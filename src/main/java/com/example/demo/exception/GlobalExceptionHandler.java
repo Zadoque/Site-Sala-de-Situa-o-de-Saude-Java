@@ -29,6 +29,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidFilterException.class)
     public ResponseEntity<ErrorResponse> handleFilter(InvalidFilterException e, HttpServletRequest r) { return error(HttpStatus.BAD_REQUEST, "INVALID_FILTER", e.getMessage(), r); }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleArgument(IllegalArgumentException e, HttpServletRequest r) { return error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", e.getMessage(), r); }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleOther(Exception e, HttpServletRequest r) { return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Erro interno ao processar a solicitação", r); }
 

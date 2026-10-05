@@ -1,9 +1,10 @@
 package com.example.demo.controller;
 
 import com.example.demo.DTO.request.LoginRequest;
-import com.example.demo.DTO.request.UserRequest;
+import com.example.demo.DTO.request.FirstAccessRequest;
 import com.example.demo.DTO.response.LoginResponse;
 import com.example.demo.DTO.response.UserResponse;
+import com.example.demo.DTO.response.MeResponse;
 import com.example.demo.security.JwtService;
 import com.example.demo.service.UserService;
 import jakarta.validation.Valid;
@@ -42,12 +43,19 @@ public class AuthController {
     @Value("${api.auth.secure-cookie:false}") private boolean secureCookie;
     private final Map<String, RefreshSession> refreshTokens = new ConcurrentHashMap<>();
 
-    @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRequest request){
-        UserResponse response = userService.save(request);
+    private final com.example.demo.service.FirstAccessService firstAccessService;
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(response);
+    @PostMapping("/first-access")
+    public ResponseEntity<Void> firstAccess(@Valid @RequestBody FirstAccessRequest request) {
+        firstAccessService.complete(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/me")
+    public ResponseEntity<MeResponse> me(Authentication authentication) {
+        UserResponse user = userService.getByEmail(authentication.getName());
+        boolean admin = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return ResponseEntity.ok(new MeResponse(user.email(), user.nome(), user.ativo(), admin ? java.util.List.of("USER_MANAGEMENT") : java.util.List.of()));
     }
 
     @PostMapping("/login")
@@ -73,7 +81,7 @@ public class AuthController {
         refreshTokens.put(refresh, new RefreshSession(userDetails.getUsername(), System.currentTimeMillis() + refreshExpiration));
         addRefreshCookie(response, refresh);
         UserResponse user = userService.getByEmail(userDetails.getUsername());
-        return ResponseEntity.ok(new LoginResponse(token, accessExpiration / 1000, user));
+        return ResponseEntity.ok(new LoginResponse(token, accessExpiration / 1000, user, token, permissions(userDetails)));
 
     }
 
@@ -93,7 +101,7 @@ public class AuthController {
         String next = UUID.randomUUID().toString();
         refreshTokens.put(next, new RefreshSession(username, System.currentTimeMillis() + refreshExpiration));
         addRefreshCookie(response, next);
-        return ResponseEntity.ok(new LoginResponse(access, accessExpiration / 1000, userService.getByEmail(username)));
+        return ResponseEntity.ok(new LoginResponse(access, accessExpiration / 1000, userService.getByEmail(username), access, permissions(userDetailsService.loadUserByUsername(username))));
     }
 
     @PostMapping("/logout")
@@ -105,6 +113,7 @@ public class AuthController {
     }
 
     private String cookie(HttpServletRequest request) { if (request.getCookies() == null) return null; for (Cookie c : request.getCookies()) if (refreshCookieName.equals(c.getName())) return c.getValue(); return null; }
+    private java.util.List<String> permissions(UserDetails details) { return details.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")) ? java.util.List.of("USER_MANAGEMENT") : java.util.List.of(); }
     private void addRefreshCookie(HttpServletResponse response, String token) { Cookie c = new Cookie(refreshCookieName, token); c.setHttpOnly(true); c.setSecure(secureCookie); c.setPath("/api/v1/auth"); c.setMaxAge((int) (refreshExpiration / 1000)); response.addCookie(c); }
     private record RefreshSession(String username, long expiresAt) {}
 

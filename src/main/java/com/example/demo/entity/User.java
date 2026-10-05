@@ -1,10 +1,6 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +16,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "nome", nullable = false, length = 100)
+    @Column(name = "nome", length = 100)
     private String nome;
 
 
@@ -28,15 +24,27 @@ public class User {
     private String email;
 
 
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", length = 255)
     private String password;
 
 
-    @Column(name = "matricula", nullable = false, unique = true, length = 11)
-    private String matricula;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_type", nullable = false, length = 10)
+    private AccountType accountType = AccountType.USER;
 
+    @Column(name = "ativo", nullable = false)
+    private boolean ativo = true;
 
-    @Column(name = "cargo", nullable = false, length = 30)
-    private String cargo;
+    @Column(name = "created_at", nullable = false)
+    private java.time.Instant createdAt = java.time.Instant.now();
+
+    @Column(name = "updated_at", nullable = false)
+    private java.time.Instant updatedAt = java.time.Instant.now();
+
+    @Column(name = "password_created_at")
+    private java.time.Instant passwordCreatedAt;
+
+    @PreUpdate
+    void touch() { updatedAt = java.time.Instant.now(); }
 
 }

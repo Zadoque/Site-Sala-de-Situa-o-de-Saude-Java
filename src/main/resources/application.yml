@@ -36,6 +36,12 @@ spring:
 api:
   mail:
     from: ${MAIL_FROM:}
+  first-access:
+    frontend-url: ${FIRST_ACCESS_FRONTEND_URL:http://localhost:5173}
+    expiration: ${FIRST_ACCESS_EXPIRATION:604800}
+  bootstrap-admin:
+    email: ${BOOTSTRAP_ADMIN_EMAIL:}
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
   auth:
