@@ -26,6 +26,7 @@ public class EpidemiologyRepository {
 
     public List<Map<String, Object>> aggregate(EpidemiologyFilter f, Geography geography) {
         String territory = switch (geography) {
+            case REGION, STATE -> "NULL";
             case MUNICIPALITY -> "f.cd_mun";
             case DISTRICT -> "f.notification_district_id";
             case NEIGHBORHOOD -> "f.notification_neighborhood_id";
@@ -40,7 +41,7 @@ public class EpidemiologyRepository {
     }
 
     public Map<String, Object> totals(EpidemiologyFilter f, Geography geography) {
-        String mapped = switch (geography) { case MUNICIPALITY -> "f.cd_mun IS NOT NULL"; case DISTRICT -> "f.notification_district_id IS NOT NULL"; case NEIGHBORHOOD -> "f.notification_neighborhood_id IS NOT NULL"; };
+        String mapped = switch (geography) { case REGION, STATE -> "FALSE"; case MUNICIPALITY -> "f.cd_mun IS NOT NULL"; case DISTRICT -> "f.notification_district_id IS NOT NULL"; case NEIGHBORHOOD -> "f.notification_neighborhood_id IS NOT NULL"; };
         StringBuilder sql = new StringBuilder("SELECT COALESCE(SUM(f.cases_total),0) AS total, COALESCE(SUM(CASE WHEN ").append(mapped).append(" THEN f.cases_total ELSE 0 END),0) AS mapped FROM analytics.fato_casos f WHERE 1=1");
         MapSqlParameterSource p = parameters(f, sql);
         if (f.municipalityCode() != null) { sql.append(" AND f.cd_mun = :municipalityCode"); p.addValue("municipalityCode", f.municipalityCode()); }

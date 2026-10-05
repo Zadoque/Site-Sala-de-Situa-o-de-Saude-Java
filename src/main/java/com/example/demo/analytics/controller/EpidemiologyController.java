@@ -16,6 +16,11 @@ public class EpidemiologyController {
     private final EpidemiologyService service;
     private final EpidemiologyRepository repository;
 
+    @GetMapping("/epidemiology/region")
+    public AnalyticsResponse region(@ModelAttribute FilterRequest request) { return service.unavailable(Geography.REGION, request.toFilter()); }
+    @GetMapping("/epidemiology/state")
+    public AnalyticsResponse state(@ModelAttribute FilterRequest request) { return service.unavailable(Geography.STATE, request.toFilter()); }
+
     @GetMapping("/epidemiology/municipalities")
     public AnalyticsResponse municipalities(@ModelAttribute FilterRequest request) { return service.query(Geography.MUNICIPALITY, request.toFilter()); }
     @GetMapping("/epidemiology/districts")
@@ -24,7 +29,7 @@ public class EpidemiologyController {
     public AnalyticsResponse neighborhoods(@ModelAttribute FilterRequest request) { return service.query(Geography.NEIGHBORHOOD, request.toFilter()); }
 
     @GetMapping("/diseases")
-    public List<DiseaseResponse> diseases() { return repository.diseases().stream().map(row -> new DiseaseResponse(String.valueOf(row.get("code")), String.valueOf(row.get("name")), true)).toList(); }
+    public DiseaseListResponse diseases() { return new DiseaseListResponse(repository.diseases().stream().map(row -> String.valueOf(row.get("code"))).toList()); }
 
     @GetMapping("/metadata")
     public MetadataResponse metadata() {
@@ -36,4 +41,5 @@ public class EpidemiologyController {
     public record FilterRequest(String disease, Integer year, Integer month, String sex, String ageBand, String municipalityCode, String districtCode) {
         EpidemiologyFilter toFilter() { return new EpidemiologyFilter(disease, year, month, sex, ageBand, municipalityCode, districtCode); }
     }
+    public record DiseaseListResponse(List<String> items) {}
 }

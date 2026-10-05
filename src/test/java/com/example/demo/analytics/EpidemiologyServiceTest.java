@@ -5,6 +5,7 @@ import com.example.demo.analytics.api.EpidemiologyFilter;
 import com.example.demo.analytics.api.Geography;
 import com.example.demo.analytics.repository.EpidemiologyRepository;
 import com.example.demo.analytics.service.EpidemiologyService;
+import com.example.demo.analytics.service.TerritoryCatalog;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class EpidemiologyServiceTest {
     @Mock EpidemiologyRepository repository;
+    @Mock TerritoryCatalog catalog;
     @InjectMocks EpidemiologyService service;
 
     @Test

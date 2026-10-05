@@ -1,3 +1,3 @@
 package com.example.demo.analytics.api;
 
-public enum Geography { MUNICIPALITY, DISTRICT, NEIGHBORHOOD }
+public enum Geography { REGION, STATE, MUNICIPALITY, DISTRICT, NEIGHBORHOOD }

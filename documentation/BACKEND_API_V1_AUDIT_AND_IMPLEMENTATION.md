@@ -35,6 +35,17 @@ O retorno usa `totalNotifications`, `notificationsTotal` e `coverage`. `I` é in
 
 O território é o bairro da notificação derivado da unidade notificadora/CNES. Não representa residência ou endereço do paciente. A implementação exige município para nível intramunicipal e restringe o drill-down inicial a Campos dos Goytacazes; o catálogo canônico completo deve ser conectado antes da publicação final.
 
+## Auditoria do frontend V2
+
+O adapter real em `NSS-front-end/src/data/apiDataSource.ts` faz estas chamadas:
+
+- `/api/v1/diseases`, esperando `{ "items": ["DENG"] }`;
+- `/api/v1/metadata`;
+- `/api/v1/epidemiology/region` e `/state` durante a navegação inicial;
+- `/api/v1/epidemiology/municipalities`, `/districts` e `/neighborhoods` com `disease`, `year`, `month`, `sex`, `ageBand`, `municipalityCode` e `districtCode`.
+
+O backend agora atende o envelope de doenças, os endpoints region/state e usa o catálogo versionado derivado dos assets do frontend (`14` distritos e `73` bairros/localidades com geometria). O frontend ainda usa `mockAuth` e `src/api/http.ts` não envia `Authorization` nem `credentials: include`; por isso, com a política atual de endpoints protegidos, a integração autenticada ainda exige uma alteração no frontend ou uma decisão explícita de tornar as consultas públicas. Nenhum enfraquecimento de segurança foi feito no Java.
+
 ## Segurança
 
 Refresh tokens são opacos, rotacionados em memória nesta baseline e enviados apenas em cookie HttpOnly; `Secure` é controlado por `SECURE_COOKIES`. CORS depende de `CORS_ALLOWED_ORIGINS`, sem default de origem externa. Para produção, a rotação deve ser persistida em store compartilhado se houver múltiplas réplicas.
