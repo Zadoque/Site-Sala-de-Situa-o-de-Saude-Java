@@ -1,129 +1,29 @@
-Sala de Situação de Saúde (NSS) - Backend
-Backend da plataforma de Sala de Situação de Saúde (NSS), desenvolvido com Spring Boot e Java 21. Esta aplicação gerencia a persistência de dados, autenticação segura e disponibilização de APIs REST para o cliente web.
+# Sala de Situação de Saúde (NSS) — backend
 
-📌 Status do Projeto
-O projeto encontra-se em estágio inicial de desenvolvimento, com o módulo de Autenticação e Gestão de Usuários já implementado (cadastro, login com emissão de token JWT, controle de acesso e consulta de usuários).
+Backend Spring Boot/Java 21 para autenticação e leitura do PostgreSQL analítico publicado pela pipeline. Não acessa PySUS, SINAN bruto, CNES operacional ou Parquet em runtime.
 
-🛠️ Tecnologias Utilizadas
-Linguagem: Java 21
+## Execução local
 
-Framework: Spring Boot 3.x
+Configure `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `ANALYTICS_DATASOURCE_URL`, `ANALYTICS_DATASOURCE_USERNAME`, `ANALYTICS_DATASOURCE_PASSWORD` e `JWT_SECRET` sem versionar segredos. Exemplo:
 
-Spring Web
+```bash
+export ANALYTICS_DATASOURCE_URL=jdbc:postgresql://localhost:5432/situacao_saude
+export ANALYTICS_DATASOURCE_USERNAME=nss
+export ANALYTICS_DATASOURCE_PASSWORD='...'
+export JWT_SECRET='base64-com-pelo-menos-32-bytes'
+./mvnw spring-boot:run
+```
 
-Spring Data JPA
+O compose usa o PostgreSQL configurado pela pipeline por padrão e não cria um `analytics-db` incompatível. O usuário analítico deve ser somente leitura. `CORS_ALLOWED_ORIGINS` e `SECURE_COOKIES` são explícitos para produção.
 
-Spring Security
+## API V1
 
-Banco de Dados: PostgreSQL
+Autenticação: `POST /api/v1/auth/login`, `/refresh` e `/logout`. O access token é retornado no corpo; refresh fica em cookie HttpOnly. Endpoints: `/api/v1/diseases`, `/api/v1/metadata`, `/api/v1/epidemiology/municipalities`, `/districts` e `/neighborhoods`.
 
-Controle de Migrações: Flyway
+Filtros: `disease`, `year`, `month`, `sex` (`M`/`F`), `ageBand`, `municipalityCode` e `districtCode`. Sexo omitido consulta `M`, `F` e `I`; ano/mês omitidos significam todos. O envelope sempre contém `totalNotifications`, `coverage` e `items`; o frontend não soma os itens.
 
-Autenticação & Segurança:
+O bairro é o bairro da notificação derivado da unidade notificadora via CNES, não o endereço residencial do paciente. Ausência de mapeamento é reportada em `coverage`, não como bairro fictício. Ver o relatório em [documentation/BACKEND_API_V1_AUDIT_AND_IMPLEMENTATION.md](documentation/BACKEND_API_V1_AUDIT_AND_IMPLEMENTATION.md).
 
-JSON Web Tokens (JJWT 0.12.6)
+## Testes
 
-Argon2 Password Encoder
-
-Mapeamento de Objetos: MapStruct
-
-Produtividade: Project Lombok
-
-Gerenciador de Dependências: Apache Maven
-
-Contêineres: Docker / Docker Compose
-
-📂 Estrutura do Projeto
-A organização de pacotes segue o padrão em camadas sob com.example.demo:
-
-text
-src/main/java/com/example/demo/
-├── controller/     # Controladores REST (/auth, /NSS/users)
-├── DTO/            # Objetos de transferência de dados (request, response e mappers)
-├── entity/         # Entidades de banco de dados (ex.: User)
-├── repository/     # Interfaces de acesso a dados (Spring Data JPA)
-├── security/       # Configurações de segurança, filtros JWT e UserDetailsService
-└── service/        # Regras de negócio da aplicação
-🔑 Autenticação e Perfis (Roles)
-A aplicação utiliza autenticação stateless via Bearer Token (JWT).
-
-As senhas são armazenadas utilizando o algoritmo de hash Argon2.
-
-A entidade User contempla os seguintes campos principais:
-
-nome: Nome completo do usuário.
-
-email: Endereço de e-mail (usado para login).
-
-password: Hash da senha.
-
-matricula: Identificador funcional do usuário.
-
-cargo: Papel ou função desempenhada na instituição.
-
-🚀 Endpoints da API
-1. Autenticação (/auth)
-   Método	Endpoint	Acesso	Descrição
-   POST	/auth/register	Público	Registra um novo usuário no sistema
-   POST	/auth/login	Público	Autentica as credenciais e retorna o JWT
-   Exemplo de Cadastro (POST /auth/register):
-
-json
-{
-"nome": "Nome do Profissional",
-"email": "usuario@saude.gov.br",
-"password": "senhaSegura123",
-"matricula": "123456",
-"cargo": "ANALISTA"
-}
-Exemplo de Login (POST /auth/login):
-
-json
-{
-"email": "usuario@saude.gov.br",
-"password": "senhaSegura123"
-}
-Resposta:
-
-json
-{
-"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-2. Gestão de Usuários (/NSS/users)
-   Método	Endpoint	Acesso	Descrição
-   GET	/NSS/users	Autenticado	Retorna a lista de todos os usuários
-   GET	/NSS/users/{id}	Autenticado	Retorna os detalhes de um usuário específico
-   Nota: Para requisições em endpoints protegidos, envie o header Authorization: Bearer <seu_token_jwt>.
-
-⚙️ Pré-requisitos
-Java JDK 21
-
-Docker e Docker Compose (ou instância local do PostgreSQL)
-
-Maven (opcional, o wrapper ./mvnw está incluso)
-
-🏃 Como Executar
-1. Executando com Docker Compose
-   Suba a infraestrutura de banco de dados e dependências:
-
-bash
-docker compose up -d
-2. Executando a Aplicação Localmente
-   Com o banco de dados rodando:
-
-bash
-# No Linux/macOS
-./mvnw clean spring-boot:run
-
-# No Windows
-mvnw.cmd clean spring-boot:run
-A API estará disponível por padrão em http://localhost:8080.
-
-🗺️ Roadmap de Integração
-Definir e implementar as permissões baseadas em perfis/roles (ADMIN, OPERADOR, etc.).
-
-Integração com o frontend (NSS Front-end).
-
-Implementação das entidades e regras de negócio da Sala de Situação de Saúde (painéis, indicadores e relatórios epidemiológicos).
-
-Integração com a esteira de implantação contínua (NSS Deployment).
+`./mvnw test` usa H2 em profile de teste e não depende de variáveis secretas. A validação PostgreSQL deve usar o schema real da pipeline e dataset mínimo controlado, sem apagar volumes nem publicar dados SINAN.

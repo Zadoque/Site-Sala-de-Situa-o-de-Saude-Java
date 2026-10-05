@@ -1,5 +1,6 @@
 package com.example.demo.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,48 +8,32 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Instant;
+import java.util.UUID;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidation(
-            MethodArgumentNotValidException exception
-    ) {
-        Map<String, String> errors = new HashMap<>();
-
-        exception.getBindingResult()
-                .getFieldErrors()
-                .forEach(error ->
-                        errors.put(
-                                error.getField(),
-                                error.getDefaultMessage()
-                        )
-                );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errors);
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException exception, HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "Dados de entrada inválidos", request);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<?> handleBadCredentiais(){
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of(
-                        "Message",
-                        "Email ou senha inválidos"
-                ));
+    public ResponseEntity<ErrorResponse> handleBadCredentials(HttpServletRequest request){ return error(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Credenciais inválidas", request);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<?> handleConflict() {
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(Map.of(
-                        "message",
-                        "E-mail ou matrícula já cadastrados"
-                ));
+    public ResponseEntity<ErrorResponse> handleConflict(HttpServletRequest request) { return error(HttpStatus.CONFLICT, "CONFLICT", "Recurso já existente", request);
     }
+
+    @ExceptionHandler(InvalidFilterException.class)
+    public ResponseEntity<ErrorResponse> handleFilter(InvalidFilterException e, HttpServletRequest r) { return error(HttpStatus.BAD_REQUEST, "INVALID_FILTER", e.getMessage(), r); }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleOther(Exception e, HttpServletRequest r) { return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Erro interno ao processar a solicitação", r); }
+
+    private ResponseEntity<ErrorResponse> error(HttpStatus status, String code, String message, HttpServletRequest request) {
+        return ResponseEntity.status(status).body(new ErrorResponse(Instant.now(), status.value(), code, message, request.getRequestURI(), UUID.randomUUID().toString()));
+    }
+    public record ErrorResponse(Instant timestamp, int status, String code, String message, String path, String requestId) {}
 }

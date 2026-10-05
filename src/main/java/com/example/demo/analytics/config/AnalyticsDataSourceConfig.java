@@ -37,10 +37,12 @@ public class AnalyticsDataSourceConfig {
 
     @Bean
     public DataSource analyticsDataSource() {
-        return analyticsDataSourceProperties()
+        HikariDataSource dataSource = analyticsDataSourceProperties()
                 .initializeDataSourceBuilder()
                 .type(HikariDataSource.class)
                 .build();
+        dataSource.setReadOnly(true);
+        return dataSource;
     }
 
     @Bean

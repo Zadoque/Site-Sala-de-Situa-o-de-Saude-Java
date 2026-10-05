@@ -19,9 +19,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping({"/auth", "/api/v1/auth"})
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -29,6 +36,11 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
+    @Value("${jwt.expiration:3600000}") private long accessExpiration;
+    @Value("${api.auth.refresh-cookie-name:nss_refresh}") private String refreshCookieName;
+    @Value("${api.auth.refresh-expiration:604800000}") private long refreshExpiration;
+    @Value("${api.auth.secure-cookie:false}") private boolean secureCookie;
+    private final Map<String, RefreshSession> refreshTokens = new ConcurrentHashMap<>();
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRequest request){
@@ -40,7 +52,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-            @Valid @RequestBody LoginRequest request
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse response
     ) {
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(
@@ -56,9 +69,43 @@ public class AuthController {
                 );
 
         String token = jwtService.generateToken(userDetails);
-
-        return ResponseEntity.ok(new LoginResponse(token));
+        String refresh = UUID.randomUUID().toString();
+        refreshTokens.put(refresh, new RefreshSession(userDetails.getUsername(), System.currentTimeMillis() + refreshExpiration));
+        addRefreshCookie(response, refresh);
+        UserResponse user = new UserResponse(null, userDetails.getUsername(), userDetails.getUsername(), "", "");
+        return ResponseEntity.ok(new LoginResponse(token, accessExpiration / 1000, user));
 
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(HttpServletRequest request, HttpServletResponse response) {
+        String token = cookie(request);
+        RefreshSession session = token == null ? null : refreshTokens.get(token);
+        if (session == null || session.expiresAt() < System.currentTimeMillis()) {
+            if (token != null) refreshTokens.remove(token);
+            throw new org.springframework.security.authentication.BadCredentialsException("Refresh inválido");
+        }
+        String username = session.username();
+        // Refresh tokens are opaque and bound to the authenticated user in the production store.
+        // This in-memory baseline rotates the token; the cookie is never exposed to JavaScript.
+        refreshTokens.remove(token);
+        String access = jwtService.generateToken(userDetailsService.loadUserByUsername(username));
+        String next = UUID.randomUUID().toString();
+        refreshTokens.put(next, new RefreshSession(username, System.currentTimeMillis() + refreshExpiration));
+        addRefreshCookie(response, next);
+        return ResponseEntity.ok(new LoginResponse(access, accessExpiration / 1000, new UserResponse(null, username, username, "", "")));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        String token = cookie(request);
+        if (token != null) refreshTokens.remove(token);
+        Cookie cookie = new Cookie(refreshCookieName, ""); cookie.setHttpOnly(true); cookie.setSecure(secureCookie); cookie.setPath("/api/v1/auth"); cookie.setMaxAge(0); response.addCookie(cookie);
+        return ResponseEntity.noContent().build();
+    }
+
+    private String cookie(HttpServletRequest request) { if (request.getCookies() == null) return null; for (Cookie c : request.getCookies()) if (refreshCookieName.equals(c.getName())) return c.getValue(); return null; }
+    private void addRefreshCookie(HttpServletResponse response, String token) { Cookie c = new Cookie(refreshCookieName, token); c.setHttpOnly(true); c.setSecure(secureCookie); c.setPath("/api/v1/auth"); c.setMaxAge((int) (refreshExpiration / 1000)); response.addCookie(c); }
+    private record RefreshSession(String username, long expiresAt) {}
 
 }
