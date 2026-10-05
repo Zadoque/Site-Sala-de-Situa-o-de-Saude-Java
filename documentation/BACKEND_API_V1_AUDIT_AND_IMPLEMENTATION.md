@@ -53,7 +53,7 @@ Variáveis: `SPRING_DATASOURCE_*`, `ANALYTICS_DATASOURCE_*`, `JWT_SECRET`, `CORS
 ```text
 BRANCH=feat/api-v1-nss-integration
 BASE_HEAD=8799ed4
-FINAL_HEAD=11343ac
+FINAL_HEAD=see `git rev-parse HEAD` after this documentation commit
 ANALYTICS_DATABASE=PostgreSQL analítico da pipeline (não acessível nesta execução)
 TEST_STATUS=./mvnw test passou
 BUILD_STATUS=./mvnw verify e ./mvnw package passaram
