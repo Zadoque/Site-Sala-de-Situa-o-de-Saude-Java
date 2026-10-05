@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.env.local[.properties]
   application:
     name: sala-de-situacao
 
@@ -58,8 +60,8 @@ analytics:
       read-only: true
       connection-timeout: ${ANALYTICS_DATASOURCE_CONNECTION_TIMEOUT:5000}
   schema:
-    year-column: ${ANALYTICS_YEAR_COLUMN:year}
-    month-column: ${ANALYTICS_MONTH_COLUMN:month}
+    year-column: ${ANALYTICS_YEAR_COLUMN:ano}
+    month-column: ${ANALYTICS_MONTH_COLUMN:mes}
 
 jwt:
   secret: ${JWT_SECRET:ZmFrZS1kZXZlbG9wbWVudC1zZWNyZXQtdGhhdC1pcy1sb25nLWVub3VnaC0zMg==}

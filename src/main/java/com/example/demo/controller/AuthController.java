@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.DTO.request.LoginRequest;
 import com.example.demo.DTO.request.FirstAccessRequest;
+import com.example.demo.DTO.request.PasswordResetRequest;
+import com.example.demo.DTO.request.PasswordResetCompleteRequest;
 import com.example.demo.DTO.response.LoginResponse;
 import com.example.demo.DTO.response.UserResponse;
 import com.example.demo.DTO.response.MeResponse;
@@ -48,6 +50,18 @@ public class AuthController {
     @PostMapping("/first-access")
     public ResponseEntity<Void> firstAccess(@Valid @RequestBody FirstAccessRequest request) {
         firstAccessService.complete(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+        userService.requestPasswordReset(request.email());
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/password-reset/complete")
+    public ResponseEntity<Void> completePasswordReset(@Valid @RequestBody PasswordResetCompleteRequest request) {
+        firstAccessService.completePasswordReset(request);
         return ResponseEntity.noContent().build();
     }
 

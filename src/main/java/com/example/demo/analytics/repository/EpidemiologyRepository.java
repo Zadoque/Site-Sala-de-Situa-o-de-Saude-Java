@@ -49,7 +49,7 @@ public class EpidemiologyRepository {
         return jdbc.queryForMap(sql.toString(), p);
     }
 
-    public List<Map<String, Object>> diseases() { return jdbc.queryForList("SELECT disease_codigo AS code, disease_codigo AS name FROM analytics.dim_doenca ORDER BY disease_codigo", Map.of()); }
+    public List<Map<String, Object>> diseases() { return jdbc.queryForList("SELECT codigo AS code, nome AS name FROM analytics.dim_doenca ORDER BY codigo", Map.of()); }
     public List<Map<String, Object>> metadata() { return jdbc.queryForList("SELECT " + yearColumn + " AS year, " + monthColumn + " AS month FROM analytics.fato_casos GROUP BY " + yearColumn + ", " + monthColumn + " ORDER BY " + yearColumn + ", " + monthColumn, Map.of()); }
 
     private MapSqlParameterSource parameters(EpidemiologyFilter f, StringBuilder sql) {

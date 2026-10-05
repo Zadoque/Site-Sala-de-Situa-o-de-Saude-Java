@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 @Service @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repository;
+    private final FirstAccessService firstAccessService;
     public UserResponse getByEmail(String email) {
         return repository.findByEmailIgnoreCase(email).map(this::response)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
     }
     public UserResponse response(User user) { return new UserResponse(user.getId(), user.getNome(), user.getEmail(), user.isAtivo()); }
+    public void requestPasswordReset(String email) { repository.findByEmailIgnoreCase(email).filter(User::isAtivo).ifPresent(firstAccessService::issuePasswordReset); }
 }

@@ -35,13 +35,30 @@ public class FirstAccessService {
         byte[] bytes = new byte[32]; random.nextBytes(bytes);
         String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         FirstAccessToken token = new FirstAccessToken();
-        token.setUser(user); token.setTokenHash(hash(raw)); token.setStatus("PENDING");
+        token.setUser(user); token.setTokenHash(hash(raw)); token.setStatus("PENDING"); token.setPurpose("FIRST_ACCESS");
         token.setSentAt(Instant.now()); token.setExpiresAt(Instant.now().plus(Duration.ofSeconds(expirationSeconds)));
         tokens.save(token);
         String link = frontendUrl.replaceAll("/$", "") + "/primeiro-acesso?token=" + raw;
         mail.sendText(user.getEmail(), "Convite de primeiro acesso ao NSS",
                 "Acesse o NSS pelo link abaixo para criar seu nome e senha:\n\n" + link +
                         "\n\nEste convite expira em 24 horas e só pode ser usado uma vez.");
+    }
+
+    @Transactional
+    public void issuePasswordReset(User user) {
+        tokens.findByUserId(user.getId()).ifPresent(tokens::delete);
+        byte[] bytes = new byte[32]; random.nextBytes(bytes);
+        String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        FirstAccessToken token = new FirstAccessToken(); token.setUser(user); token.setTokenHash(hash(raw)); token.setStatus("PENDING"); token.setPurpose("PASSWORD_RESET"); token.setSentAt(Instant.now()); token.setExpiresAt(Instant.now().plus(Duration.ofSeconds(expirationSeconds))); tokens.save(token);
+        String link = frontendUrl.replaceAll("/$", "") + "/redefinir-senha?token=" + raw;
+        mail.sendText(user.getEmail(), "Redefinição de senha do NSS", "Use o link abaixo para criar uma nova senha:\n\n" + link + "\n\nEste link expira em 7 dias e só pode ser usado uma vez.");
+    }
+
+    @Transactional
+    public void completePasswordReset(com.example.demo.DTO.request.PasswordResetCompleteRequest request) {
+        FirstAccessToken invite = tokens.findByTokenHash(hash(request.token())).filter(t -> "PENDING".equals(t.getStatus()) && "PASSWORD_RESET".equals(t.getPurpose()) && t.getExpiresAt().isAfter(Instant.now())).orElseThrow(() -> new IllegalArgumentException("Link inválido ou expirado"));
+        User user = invite.getUser(); if (!user.getEmail().equalsIgnoreCase(request.email())) throw new IllegalArgumentException("E-mail não corresponde ao link");
+        user.setPassword(encoder.encode(request.password())); user.setPasswordCreatedAt(Instant.now()); user.setAtivo(true); users.save(user); invite.setStatus("COMPLETED"); invite.setCompletedAt(Instant.now()); invite.setPasswordCreatedAt(Instant.now()); tokens.save(invite);
     }
 
     @Transactional

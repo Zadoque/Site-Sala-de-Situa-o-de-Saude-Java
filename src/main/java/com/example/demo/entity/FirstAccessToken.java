@@ -20,6 +20,8 @@ public class FirstAccessToken {
     private String tokenHash;
     @Column(name = "status", nullable = false, length = 20)
     private String status;
+    @Column(name = "purpose", nullable = false, length = 20)
+    private String purpose;
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
     @Column(name = "sent_at", nullable = false)

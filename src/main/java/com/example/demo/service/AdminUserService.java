@@ -36,7 +36,7 @@ public class AdminUserService {
         user.setAtivo(active); return view(users.save(user));
     }
 
-    @Transactional public void resetPassword(Long id) { User user = users.findById(id).orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado")); user.setPassword(null); user.setPasswordCreatedAt(null); users.save(user); firstAccess.issue(user); }
+    @Transactional public void resetPassword(Long id) { User user = users.findById(id).orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado")); user.setPassword(null); user.setPasswordCreatedAt(null); users.save(user); firstAccess.issuePasswordReset(user); }
     public java.util.List<com.example.demo.DTO.response.InvitationResponse> invitations() { return firstAccess.pendingInvitations(); }
     public com.example.demo.DTO.response.InvitationResponse renewInvitation(Long id) { return firstAccess.renew(id); }
     public void cancelInvitation(Long id) { firstAccess.cancel(id); }
