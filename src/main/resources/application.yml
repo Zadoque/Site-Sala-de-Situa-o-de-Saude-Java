@@ -15,6 +15,34 @@ spring:
   flyway:
     enabled: true
 
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    protocol: ${MAIL_PROTOCOL:smtp}
+    test-connection: ${MAIL_TEST_CONNECTION:false}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:false}
+            required: ${MAIL_SMTP_STARTTLS_REQUIRED:false}
+          connectiontimeout: ${MAIL_CONNECTION_TIMEOUT:5000}
+          timeout: ${MAIL_TIMEOUT:5000}
+          writetimeout: ${MAIL_WRITE_TIMEOUT:5000}
+
+api:
+  mail:
+    from: ${MAIL_FROM:}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+  auth:
+    refresh-cookie-name: ${REFRESH_COOKIE_NAME:nss_refresh}
+    refresh-expiration: ${REFRESH_EXPIRATION:604800000}
+    secure-cookie: ${SECURE_COOKIES:false}
+
 analytics:
   datasource:
     url: ${ANALYTICS_DATASOURCE_URL:jdbc:postgresql://localhost:5432/situacao_saude}
@@ -26,14 +54,6 @@ analytics:
   schema:
     year-column: ${ANALYTICS_YEAR_COLUMN:year}
     month-column: ${ANALYTICS_MONTH_COLUMN:month}
-
-api:
-  cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
-  auth:
-    refresh-cookie-name: ${REFRESH_COOKIE_NAME:nss_refresh}
-    refresh-expiration: ${REFRESH_EXPIRATION:604800000}
-    secure-cookie: ${SECURE_COOKIES:false}
 
 jwt:
   secret: ${JWT_SECRET:ZmFrZS1kZXZlbG9wbWVudC1zZWNyZXQtdGhhdC1pcy1sb25nLWVub3VnaC0zMg==}
