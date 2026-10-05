@@ -16,9 +16,12 @@ public class AdminUserService {
     private final UserRepository users;
     private final FirstAccessService firstAccess;
 
-    public List<ManagedUserResponse> search(String search) {
-        List<User> result = search == null || search.isBlank() ? users.findAll() : users.findByNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(search, search);
-        return result.stream().map(this::view).toList();
+    public com.example.demo.DTO.response.UserPageResponse search(String search, int page, int size) {
+        int safeSize = Math.min(Math.max(size, 1), 60);
+        org.springframework.data.domain.Page<User> result = search == null || search.isBlank()
+                ? users.findAll(org.springframework.data.domain.PageRequest.of(page, safeSize, org.springframework.data.domain.Sort.by("email").ascending()))
+                : users.findByNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(search, search, org.springframework.data.domain.PageRequest.of(page, safeSize, org.springframework.data.domain.Sort.by("email").ascending()));
+        return new com.example.demo.DTO.response.UserPageResponse(result.getContent().stream().map(this::view).toList(), result.getNumber(), result.getSize(), result.hasNext(), result.getTotalElements());
     }
 
     @Transactional
