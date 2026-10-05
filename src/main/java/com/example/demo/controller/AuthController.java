@@ -72,7 +72,7 @@ public class AuthController {
         String refresh = UUID.randomUUID().toString();
         refreshTokens.put(refresh, new RefreshSession(userDetails.getUsername(), System.currentTimeMillis() + refreshExpiration));
         addRefreshCookie(response, refresh);
-        UserResponse user = new UserResponse(null, userDetails.getUsername(), userDetails.getUsername(), "", "");
+        UserResponse user = userService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(new LoginResponse(token, accessExpiration / 1000, user));
 
     }
@@ -93,7 +93,7 @@ public class AuthController {
         String next = UUID.randomUUID().toString();
         refreshTokens.put(next, new RefreshSession(username, System.currentTimeMillis() + refreshExpiration));
         addRefreshCookie(response, next);
-        return ResponseEntity.ok(new LoginResponse(access, accessExpiration / 1000, new UserResponse(null, username, username, "", "")));
+        return ResponseEntity.ok(new LoginResponse(access, accessExpiration / 1000, userService.getByEmail(username)));
     }
 
     @PostMapping("/logout")

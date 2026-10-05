@@ -41,7 +41,7 @@ Refresh tokens são opacos, rotacionados em memória nesta baseline e enviados a
 
 ## Testes, falhas e pendências
 
-- `./mvnw test`: passou com perfil H2 isolado.
+- `./mvnw test`: passou com perfil H2 isolado, incluindo testes de filtro, total oficial, cobertura `PARTIAL`/`UNAVAILABLE` e zero real.
 - `./mvnw verify`, `./mvnw package` e `docker compose config`: executar na validação final.
 - Teste PostgreSQL/Testcontainers e MockMvc completo: pendentes; requerem schema real compatível.
 - Validar nomes/tipos do schema real e categorias de cobertura da pipeline.
@@ -56,7 +56,7 @@ BASE_HEAD=8799ed4
 FINAL_HEAD=see `git rev-parse HEAD` after this documentation commit
 ANALYTICS_DATABASE=PostgreSQL analítico da pipeline (não acessível nesta execução)
 TEST_STATUS=./mvnw test passou
-BUILD_STATUS=./mvnw verify e ./mvnw package passaram
+BUILD_STATUS=./mvnw verify e ./mvnw package passaram; testes de regras adicionais passaram
 API_STATUS=implementação baseline /api/v1; schema real pendente
 MAIN_MODIFIED=NO
 ```

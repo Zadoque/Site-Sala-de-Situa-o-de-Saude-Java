@@ -47,6 +47,12 @@ public class UserService {
                 .map(mapper::toResponse);
     }
 
+    public UserResponse getByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(mapper::toResponse)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    }
+
     public UserResponse updateUser(Long id, UserRequest request){
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
