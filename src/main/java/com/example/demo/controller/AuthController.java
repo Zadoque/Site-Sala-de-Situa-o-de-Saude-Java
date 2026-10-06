@@ -9,6 +9,8 @@ import com.example.demo.DTO.response.UserResponse;
 import com.example.demo.DTO.response.MeResponse;
 import com.example.demo.security.JwtService;
 import com.example.demo.service.UserService;
+import com.example.demo.service.AuthRateLimiter;
+import com.example.demo.service.RefreshSessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,12 +25,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Value;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.AuthenticationException;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping({"/auth", "/api/v1/auth"})
@@ -43,9 +46,9 @@ public class AuthController {
     @Value("${api.auth.refresh-cookie-name:nss_refresh}") private String refreshCookieName;
     @Value("${api.auth.refresh-expiration:604800000}") private long refreshExpiration;
     @Value("${api.auth.secure-cookie:false}") private boolean secureCookie;
-    private final Map<String, RefreshSession> refreshTokens = new ConcurrentHashMap<>();
-
     private final com.example.demo.service.FirstAccessService firstAccessService;
+    private final RefreshSessionService refreshSessions;
+    private final AuthRateLimiter rateLimiter;
 
     @PostMapping("/first-access")
     public ResponseEntity<Void> firstAccess(@Valid @RequestBody FirstAccessRequest request) {
@@ -55,6 +58,7 @@ public class AuthController {
 
     @PostMapping("/password-reset/request")
     public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+        rateLimiter.registerPasswordResetRequest(request.email());
         userService.requestPasswordReset(request.email());
         return ResponseEntity.accepted().build();
     }
@@ -77,13 +81,20 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request,
             HttpServletResponse response
     ) {
+        rateLimiter.checkLogin(request.email());
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(
                         request.email(),
                         request.password()
                 );
 
-        authenticationManager.authenticate(authentication);
+        try {
+            authenticationManager.authenticate(authentication);
+        } catch (AuthenticationException exception) {
+            rateLimiter.loginFailed(request.email());
+            throw exception;
+        }
+        rateLimiter.loginSucceeded(request.email());
 
         UserDetails userDetails =
                 userDetailsService.loadUserByUsername(
@@ -91,8 +102,7 @@ public class AuthController {
                 );
 
         String token = jwtService.generateToken(userDetails);
-        String refresh = UUID.randomUUID().toString();
-        refreshTokens.put(refresh, new RefreshSession(userDetails.getUsername(), System.currentTimeMillis() + refreshExpiration));
+        String refresh = refreshSessions.issue(userService.entityByEmail(userDetails.getUsername()));
         addRefreshCookie(response, refresh);
         UserResponse user = userService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(new LoginResponse(token, accessExpiration / 1000, user, token, permissions(userDetails)));
@@ -102,33 +112,24 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<LoginResponse> refresh(HttpServletRequest request, HttpServletResponse response) {
         String token = cookie(request);
-        RefreshSession session = token == null ? null : refreshTokens.get(token);
-        if (session == null || session.expiresAt() < System.currentTimeMillis()) {
-            if (token != null) refreshTokens.remove(token);
-            throw new org.springframework.security.authentication.BadCredentialsException("Refresh inválido");
-        }
-        String username = session.username();
-        // Refresh tokens are opaque and bound to the authenticated user in the production store.
-        // This in-memory baseline rotates the token; the cookie is never exposed to JavaScript.
-        refreshTokens.remove(token);
-        String access = jwtService.generateToken(userDetailsService.loadUserByUsername(username));
-        String next = UUID.randomUUID().toString();
-        refreshTokens.put(next, new RefreshSession(username, System.currentTimeMillis() + refreshExpiration));
-        addRefreshCookie(response, next);
-        return ResponseEntity.ok(new LoginResponse(access, accessExpiration / 1000, userService.getByEmail(username), access, permissions(userDetailsService.loadUserByUsername(username))));
+        RefreshSessionService.Rotation rotation = refreshSessions.rotateWithToken(token);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(rotation.user().getEmail());
+        String access = jwtService.generateToken(userDetails);
+        addRefreshCookie(response, rotation.rawToken());
+        return ResponseEntity.ok(new LoginResponse(access, accessExpiration / 1000, userService.getByEmail(userDetails.getUsername()), access, permissions(userDetails)));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         String token = cookie(request);
-        if (token != null) refreshTokens.remove(token);
-        Cookie cookie = new Cookie(refreshCookieName, ""); cookie.setHttpOnly(true); cookie.setSecure(secureCookie); cookie.setPath("/api/v1/auth"); cookie.setMaxAge(0); response.addCookie(cookie);
+        refreshSessions.revoke(token);
+        clearRefreshCookie(response);
         return ResponseEntity.noContent().build();
     }
 
-    private String cookie(HttpServletRequest request) { if (request.getCookies() == null) return null; for (Cookie c : request.getCookies()) if (refreshCookieName.equals(c.getName())) return c.getValue(); return null; }
+    private String cookie(HttpServletRequest request) { if (request.getCookies() == null) return null; for (jakarta.servlet.http.Cookie c : request.getCookies()) if (refreshCookieName.equals(c.getName())) return c.getValue(); return null; }
     private java.util.List<String> permissions(UserDetails details) { return details.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")) ? java.util.List.of("USER_MANAGEMENT") : java.util.List.of(); }
-    private void addRefreshCookie(HttpServletResponse response, String token) { Cookie c = new Cookie(refreshCookieName, token); c.setHttpOnly(true); c.setSecure(secureCookie); c.setPath("/api/v1/auth"); c.setMaxAge((int) (refreshExpiration / 1000)); response.addCookie(c); }
-    private record RefreshSession(String username, long expiresAt) {}
+    private void addRefreshCookie(HttpServletResponse response, String token) { response.addHeader(HttpHeaders.SET_COOKIE, ResponseCookie.from(refreshCookieName, token).httpOnly(true).secure(secureCookie).sameSite("Strict").path("/api/v1/auth").maxAge(Duration.ofMillis(refreshExpiration)).build().toString()); }
+    private void clearRefreshCookie(HttpServletResponse response) { response.addHeader(HttpHeaders.SET_COOKIE, ResponseCookie.from(refreshCookieName, "").httpOnly(true).secure(secureCookie).sameSite("Strict").path("/api/v1/auth").maxAge(Duration.ZERO).build().toString()); }
 
 }
