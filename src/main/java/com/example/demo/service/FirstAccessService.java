@@ -74,6 +74,7 @@ public class FirstAccessService {
     }
 
     public boolean pending(User user) { return tokens.findByUserId(user.getId()).map(t -> "PENDING".equals(t.getStatus()) && t.getExpiresAt().isAfter(Instant.now())).orElse(false); }
+    @Transactional(readOnly = true)
     public java.util.List<com.example.demo.DTO.response.InvitationResponse> pendingInvitations() {
         return tokens.findByStatusOrderByExpiresAtAsc("PENDING").stream().map(this::view).toList();
     }

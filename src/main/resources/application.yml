@@ -1,13 +1,18 @@
 spring:
   config:
     import: optional:file:.env.local[.properties]
+  docker:
+    compose:
+      enabled: ${SPRING_DOCKER_COMPOSE_ENABLED:true}
   application:
     name: sala-de-situacao
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/sala_saude}
-    username: ${SPRING_DATASOURCE_USERNAME:appuser}
-    password: ${SPRING_DATASOURCE_PASSWORD:}
+    # Banco operacional do Java. O PostgreSQL analítico é configurado
+    # separadamente em analytics.datasource e nunca deve ser migrado pelo Flyway.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/nss}
+    username: ${SPRING_DATASOURCE_USERNAME:nss}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
 
   jpa:
     hibernate:
