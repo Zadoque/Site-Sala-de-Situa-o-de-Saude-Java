@@ -3,6 +3,7 @@ package com.example.demo.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.io.DecodingException;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,9 +23,14 @@ public class JwtService {
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration}") long expiration
     ) {
-        this.signingKey = Keys.hmacShaKeyFor(
-                Decoders.BASE64.decode(secret)
-        );
+        try {
+            this.signingKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        } catch (DecodingException exception) {
+            throw new IllegalStateException(
+                    "JWT_SECRET deve ser uma chave Base64 válida; gere-a com `openssl rand -base64 64`",
+                    exception
+            );
+        }
         this.expiration = expiration;
     }
 
@@ -56,6 +62,7 @@ public class JwtService {
         String username = extractUsername(token);
 
         return username.equals(userDetails.getUsername())
+                && userDetails.isEnabled()
                 && !isTokenExpired(token);
     }
 
