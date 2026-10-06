@@ -15,6 +15,7 @@ import java.util.List;
 public class AdminUserService {
     private final UserRepository users;
     private final FirstAccessService firstAccess;
+    private final RefreshSessionService refreshSessions;
 
     public com.example.demo.DTO.response.UserPageResponse search(String search, int page, int size) {
         int safeSize = Math.min(Math.max(size, 1), 60);
@@ -36,10 +37,13 @@ public class AdminUserService {
         User user = users.findById(id).orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
         if (user.getEmail().equalsIgnoreCase(actorEmail) && !active) throw new IllegalArgumentException("Você não pode desativar sua própria conta");
         if (!active && user.getAccountType() == AccountType.ADMIN) throw new IllegalArgumentException("Admin não pode desativar outro admin");
-        user.setAtivo(active); return view(users.save(user));
+        user.setAtivo(active);
+        User saved = users.save(user);
+        if (!active) refreshSessions.revokeAllForUser(saved.getId());
+        return view(saved);
     }
 
-    @Transactional public void resetPassword(Long id) { User user = users.findById(id).orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado")); user.setPassword(null); user.setPasswordCreatedAt(null); users.save(user); firstAccess.issuePasswordReset(user); }
+    @Transactional public void resetPassword(Long id) { User user = users.findById(id).orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado")); user.setPassword(null); user.setPasswordCreatedAt(null); users.save(user); refreshSessions.revokeAllForUser(user.getId()); firstAccess.issuePasswordReset(user); }
     public java.util.List<com.example.demo.DTO.response.InvitationResponse> invitations() { return firstAccess.pendingInvitations(); }
     public com.example.demo.DTO.response.InvitationResponse renewInvitation(Long id) { return firstAccess.renew(id); }
     public void cancelInvitation(Long id) { firstAccess.cancel(id); }
