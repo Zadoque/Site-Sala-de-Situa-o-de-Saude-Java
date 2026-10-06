@@ -64,7 +64,7 @@ public class FirstAccessService {
     @Transactional
     public void complete(FirstAccessRequest request) {
         FirstAccessToken invite = tokens.findByTokenHash(hash(request.token()))
-                .filter(t -> "PENDING".equals(t.getStatus()) && t.getExpiresAt().isAfter(Instant.now()))
+                .filter(t -> "PENDING".equals(t.getStatus()) && "FIRST_ACCESS".equals(t.getPurpose()) && t.getExpiresAt().isAfter(Instant.now()))
                 .orElseThrow(() -> new IllegalArgumentException("Convite inválido ou expirado"));
         User user = invite.getUser();
         if (!user.getEmail().equalsIgnoreCase(request.email())) throw new IllegalArgumentException("E-mail não corresponde ao convite");
