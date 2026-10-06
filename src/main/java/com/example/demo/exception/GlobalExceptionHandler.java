@@ -8,6 +8,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -31,6 +33,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleArgument(IllegalArgumentException e, HttpServletRequest r) { return error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", e.getMessage(), r); }
+
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public ResponseEntity<ErrorResponse> handleNotFound(Exception e, HttpServletRequest r) { return error(HttpStatus.NOT_FOUND, "NOT_FOUND", "Recurso não encontrado", r); }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleOther(Exception e, HttpServletRequest r) { return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Erro interno ao processar a solicitação", r); }
