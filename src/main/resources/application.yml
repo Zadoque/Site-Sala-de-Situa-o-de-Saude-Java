@@ -21,6 +21,8 @@ spring:
 
   flyway:
     enabled: true
+    user: ${SPRING_FLYWAY_USER:${SPRING_DATASOURCE_USERNAME:nss}}
+    password: ${SPRING_FLYWAY_PASSWORD:${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}}
 
   mail:
     host: ${MAIL_HOST:localhost}
@@ -55,6 +57,25 @@ api:
     refresh-cookie-name: ${REFRESH_COOKIE_NAME:nss_refresh}
     refresh-expiration: ${REFRESH_EXPIRATION:604800000}
     secure-cookie: ${SECURE_COOKIES:false}
+    rate-limit:
+      login-maximum: ${AUTH_RATE_LIMIT_LOGIN_MAXIMUM:5}
+      reset-maximum: ${AUTH_RATE_LIMIT_RESET_MAXIMUM:3}
+      window-seconds: ${AUTH_RATE_LIMIT_WINDOW_SECONDS:900}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    # SMTP failures must be alerted separately; they must not make the HTTP
+    # process unavailable or trigger a restart loop for data consultation.
+    mail:
+      enabled: false
 
 analytics:
   datasource:
