@@ -281,6 +281,22 @@ O PIT foi executado após o incremento e permaneceu aprovado: 182 de 193
 mutações mortas (94%), test strength de 96% e três mutações sem cobertura
 classificadas.
 
+### Ciclo 12 — primeiro acesso e reset persistentes
+
+- concluir primeiro acesso pelo endpoint HTTP com token persistido;
+- concluir reset de senha e reativar a conta persistida;
+- solicitar reset para conta ativa e validar token e e-mail;
+- executar `clean verify` e PIT no mesmo ciclo.
+
+O teste `FirstAccessIntegrationIT` usa `FirstAccessService`, `UserService`,
+repositórios JPA e `MockMvc` reais, mockando somente o gateway de e-mail. A
+cobertura de integração subiu de 77,83% para 83,50% em linhas, de 49,60%
+para 52,78% em branches e de 75,00% para 78,43% em métodos.
+
+O PIT foi executado após o incremento e permaneceu aprovado: 182 de 193
+mutações mortas (94%), test strength de 96% e três mutações sem cobertura
+classificadas.
+
 ## Critérios de aceitação
 
 - cada ciclo aumenta a métrica planejada em aproximadamente 5 p.p.;
