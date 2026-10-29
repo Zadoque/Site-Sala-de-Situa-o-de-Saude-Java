@@ -120,6 +120,17 @@ de branches e 70,94% de métodos. O PIT também passou com 115 de 191 mutações
 mortas (60%) e test strength de 91%. As 65 mutações sem cobertura permanecem
 indicadores para a próxima análise; não foram ocultadas por exclusões amplas.
 
+Com a execução HTTP e PostgreSQL real, a medição oficial do `clean verify`
+passou a ser 77,12% de linhas, 69,05% de branches e 74,38% de métodos. Os
+relatórios separados registraram 67,64%/64,68%/64,04% para unitários e
+21,11%/14,29%/21,18% para integração.
+
+Também foram adicionados três testes `@WebMvcTest` com `MockMvc` e um teste
+`EpidemiologyRepositoryPostgresIT` com PostgreSQL 16 via Testcontainers. O
+contrato HTTP e a persistência real estão cobertos; autorização completa por
+JWT permanece como próximo cenário, pois os testes HTTP atuais desabilitam os
+filtros para isolar o contrato do controller.
+
 ### Ciclo 5 — força dos testes
 
 - executar PIT nos services de autenticação e analytics;
