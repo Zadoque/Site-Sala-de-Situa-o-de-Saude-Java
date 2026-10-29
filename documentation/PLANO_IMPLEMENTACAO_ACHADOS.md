@@ -88,13 +88,18 @@ falhar sem depender de probabilidade.
 
 ### P0.6 — probes de saúde funcionais
 
+Status: concluído no incremento `fix(ops): expose actuator health probes`.
+
 - liberar liveness e readiness explicitamente;
 - manter endpoints de negócio protegidos;
 - iniciar a imagem com dependências de teste;
 - executar smoke test real dos endpoints de saúde.
 
 Critério de aceite: o healthcheck configurado no Docker passa em uma instância
-saudável sem credenciais e endpoints de negócio continuam protegidos.
+saudável sem credenciais e endpoints de negócio continuam protegidos. As
+probes foram testadas por HTTP com PostgreSQL real em container; liveness e
+readiness retornaram 200 e um endpoint administrativo sem credencial retornou
+401.
 
 ## P1 — testes que comprovam comportamento
 

@@ -2,6 +2,7 @@ package com.example.nss.integration;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.nss.entity.AccountType;
@@ -23,6 +24,19 @@ class JwtAuthenticationIntegrationIT {
   @Autowired MockMvc mockMvc;
   @Autowired JwtService jwtService;
   @Autowired UserRepository users;
+
+  @Test
+  void exposesLivenessAndReadinessProbesWithoutAuthentication() throws Exception {
+    mockMvc
+        .perform(get("/actuator/health/liveness"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("UP"));
+
+    mockMvc
+        .perform(get("/actuator/health/readiness"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("UP"));
+  }
 
   @Test
   void acceptsAValidJwtForAnAdminEndpoint() throws Exception {
