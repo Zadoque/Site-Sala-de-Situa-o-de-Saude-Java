@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  verify:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -14,4 +14,5 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-      - run: ./mvnw verify
+      - name: Run tests and quality gates
+        run: ./mvnw -B verify
