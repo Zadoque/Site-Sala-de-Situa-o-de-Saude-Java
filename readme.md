@@ -54,3 +54,12 @@ O bairro é o bairro da notificação derivado da unidade notificadora via CNES,
 ## Testes
 
 `./mvnw test` usa H2 em profile de teste e não depende de variáveis secretas. A validação PostgreSQL deve usar o schema real da pipeline e dataset mínimo controlado, sem apagar volumes nem publicar dados SINAN.
+
+## Qualidade do código
+
+`./mvnw verify` valida a formatação com Spotless e as regras de estilo com
+Checkstyle. Para formatar os arquivos localmente antes do commit, execute:
+
+```bash
+./mvnw spotless:apply
+```

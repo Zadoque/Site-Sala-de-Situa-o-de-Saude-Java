@@ -1,3 +1,6 @@
 package com.example.demo.entity;
 
-public enum AccountType { ADMIN, USER }
+public enum AccountType {
+  ADMIN,
+  USER
+}

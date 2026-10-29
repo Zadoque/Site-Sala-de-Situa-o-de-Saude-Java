@@ -1,42 +1,56 @@
 package com.example.demo.analytics;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.example.demo.analytics.api.EpidemiologyFilter;
 import com.example.demo.analytics.api.Geography;
 import com.example.demo.analytics.repository.EpidemiologyRepository;
 import com.example.demo.analytics.service.TerritoryCatalog;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import java.util.UUID;
-import static org.junit.jupiter.api.Assertions.*;
 
 class EpidemiologyRepositoryTest {
-    @Test
-    void invalidIdsAndStatusesNeverCountAsMapped() {
-        var jdbc = new JdbcTemplate(new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", ""));
-        jdbc.execute("CREATE SCHEMA analytics");
-        jdbc.execute("CREATE TABLE analytics.fato_casos (cd_mun VARCHAR, notification_district_id VARCHAR, notification_neighborhood_id VARCHAR, notification_territory_status VARCHAR, cases_total INT, cd_sexo VARCHAR)");
-        var catalog = new TerritoryCatalog();
-        String district = "CG_DIST_SEDE";
-        String neighborhood = catalog.forGeography("3301009", district, "NEIGHBORHOOD").getFirst().territoryId();
-        Object[][] rows = {
-            {district, neighborhood, "NOTIFICATION_NEIGHBORHOOD", 3},
-            {district, null, "NOTIFICATION_DISTRICT_ONLY", 2},
-            {"NaN", "NaN", "UNMAPPED_NOTIFICATION_UNIT", 7},
-            {"UNKNOWN", null, "NOTIFICATION_DISTRICT_ONLY", 11},
-            {district, neighborhood, "UNMAPPED_NOTIFICATION_UNIT", 13},
-            {null, null, "UNMAPPED_NOTIFICATION_UNIT", 17}
-        };
-        for (Object[] row : rows) jdbc.update("INSERT INTO analytics.fato_casos VALUES ('3301009', ?, ?, ?, ?, 'F')", row);
-        var repository = new EpidemiologyRepository(jdbc, "ano", "mes");
-        var filter = new EpidemiologyFilter(null, null, null, null, null, "3301009", null);
-        var districtIds = catalog.forGeography("3301009", null, "DISTRICT").stream().map(TerritoryCatalog.Entry::territoryId).toList();
-        var totals = repository.totals(filter, Geography.DISTRICT, districtIds);
-        assertEquals(53L, totals.total());
-        assertEquals(5L, totals.mapped());
-        assertEquals(1, repository.aggregate(filter, Geography.DISTRICT, districtIds).size());
-        var neighborhoods = new EpidemiologyFilter(null, null, null, null, null, "3301009", district);
-        var neighborhoodIds = catalog.forGeography("3301009", district, "NEIGHBORHOOD").stream().map(TerritoryCatalog.Entry::territoryId).toList();
-        assertEquals(3L, repository.totals(neighborhoods, Geography.NEIGHBORHOOD, neighborhoodIds).mapped());
-    }
+  @Test
+  void invalidIdsAndStatusesNeverCountAsMapped() {
+    var jdbc =
+        new JdbcTemplate(
+            new DriverManagerDataSource(
+                "jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", ""));
+    jdbc.execute("CREATE SCHEMA analytics");
+    jdbc.execute(
+        "CREATE TABLE analytics.fato_casos (cd_mun VARCHAR, notification_district_id VARCHAR, notification_neighborhood_id VARCHAR, notification_territory_status VARCHAR, cases_total INT, cd_sexo VARCHAR)");
+    var catalog = new TerritoryCatalog();
+    String district = "CG_DIST_SEDE";
+    String neighborhood =
+        catalog.forGeography("3301009", district, "NEIGHBORHOOD").getFirst().territoryId();
+    Object[][] rows = {
+      {district, neighborhood, "NOTIFICATION_NEIGHBORHOOD", 3},
+      {district, null, "NOTIFICATION_DISTRICT_ONLY", 2},
+      {"NaN", "NaN", "UNMAPPED_NOTIFICATION_UNIT", 7},
+      {"UNKNOWN", null, "NOTIFICATION_DISTRICT_ONLY", 11},
+      {district, neighborhood, "UNMAPPED_NOTIFICATION_UNIT", 13},
+      {null, null, "UNMAPPED_NOTIFICATION_UNIT", 17}
+    };
+    for (Object[] row : rows)
+      jdbc.update("INSERT INTO analytics.fato_casos VALUES ('3301009', ?, ?, ?, ?, 'F')", row);
+    var repository = new EpidemiologyRepository(jdbc, "ano", "mes");
+    var filter = new EpidemiologyFilter(null, null, null, null, null, "3301009", null);
+    var districtIds =
+        catalog.forGeography("3301009", null, "DISTRICT").stream()
+            .map(TerritoryCatalog.Entry::territoryId)
+            .toList();
+    var totals = repository.totals(filter, Geography.DISTRICT, districtIds);
+    assertEquals(53L, totals.total());
+    assertEquals(5L, totals.mapped());
+    assertEquals(1, repository.aggregate(filter, Geography.DISTRICT, districtIds).size());
+    var neighborhoods = new EpidemiologyFilter(null, null, null, null, null, "3301009", district);
+    var neighborhoodIds =
+        catalog.forGeography("3301009", district, "NEIGHBORHOOD").stream()
+            .map(TerritoryCatalog.Entry::territoryId)
+            .toList();
+    assertEquals(
+        3L, repository.totals(neighborhoods, Geography.NEIGHBORHOOD, neighborhoodIds).mapped());
+  }
 }

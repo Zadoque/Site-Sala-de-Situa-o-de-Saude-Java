@@ -13,38 +13,37 @@ import lombok.Setter;
 @AllArgsConstructor
 @Table(name = "users")
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(name = "nome", length = 100)
-    private String nome;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
+  @Column(name = "nome", length = 100)
+  private String nome;
 
-    @Column(name = "email", nullable = false, unique = true, length = 254)
-    private String email;
+  @Column(name = "email", nullable = false, unique = true, length = 254)
+  private String email;
 
+  @Column(name = "password", length = 255)
+  private String password;
 
-    @Column(name = "password", length = 255)
-    private String password;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "account_type", nullable = false, length = 10)
+  private AccountType accountType = AccountType.USER;
 
+  @Column(name = "ativo", nullable = false)
+  private boolean ativo = true;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "account_type", nullable = false, length = 10)
-    private AccountType accountType = AccountType.USER;
+  @Column(name = "created_at", nullable = false)
+  private java.time.Instant createdAt = java.time.Instant.now();
 
-    @Column(name = "ativo", nullable = false)
-    private boolean ativo = true;
+  @Column(name = "updated_at", nullable = false)
+  private java.time.Instant updatedAt = java.time.Instant.now();
 
-    @Column(name = "created_at", nullable = false)
-    private java.time.Instant createdAt = java.time.Instant.now();
+  @Column(name = "password_created_at")
+  private java.time.Instant passwordCreatedAt;
 
-    @Column(name = "updated_at", nullable = false)
-    private java.time.Instant updatedAt = java.time.Instant.now();
-
-    @Column(name = "password_created_at")
-    private java.time.Instant passwordCreatedAt;
-
-    @PreUpdate
-    void touch() { updatedAt = java.time.Instant.now(); }
-
+  @PreUpdate
+  void touch() {
+    updatedAt = java.time.Instant.now();
+  }
 }

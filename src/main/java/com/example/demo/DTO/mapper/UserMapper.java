@@ -9,10 +9,10 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    UserResponse toResponse(User user);
+  UserResponse toResponse(User user);
 
-    @Mapping(target = "name", source = "user.nome")
-    @Mapping(target = "active", source = "user.ativo")
-    @Mapping(target = "firstAccessPending", source = "firstAccessPending")
-    ManagedUserResponse toManagedResponse(User user, boolean firstAccessPending);
+  @Mapping(target = "name", source = "user.nome")
+  @Mapping(target = "active", source = "user.ativo")
+  @Mapping(target = "firstAccessPending", source = "firstAccessPending")
+  ManagedUserResponse toManagedResponse(User user, boolean firstAccessPending);
 }

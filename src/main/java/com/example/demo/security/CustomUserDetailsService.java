@@ -12,21 +12,22 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-    @Override
-    public UserDetails loadUserByUsername(String email)
-            throws UsernameNotFoundException {
+  @Override
+  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        User user = userRepository.findByEmailIgnoreCase(EmailNormalizer.normalize(email))
-                .orElseThrow(() ->
-                        new UsernameNotFoundException(
-                                "Usuário não encontrado"
-                        ));
+    User user =
+        userRepository
+            .findByEmailIgnoreCase(EmailNormalizer.normalize(email))
+            .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
-        if (user.getPassword() == null) throw new UsernameNotFoundException("Conta ainda não configurada");
-        return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
-                .password(user.getPassword()).roles(user.getAccountType().name())
-                .disabled(!user.isAtivo()).build();
-    }
+    if (user.getPassword() == null)
+      throw new UsernameNotFoundException("Conta ainda não configurada");
+    return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
+        .password(user.getPassword())
+        .roles(user.getAccountType().name())
+        .disabled(!user.isAtivo())
+        .build();
+  }
 }
