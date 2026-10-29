@@ -142,8 +142,13 @@ login é bloqueado e revogar sessões de acordo com P0.4.
 
 ### P1.5 — unicidade normalizada de e-mail
 
+Status: concluído no incremento `fix(user): enforce normalized email uniqueness`.
+
 Auditar colisões, normalizar dados e criar índice único compatível com a
-normalização adotada. Testar convites concorrentes no PostgreSQL.
+normalização adotada. A migração V6 falha se encontrar colisões após
+`trim`/`lower`, normaliza os valores existentes e cria um índice único por
+`LOWER(email)`. O service traduz violações concorrentes para conflito de
+cadastro, validado com PostgreSQL e Testcontainers.
 
 ### P1.6 — contrato web
 

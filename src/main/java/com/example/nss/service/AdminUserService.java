@@ -10,6 +10,7 @@ import com.example.nss.repository.UserRepository;
 import com.example.nss.security.EmailNormalizer;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +53,12 @@ public class AdminUserService {
     user.setAtivo(true);
     user.setCreatedAt(Instant.now());
     user.setUpdatedAt(Instant.now());
-    User saved = users.save(user);
+    User saved;
+    try {
+      saved = users.save(user);
+    } catch (DataIntegrityViolationException exception) {
+      throw new IllegalArgumentException("E-mail já cadastrado", exception);
+    }
     firstAccess.issue(saved);
     return view(saved);
   }
