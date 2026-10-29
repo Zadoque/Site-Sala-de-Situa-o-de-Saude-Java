@@ -1,4 +1,8 @@
 spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  main:
+    keep-alive: true
   config:
     import: optional:file:.env.local[.properties]
   docker:
@@ -90,5 +94,10 @@ analytics:
     month-column: ${ANALYTICS_MONTH_COLUMN:mes}
 
 jwt:
-  secret: ${JWT_SECRET:ZmFrZS1kZXZlbG9wbWVudC1zZWNyZXQtdGhhdC1pcy1sb25nLWVub3VnaC0zMg==}
+  # Never use a development fallback. Tests provide this value through
+  # application-test.yml and local development must configure JWT_SECRET.
+  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:3600000}
+
+server:
+  shutdown: graceful

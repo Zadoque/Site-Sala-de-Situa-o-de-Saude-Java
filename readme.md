@@ -69,3 +69,6 @@ O JaCoCo coleta cobertura durante `test` e `verify` e publica relatórios HTML,
 XML e CSV em `target/site/jacoco/`, com visões separadas em `unit/` e
 `integration/`. O planejamento incremental está em
 [documentation/PLANEJAMENTO_TESTES.md](documentation/PLANEJAMENTO_TESTES.md).
+
+O checklist de deploy, smoke test, backup/restauração, rollback e observabilidade
+está em [documentation/OPERACAO_PRODUCAO.md](documentation/OPERACAO_PRODUCAO.md).
