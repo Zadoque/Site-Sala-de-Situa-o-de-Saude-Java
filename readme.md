@@ -11,8 +11,35 @@ export ANALYTICS_DATASOURCE_URL=jdbc:postgresql://localhost:5432/situacao_saude
 export ANALYTICS_DATASOURCE_USERNAME=nss
 export ANALYTICS_DATASOURCE_PASSWORD='...'
 export JWT_SECRET='base64-com-pelo-menos-32-bytes'
-./mvnw spring-boot:run
+./mvnw -Pdev spring-boot:run
 ```
+
+O perfil Maven `dev` adiciona somente a integração do Spring Boot com o
+`compose.yaml`. Ele é destinado à execução local e não é ativado no Docker.
+
+## Dependências por ambiente
+
+- **Produção/Docker:** o `Dockerfile` compila a aplicação com Java 21 e gera
+  uma imagem final somente com o JRE e o JAR empacotado. As dependências de
+  runtime da aplicação (Spring Web, JPA, PostgreSQL, segurança, JWT, Flyway,
+  Actuator e métricas) são empacotadas nesse JAR.
+- **Desenvolvimento local:** `./mvnw -Pdev spring-boot:run` habilita o starter
+  `spring-boot-docker-compose`, que permite ao Spring iniciar o
+  `compose.yaml` automaticamente.
+- **Testes e build/CI:** `./mvnw test` ou `./mvnw verify` usam dependências com
+  escopo `test` somente durante a compilação e execução dos testes. O perfil
+  `dev` não é ativado no CI nem no build da imagem.
+- **Compilação:** MapStruct e Lombok têm escopo `provided` e seus processadores
+  geram o código durante o build; eles não são necessários em runtime.
+
+Para executar tudo via Docker, use:
+
+```bash
+docker compose up --build
+```
+
+Nesse fluxo o Compose é executado externamente pelo Docker, portanto o
+starter `spring-boot-docker-compose` não precisa estar na imagem final.
 
 O compose usa o PostgreSQL configurado pela pipeline por padrão e não cria um `analytics-db` incompatível. O usuário analítico deve ser somente leitura. `CORS_ALLOWED_ORIGINS` e `SECURE_COOKIES` são explícitos para produção.
 
