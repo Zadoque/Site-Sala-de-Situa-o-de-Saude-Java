@@ -67,6 +67,14 @@ integração em uma meta artificial.
 - testar primeiro acesso e reset de senha;
 - testar autorização administrativa e respostas HTTP.
 
+Status: concluído. A cobertura global passou para 58,15% de linhas, 47,22% de
+branches e 52,22% de métodos. O ciclo adicionou cenários de falha de login,
+principal inválido, refresh, logout, rotação de sessão, primeiro acesso e
+carregamento do usuário autenticado.
+
+Próxima referência para o ciclo seguinte: 63,15% de linhas, 52,22% de
+branches e 57,22% de métodos.
+
 ### Ciclo 3 — analytics (+5 p.p.)
 
 - cobrir filtros por doença, período, sexo e faixa etária;
