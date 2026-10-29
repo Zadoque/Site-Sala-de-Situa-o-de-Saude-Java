@@ -3,9 +3,11 @@ package com.example.nss.service;
 import com.example.nss.exception.RateLimitExceededException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -15,35 +17,42 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class AuthRateLimiter {
-  private final Map<String, AttemptWindow> attempts = new ConcurrentHashMap<>();
+  private final Map<String, AttemptWindow> attempts = new HashMap<>();
   private final int loginMaximum;
   private final int resetMaximum;
   private final Duration window;
+  private final int maximumEntries;
 
+  @Autowired
   public AuthRateLimiter(
       @Value("${api.auth.rate-limit.login-maximum:5}") int loginMaximum,
       @Value("${api.auth.rate-limit.reset-maximum:3}") int resetMaximum,
-      @Value("${api.auth.rate-limit.window-seconds:900}") long windowSeconds) {
+      @Value("${api.auth.rate-limit.window-seconds:900}") long windowSeconds,
+      @Value("${api.auth.rate-limit.maximum-entries:10000}") int maximumEntries) {
     this.loginMaximum = loginMaximum;
     this.resetMaximum = resetMaximum;
     this.window = Duration.ofSeconds(windowSeconds);
+    this.maximumEntries = maximumEntries;
   }
 
-  public void checkLogin(String email) {
+  public AuthRateLimiter(int loginMaximum, int resetMaximum, long windowSeconds) {
+    this(loginMaximum, resetMaximum, windowSeconds, 10_000);
+  }
+
+  public synchronized void registerLoginAttempt(String email) {
+    reserve("login", email, loginMaximum);
+  }
+
+  public synchronized void checkLogin(String email) {
     check("login", email, loginMaximum);
   }
 
-  public void loginFailed(String email) {
-    increment("login", email);
-  }
-
-  public void loginSucceeded(String email) {
+  public synchronized void loginSucceeded(String email) {
     attempts.remove(key("login", email));
   }
 
-  public void registerPasswordResetRequest(String email) {
-    check("password-reset", email, resetMaximum);
-    increment("password-reset", email);
+  public synchronized void registerPasswordResetRequest(String email) {
+    reserve("password-reset", email, resetMaximum);
   }
 
   private void check(String operation, String email, int maximum) {
@@ -59,20 +68,48 @@ public class AuthRateLimiter {
     }
   }
 
-  private void increment(String operation, String email) {
+  private void reserve(String operation, String email, int maximum) {
     String key = key(operation, email);
-    attempts.compute(
-        key,
-        (ignored, previous) -> {
-          if (previous == null || expired(previous)) {
-            return new AttemptWindow(1, Instant.now());
-          }
-          return new AttemptWindow(previous.count + 1, previous.startedAt);
-        });
+    removeExpiredAttempts();
+    AttemptWindow current = attempts.get(key);
+    if (current != null && current.count >= maximum) {
+      throw new RateLimitExceededException();
+    }
+    if (current == null) {
+      evictOldestIfNecessary();
+      attempts.put(key, new AttemptWindow(1, Instant.now()));
+    } else {
+      attempts.put(key, new AttemptWindow(current.count + 1, current.startedAt));
+    }
+  }
+
+  private void removeExpiredAttempts() {
+    Instant now = Instant.now();
+    Iterator<Map.Entry<String, AttemptWindow>> iterator = attempts.entrySet().iterator();
+    while (iterator.hasNext()) {
+      if (expired(iterator.next().getValue(), now)) iterator.remove();
+    }
+  }
+
+  private void evictOldestIfNecessary() {
+    if (maximumEntries <= 0 || attempts.size() < maximumEntries) return;
+    String oldestKey = null;
+    Instant oldest = Instant.MAX;
+    for (Map.Entry<String, AttemptWindow> entry : attempts.entrySet()) {
+      if (entry.getValue().startedAt.isBefore(oldest)) {
+        oldest = entry.getValue().startedAt;
+        oldestKey = entry.getKey();
+      }
+    }
+    if (oldestKey != null) attempts.remove(oldestKey);
   }
 
   private boolean expired(AttemptWindow attempt) {
-    return attempt.startedAt.plus(window).isBefore(Instant.now());
+    return expired(attempt, Instant.now());
+  }
+
+  private boolean expired(AttemptWindow attempt, Instant now) {
+    return !attempt.startedAt.plus(window).isAfter(now);
   }
 
   private String key(String operation, String email) {

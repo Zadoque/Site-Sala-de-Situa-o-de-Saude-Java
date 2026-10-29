@@ -75,7 +75,7 @@ public class FirstAccessService {
     token.setExpiresAt(Instant.now().plus(Duration.ofSeconds(expirationSeconds)));
     tokens.save(token);
     String link = frontendUrl.replaceAll("/$", "") + "/primeiro-acesso?token=" + raw;
-    mail.sendText(
+    mail.sendTextAfterCommit(
         user.getEmail(),
         "Convite de primeiro acesso ao NSS",
         "Acesse o NSS pelo link abaixo para criar seu nome e senha:\n\n"
@@ -98,7 +98,7 @@ public class FirstAccessService {
     token.setExpiresAt(Instant.now().plus(Duration.ofSeconds(expirationSeconds)));
     tokens.save(token);
     String link = frontendUrl.replaceAll("/$", "") + "/redefinir-senha?token=" + raw;
-    mail.sendText(
+    mail.sendTextAfterCommit(
         user.getEmail(),
         "Redefinição de senha do NSS",
         "Use o link abaixo para criar uma nova senha:\n\n"

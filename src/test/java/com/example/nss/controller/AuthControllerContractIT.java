@@ -314,7 +314,7 @@ class AuthControllerContractIT {
                 .content("{\"email\":\"user@nss.test\",\"password\":\"wrong\"}"))
         .andExpect(status().isUnauthorized());
 
-    verify(rateLimiter).loginFailed("user@nss.test");
+    verify(rateLimiter).registerLoginAttempt("user@nss.test");
   }
 
   @Test

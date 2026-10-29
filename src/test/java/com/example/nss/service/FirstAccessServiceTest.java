@@ -49,7 +49,7 @@ class FirstAccessServiceTest {
     ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
     org.mockito.Mockito.verify(tokens).save(tokenCaptor.capture());
     org.mockito.Mockito.verify(mail)
-        .sendText(
+        .sendTextAfterCommit(
             org.mockito.ArgumentMatchers.eq("deterministic@nss.test"),
             org.mockito.ArgumentMatchers.anyString(),
             bodyCaptor.capture());
@@ -170,7 +170,7 @@ class FirstAccessServiceTest {
     org.mockito.Mockito.verify(tokens).delete(previous);
     org.mockito.Mockito.verify(tokens).flush();
     org.mockito.Mockito.verify(mail)
-        .sendText(
+        .sendTextAfterCommit(
             org.mockito.ArgumentMatchers.eq("invite@nss.test"),
             org.mockito.ArgumentMatchers.contains("Convite"),
             org.mockito.ArgumentMatchers.contains("primeiro-acesso"));
@@ -209,7 +209,7 @@ class FirstAccessServiceTest {
     org.mockito.Mockito.verify(tokens).delete(previous);
     org.mockito.Mockito.verify(tokens).flush();
     org.mockito.Mockito.verify(mail)
-        .sendText(
+        .sendTextAfterCommit(
             org.mockito.ArgumentMatchers.eq("reset@nss.test"),
             org.mockito.ArgumentMatchers.contains("Redefinição"),
             org.mockito.ArgumentMatchers.contains("redefinir-senha"));
@@ -347,7 +347,7 @@ class FirstAccessServiceTest {
     assertEquals(23L, invitation.id());
     org.mockito.Mockito.verify(tokens).save(old);
     org.mockito.Mockito.verify(mail)
-        .sendText(
+        .sendTextAfterCommit(
             org.mockito.ArgumentMatchers.eq("renew@nss.test"),
             org.mockito.ArgumentMatchers.any(),
             org.mockito.ArgumentMatchers.any());

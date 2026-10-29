@@ -65,6 +65,7 @@ api:
       login-maximum: ${AUTH_RATE_LIMIT_LOGIN_MAXIMUM:5}
       reset-maximum: ${AUTH_RATE_LIMIT_RESET_MAXIMUM:3}
       window-seconds: ${AUTH_RATE_LIMIT_WINDOW_SECONDS:900}
+      maximum-entries: ${AUTH_RATE_LIMIT_MAXIMUM_ENTRIES:10000}
 
 management:
   endpoints:

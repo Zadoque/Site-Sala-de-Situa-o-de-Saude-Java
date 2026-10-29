@@ -89,7 +89,7 @@ class AuthControllerTest {
         BadCredentialsException.class,
         () -> controller.login(new LoginRequest("user@example.com", "wrong"), response));
 
-    verify(rateLimiter).loginFailed("user@example.com");
+    verify(rateLimiter).registerLoginAttempt("user@example.com");
     verify(rateLimiter, never()).loginSucceeded(any());
   }
 

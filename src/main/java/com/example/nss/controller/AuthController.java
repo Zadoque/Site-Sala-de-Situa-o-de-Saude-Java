@@ -107,7 +107,7 @@ public class AuthController {
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> login(
       @Valid @RequestBody LoginRequest request, HttpServletResponse response) {
-    rateLimiter.checkLogin(request.email());
+    rateLimiter.registerLoginAttempt(request.email());
     String normalizedEmail = EmailNormalizer.normalize(request.email());
     Authentication authenticationRequest =
         new UsernamePasswordAuthenticationToken(normalizedEmail, request.password());
@@ -116,7 +116,6 @@ public class AuthController {
     try {
       authenticationResult = authenticationManager.authenticate(authenticationRequest);
     } catch (AuthenticationException exception) {
-      rateLimiter.loginFailed(request.email());
       throw exception;
     }
     rateLimiter.loginSucceeded(request.email());

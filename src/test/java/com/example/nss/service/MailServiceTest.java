@@ -7,6 +7,8 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
 class MailServiceTest {
   @Test
@@ -33,6 +35,25 @@ class MailServiceTest {
     ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
     verify(sender).send(captor.capture());
     org.junit.jupiter.api.Assertions.assertNull(captor.getValue().getFrom());
+  }
+
+  @Test
+  void sendsOnlyAfterTheCurrentTransactionCommits() {
+    JavaMailSender sender = org.mockito.Mockito.mock(JavaMailSender.class);
+    MailService service = new MailService(sender);
+    TransactionSynchronizationManager.initSynchronization();
+
+    try {
+      service.sendTextAfterCommit("user@example.com", "Subject", "Body");
+      org.mockito.Mockito.verifyNoInteractions(sender);
+
+      TransactionSynchronizationUtils.invokeAfterCommit(
+          TransactionSynchronizationManager.getSynchronizations());
+
+      verify(sender).send(org.mockito.ArgumentMatchers.any(SimpleMailMessage.class));
+    } finally {
+      TransactionSynchronizationManager.clearSynchronization();
+    }
   }
 
   private static boolean matches(SimpleMailMessage message) {

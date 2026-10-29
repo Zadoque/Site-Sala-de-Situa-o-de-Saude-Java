@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Serviço de envio de e-mails transacionais.
@@ -30,5 +32,20 @@ public class MailService {
     message.setSubject(subject);
     message.setText(body);
     mailSender.send(message);
+  }
+
+  public void sendTextAfterCommit(String recipient, String subject, String body) {
+    Runnable send = () -> sendText(recipient, subject, body);
+    if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+      send.run();
+      return;
+    }
+    TransactionSynchronizationManager.registerSynchronization(
+        new TransactionSynchronization() {
+          @Override
+          public void afterCommit() {
+            send.run();
+          }
+        });
   }
 }

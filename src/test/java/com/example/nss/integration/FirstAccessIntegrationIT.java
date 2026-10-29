@@ -104,7 +104,7 @@ class FirstAccessIntegrationIT {
     assertEquals("PASSWORD_RESET", token.getPurpose());
     assertEquals("PENDING", token.getStatus());
     org.mockito.Mockito.verify(mail)
-        .sendText(
+        .sendTextAfterCommit(
             org.mockito.ArgumentMatchers.eq("password-request-http@nss.test"),
             org.mockito.ArgumentMatchers.contains("Redefinição"),
             org.mockito.ArgumentMatchers.any());

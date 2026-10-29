@@ -169,8 +169,26 @@ integração; PIT passou com 182/193 mutações eliminadas e força de teste de
 
 ### P1.7 — rate limit e e-mail
 
-Limpar o mapa de tentativas, documentar o limite single-node ou migrá-lo para
-um armazenamento compartilhado, e definir envio de e-mail após commit.
+Status: concluído no incremento `fix(auth): make rate limiting atomic and post-commit mail`.
+
+O rate limit agora reserva a tentativa e incrementa o contador atomicamente sob
+concorrência, tanto para login quanto para solicitação de reset. As chaves
+expiradas são removidas durante as reservas e o mapa possui limite configurável
+por `api.auth.rate-limit.maximum-entries` (padrão 10.000), com eviction da
+entrada mais antiga quando necessário. A proteção continua sendo single-node;
+ambientes com múltiplas instâncias ainda precisam de armazenamento
+compartilhado, como Redis, para uma política global.
+
+O envio de convite e reset foi movido para `afterCommit`: a transação grava o
+token antes de publicar o e-mail, evitando que uma falha SMTP faça rollback do
+estado ou envie um link para uma alteração não persistida. Fora de uma
+transação, o serviço mantém envio imediato para usos síncronos controlados.
+Falhas de SMTP após o commit não são reprocessadas automaticamente; devem ser
+monitoradas e serão tratadas por outbox/retry em uma evolução operacional.
+
+Validação: `./mvnw -B verify` passou com 99 testes unitários e 48 testes de
+integração; PIT passou com 189/210 mutações eliminadas e força de teste de
+93%.
 
 ## P2 — migrações e arquitetura
 
