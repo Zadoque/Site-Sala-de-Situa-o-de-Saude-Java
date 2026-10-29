@@ -1,7 +1,9 @@
 package com.example.demo.service;
 
+import com.example.demo.DTO.mapper.UserMapper;
 import com.example.demo.DTO.request.AccountInvitationRequest;
 import com.example.demo.DTO.response.ManagedUserResponse;
+import com.example.demo.DTO.response.UserPageResponse;
 import com.example.demo.entity.AccountType;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
@@ -16,13 +18,14 @@ public class AdminUserService {
     private final UserRepository users;
     private final FirstAccessService firstAccess;
     private final RefreshSessionService refreshSessions;
+    private final UserMapper mapper;
 
-    public com.example.demo.DTO.response.UserPageResponse search(String search, int page, int size) {
+    public UserPageResponse search(String search, int page, int size) {
         int safeSize = Math.min(Math.max(size, 1), 60);
         org.springframework.data.domain.Page<User> result = search == null || search.isBlank()
                 ? users.findAll(org.springframework.data.domain.PageRequest.of(page, safeSize, org.springframework.data.domain.Sort.by("email").ascending()))
                 : users.findByNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(search, search, org.springframework.data.domain.PageRequest.of(page, safeSize, org.springframework.data.domain.Sort.by("email").ascending()));
-        return new com.example.demo.DTO.response.UserPageResponse(result.getContent().stream().map(this::view).toList(), result.getNumber(), result.getSize(), result.hasNext(), result.getTotalElements());
+        return new UserPageResponse(result.getContent().stream().map(this::view).toList(), result.getNumber(), result.getSize(), result.hasNext(), result.getTotalElements());
     }
 
     @Transactional
@@ -47,5 +50,7 @@ public class AdminUserService {
     public java.util.List<com.example.demo.DTO.response.InvitationResponse> invitations() { return firstAccess.pendingInvitations(); }
     public com.example.demo.DTO.response.InvitationResponse renewInvitation(Long id) { return firstAccess.renew(id); }
     public void cancelInvitation(Long id) { firstAccess.cancel(id); }
-    private ManagedUserResponse view(User u) { return new ManagedUserResponse(u.getId(), u.getEmail(), u.getNome(), u.getAccountType(), u.isAtivo(), firstAccess.pending(u), u.getPasswordCreatedAt()); }
+    private ManagedUserResponse view(User user) {
+        return mapper.toManagedResponse(user, firstAccess.pending(user));
+    }
 }

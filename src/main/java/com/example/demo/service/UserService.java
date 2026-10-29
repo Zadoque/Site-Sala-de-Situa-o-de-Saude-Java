@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.DTO.mapper.UserMapper;
 import com.example.demo.DTO.response.UserResponse;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
@@ -11,8 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
     private final UserRepository repository;
     private final FirstAccessService firstAccessService;
+    private final UserMapper mapper;
+
     public UserResponse getByEmail(String email) {
-        return repository.findByEmailIgnoreCase(email).map(this::response)
+        return repository.findByEmailIgnoreCase(email).map(mapper::toResponse)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
     }
 
@@ -21,6 +24,5 @@ public class UserService {
         return repository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
     }
-    public UserResponse response(User user) { return new UserResponse(user.getId(), user.getNome(), user.getEmail(), user.isAtivo()); }
     public void requestPasswordReset(String email) { repository.findByEmailIgnoreCase(email).filter(User::isAtivo).ifPresent(firstAccessService::issuePasswordReset); }
 }
