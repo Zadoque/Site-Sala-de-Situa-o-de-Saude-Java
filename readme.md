@@ -57,8 +57,9 @@ O bairro é o bairro da notificação derivado da unidade notificadora via CNES,
 
 ## Qualidade do código
 
-`./mvnw verify` valida a formatação com Spotless e as regras de estilo com
-Checkstyle. Para formatar os arquivos localmente antes do commit, execute:
+`./mvnw verify` valida a formatação com Spotless, as regras de estilo com
+Checkstyle e code smells com PMD. Para formatar os arquivos localmente antes do
+commit, execute:
 
 ```bash
 ./mvnw spotless:apply

@@ -85,7 +85,7 @@ public class AuthController {
     UserResponse user = userService.getByEmail(authentication.getName());
     boolean admin =
         authentication.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     return ResponseEntity.ok(
         new MeResponse(
             user.email(),
@@ -156,7 +156,7 @@ public class AuthController {
   }
 
   private java.util.List<String> permissions(UserDetails details) {
-    return details.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))
+    return details.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))
         ? java.util.List.of("USER_MANAGEMENT")
         : java.util.List.of();
   }

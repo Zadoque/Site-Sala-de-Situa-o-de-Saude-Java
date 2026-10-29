@@ -4,6 +4,7 @@ import com.example.demo.exception.RateLimitExceededException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class AuthRateLimiter {
-  private final ConcurrentHashMap<String, AttemptWindow> attempts = new ConcurrentHashMap<>();
+  private final Map<String, AttemptWindow> attempts = new ConcurrentHashMap<>();
   private final int loginMaximum;
   private final int resetMaximum;
   private final Duration window;

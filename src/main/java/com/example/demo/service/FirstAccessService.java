@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class FirstAccessService {
+  private static final String PENDING_STATUS = "PENDING";
   private final UserRepository users;
   private final FirstAccessTokenRepository tokens;
   private final PasswordEncoder encoder;
@@ -44,7 +45,7 @@ public class FirstAccessService {
     FirstAccessToken token = new FirstAccessToken();
     token.setUser(user);
     token.setTokenHash(hash(raw));
-    token.setStatus("PENDING");
+    token.setStatus(PENDING_STATUS);
     token.setPurpose("FIRST_ACCESS");
     token.setSentAt(Instant.now());
     token.setExpiresAt(Instant.now().plus(Duration.ofSeconds(expirationSeconds)));
@@ -67,7 +68,7 @@ public class FirstAccessService {
     FirstAccessToken token = new FirstAccessToken();
     token.setUser(user);
     token.setTokenHash(hash(raw));
-    token.setStatus("PENDING");
+    token.setStatus(PENDING_STATUS);
     token.setPurpose("PASSWORD_RESET");
     token.setSentAt(Instant.now());
     token.setExpiresAt(Instant.now().plus(Duration.ofSeconds(expirationSeconds)));
@@ -89,7 +90,7 @@ public class FirstAccessService {
             .findByTokenHash(hash(request.token()))
             .filter(
                 t ->
-                    "PENDING".equals(t.getStatus())
+                    PENDING_STATUS.equals(t.getStatus())
                         && "PASSWORD_RESET".equals(t.getPurpose())
                         && t.getExpiresAt().isAfter(Instant.now()))
             .orElseThrow(() -> new IllegalArgumentException("Link inválido ou expirado"));
@@ -113,7 +114,7 @@ public class FirstAccessService {
             .findByTokenHash(hash(request.token()))
             .filter(
                 t ->
-                    "PENDING".equals(t.getStatus())
+                    PENDING_STATUS.equals(t.getStatus())
                         && "FIRST_ACCESS".equals(t.getPurpose())
                         && t.getExpiresAt().isAfter(Instant.now()))
             .orElseThrow(() -> new IllegalArgumentException("Convite inválido ou expirado"));
@@ -134,13 +135,13 @@ public class FirstAccessService {
   public boolean pending(User user) {
     return tokens
         .findByUserId(user.getId())
-        .map(t -> "PENDING".equals(t.getStatus()) && t.getExpiresAt().isAfter(Instant.now()))
+        .map(t -> PENDING_STATUS.equals(t.getStatus()) && t.getExpiresAt().isAfter(Instant.now()))
         .orElse(false);
   }
 
   @Transactional(readOnly = true)
   public java.util.List<com.example.demo.DTO.response.InvitationResponse> pendingInvitations() {
-    return tokens.findByStatusOrderByExpiresAtAsc("PENDING").stream().map(this::view).toList();
+    return tokens.findByStatusOrderByExpiresAtAsc(PENDING_STATUS).stream().map(this::view).toList();
   }
 
   @Transactional
@@ -149,7 +150,7 @@ public class FirstAccessService {
         tokens
             .findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Convite não encontrado"));
-    if (!"PENDING".equals(old.getStatus()))
+    if (!PENDING_STATUS.equals(old.getStatus()))
       throw new IllegalArgumentException("Convite não está pendente");
     old.setStatus("CANCELLED");
     tokens.save(old);
@@ -163,7 +164,7 @@ public class FirstAccessService {
         tokens
             .findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Convite não encontrado"));
-    if ("PENDING".equals(token.getStatus())) {
+    if (PENDING_STATUS.equals(token.getStatus())) {
       token.setStatus("CANCELLED");
       tokens.save(token);
     }

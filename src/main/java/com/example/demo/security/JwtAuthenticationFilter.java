@@ -60,6 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       }
     } catch (JwtException | IllegalArgumentException | UsernameNotFoundException exception) {
       // Token inválido: a requisição continuará anônima.
+      SecurityContextHolder.clearContext();
     }
 
     filterChain.doFilter(request, response);
