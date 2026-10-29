@@ -5,6 +5,7 @@ import com.example.demo.analytics.api.CoverageStatus;
 import com.example.demo.analytics.api.EpidemiologyFilter;
 import com.example.demo.analytics.api.Geography;
 import com.example.demo.analytics.repository.EpidemiologyRepository;
+import com.example.demo.analytics.repository.EpidemiologyTotals;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,12 +29,12 @@ public class EpidemiologyService {
         if (geography == Geography.NEIGHBORHOOD && !"CG_DIST_SEDE".equals(filter.districtCode())) {
             return response(geography, filter, null, CoverageStatus.UNAVAILABLE, 0L, 0L, List.of());
         }
-        Map<String, Object> totals = repository.totals(filter, geography);
-        long total = number(totals.get("total"));
-        long mapped = number(totals.get("mapped"));
+        EpidemiologyTotals totals = repository.totals(filter, geography);
+        long total = totals.total();
+        long mapped = totals.mapped();
         List<AnalyticsResponse.TerritoryItem> items = new ArrayList<>();
         Map<String, Long> aggregates = new HashMap<>();
-        for (Map<String, Object> row : repository.aggregate(filter, geography)) aggregates.put(String.valueOf(row.get("code")), number(row.get("total")));
+        repository.aggregate(filter, geography).forEach(row -> aggregates.put(row.code(), row.total()));
         for (TerritoryCatalog.Entry entry : catalog.forGeography(filter.municipalityCode(), filter.districtCode(), geography.name())) {
             items.add(new AnalyticsResponse.TerritoryItem(entry.territoryId(), entry.name(), aggregates.getOrDefault(entry.territoryId(), 0L), entry.parentDistrictId()));
         }
@@ -56,5 +57,4 @@ public class EpidemiologyService {
                 new AnalyticsResponse.FilterResponse(f.disease(), f.year(), f.month(), f.sex(), f.ageBand(), f.municipalityCode(), f.districtCode()),
                 total, new AnalyticsResponse.Coverage(status, mapped, unmapped), items);
     }
-    private long number(Object value) { return value == null ? 0 : ((Number) value).longValue(); }
 }

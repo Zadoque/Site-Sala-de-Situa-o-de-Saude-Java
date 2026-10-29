@@ -4,8 +4,10 @@ import com.example.demo.analytics.api.AnalyticsResponse;
 import com.example.demo.analytics.api.EpidemiologyFilter;
 import com.example.demo.analytics.api.Geography;
 import com.example.demo.analytics.repository.EpidemiologyRepository;
+import com.example.demo.analytics.repository.EpidemiologyTotals;
 import com.example.demo.analytics.service.EpidemiologyService;
 import com.example.demo.analytics.service.TerritoryCatalog;
+import com.example.demo.analytics.repository.TerritoryAggregate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,8 +29,8 @@ class EpidemiologyServiceTest {
 
     @Test
     void totalOfficialIsNotCalculatedFromVisibleItems() {
-        when(repository.totals(any(), eq(Geography.DISTRICT))).thenReturn(Map.of("total", 10L, "mapped", 7L));
-        when(repository.aggregate(any(), eq(Geography.DISTRICT))).thenReturn(List.of(Map.of("code", "CG_DIST_SEDE", "total", 7L)));
+        when(repository.totals(any(), eq(Geography.DISTRICT))).thenReturn(new EpidemiologyTotals(10L, 7L));
+        when(repository.aggregate(any(), eq(Geography.DISTRICT))).thenReturn(List.of(new TerritoryAggregate("CG_DIST_SEDE", 7L)));
 
         AnalyticsResponse response = service.query(Geography.DISTRICT,
                 new EpidemiologyFilter("DENG", 2026, 3, null, null, "3301009", null));
@@ -63,7 +64,7 @@ class EpidemiologyServiceTest {
 
     @Test
     void availableZeroIsDifferentFromUnavailable() {
-        when(repository.totals(any(), eq(Geography.DISTRICT))).thenReturn(Map.of("total", 0L, "mapped", 0L));
+        when(repository.totals(any(), eq(Geography.DISTRICT))).thenReturn(new EpidemiologyTotals(0L, 0L));
         when(repository.aggregate(any(), eq(Geography.DISTRICT))).thenReturn(List.of());
 
         AnalyticsResponse response = service.query(Geography.DISTRICT,

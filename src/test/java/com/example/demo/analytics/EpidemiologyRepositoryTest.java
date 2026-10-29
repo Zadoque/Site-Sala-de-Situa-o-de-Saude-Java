@@ -31,10 +31,10 @@ class EpidemiologyRepositoryTest {
         var repository = new EpidemiologyRepository(jdbc, "ano", "mes", catalog);
         var filter = new EpidemiologyFilter(null, null, null, null, null, "3301009", null);
         var totals = repository.totals(filter, Geography.DISTRICT);
-        assertEquals(53L, ((Number) totals.get("total")).longValue());
-        assertEquals(5L, ((Number) totals.get("mapped")).longValue());
+        assertEquals(53L, totals.total());
+        assertEquals(5L, totals.mapped());
         assertEquals(1, repository.aggregate(filter, Geography.DISTRICT).size());
         var neighborhoods = new EpidemiologyFilter(null, null, null, null, null, "3301009", district);
-        assertEquals(3L, ((Number) repository.totals(neighborhoods, Geography.NEIGHBORHOOD).get("mapped")).longValue());
+        assertEquals(3L, repository.totals(neighborhoods, Geography.NEIGHBORHOOD).mapped());
     }
 }

@@ -1,7 +1,9 @@
 package com.example.demo.analytics.controller;
 
 import com.example.demo.analytics.api.*;
+import com.example.demo.analytics.repository.DiseaseRow;
 import com.example.demo.analytics.repository.EpidemiologyRepository;
+import com.example.demo.analytics.repository.MetadataRow;
 import com.example.demo.analytics.service.EpidemiologyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -29,11 +31,11 @@ public class EpidemiologyController {
     public AnalyticsResponse neighborhoods(@ModelAttribute FilterRequest request) { return service.query(Geography.NEIGHBORHOOD, request.toFilter()); }
 
     @GetMapping("/diseases")
-    public DiseaseListResponse diseases() { return new DiseaseListResponse(repository.diseases().stream().map(row -> String.valueOf(row.get("code"))).toList()); }
+    public DiseaseListResponse diseases() { return new DiseaseListResponse(repository.diseases().stream().map(DiseaseRow::code).toList()); }
 
     @GetMapping("/metadata")
     public MetadataResponse metadata() {
-        Map<Integer, List<Integer>> grouped = repository.metadata().stream().collect(Collectors.groupingBy(r -> ((Number) r.get("year")).intValue(), LinkedHashMap::new, Collectors.mapping(r -> ((Number) r.get("month")).intValue(), Collectors.toList())));
+        Map<Integer, List<Integer>> grouped = repository.metadata().stream().collect(Collectors.groupingBy(MetadataRow::year, LinkedHashMap::new, Collectors.mapping(MetadataRow::month, Collectors.toList())));
         return new MetadataResponse(new ArrayList<>(grouped.keySet()), grouped.entrySet().stream().collect(Collectors.toMap(e -> String.valueOf(e.getKey()), Map.Entry::getValue, (a,b) -> a, LinkedHashMap::new)),
                 List.of("MUNICIPALITY", "DISTRICT", "NEIGHBORHOOD"), new ArrayList<>(EpidemiologyFilter.AGE_BANDS), List.of("M", "F", "ALL"));
     }
