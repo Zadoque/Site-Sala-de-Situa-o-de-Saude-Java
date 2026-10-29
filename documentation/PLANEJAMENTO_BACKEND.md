@@ -83,10 +83,14 @@ repository dependente de service e respostas HTTP sem tipagem.
 ### Fase 5 — automatizar qualidade
 
 - `chore(quality): add spotless and checkstyle validation`
+- `chore(quality): add pmd static analysis`
+- `test(architecture): enforce controller service repository boundaries`
 - `chore(quality): add static analysis to continuous integration`
 
-Critério: formatação e regras de estilo falham no build quando violadas; o CI
-executa formatação verificada, análise estática e testes.
+Critério: Spotless formata automaticamente; Checkstyle falha o build quando o
+estilo e a indentação estão errados; PMD detecta code smells; ArchUnit impede
+dependências fora do sentido `Controller -> Service -> Repository`; o CI
+executa todas as verificações e os testes.
 
 ### Fase 6 — validar o comportamento preservado
 
@@ -106,4 +110,3 @@ token, rate limiting, autorização administrativa e contrato da API NSS v1.
 6. Adicionar Spotless, Checkstyle e análise estática ao CI.
 
 Cada etapa deve manter `./mvnw test` verde antes do próximo commit.
-
