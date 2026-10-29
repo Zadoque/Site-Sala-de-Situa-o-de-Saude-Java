@@ -131,6 +131,11 @@ contrato HTTP e a persistência real estão cobertos; autorização completa por
 JWT permanece como próximo cenário, pois os testes HTTP atuais desabilitam os
 filtros para isolar o contrato do controller.
 
+Esse cenário também foi validado com `AdminUserAuthorizationIT` usando a
+aplicação completa: acesso anônimo retorna 401, usuário sem role ADMIN retorna
+403 e usuário ADMIN acessa o endpoint. O ciclo 4 agora está concluído quanto
+aos itens de API, persistência e autorização previstos.
+
 ### Ciclo 5 — força dos testes
 
 - executar PIT nos services de autenticação e analytics;
