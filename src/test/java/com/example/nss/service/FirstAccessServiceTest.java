@@ -27,7 +27,8 @@ class FirstAccessServiceTest {
     UserRepository users = mock(UserRepository.class);
     PasswordEncoder encoder = mock(PasswordEncoder.class);
     MailService mail = mock(MailService.class);
-    FirstAccessService service = new FirstAccessService(users, tokens, encoder, mail);
+    FirstAccessService service =
+        new FirstAccessService(users, tokens, encoder, mail, mock(RefreshSessionService.class));
     User user = new User();
     user.setEmail("user@nss.test");
     user.setAtivo(false);
@@ -55,7 +56,8 @@ class FirstAccessServiceTest {
     UserRepository users = mock(UserRepository.class);
     PasswordEncoder encoder = mock(PasswordEncoder.class);
     MailService mail = mock(MailService.class);
-    FirstAccessService service = new FirstAccessService(users, tokens, encoder, mail);
+    FirstAccessService service =
+        new FirstAccessService(users, tokens, encoder, mail, mock(RefreshSessionService.class));
     User user = new User();
     user.setEmail("user@nss.test");
     FirstAccessToken token = pendingToken(user, "FIRST_ACCESS", "first-access-token");
@@ -75,7 +77,8 @@ class FirstAccessServiceTest {
     UserRepository users = mock(UserRepository.class);
     PasswordEncoder encoder = mock(PasswordEncoder.class);
     MailService mail = mock(MailService.class);
-    FirstAccessService service = new FirstAccessService(users, tokens, encoder, mail);
+    FirstAccessService service =
+        new FirstAccessService(users, tokens, encoder, mail, mock(RefreshSessionService.class));
     User user = new User();
     user.setEmail("user@nss.test");
     FirstAccessToken token = new FirstAccessToken();
@@ -103,7 +106,8 @@ class FirstAccessServiceTest {
     UserRepository users = mock(UserRepository.class);
     PasswordEncoder encoder = mock(PasswordEncoder.class);
     MailService mail = mock(MailService.class);
-    FirstAccessService service = new FirstAccessService(users, tokens, encoder, mail);
+    FirstAccessService service =
+        new FirstAccessService(users, tokens, encoder, mail, mock(RefreshSessionService.class));
     org.springframework.test.util.ReflectionTestUtils.setField(
         service, "frontendUrl", "https://app.nss.test/");
     org.springframework.test.util.ReflectionTestUtils.setField(service, "expirationSeconds", 3600L);
@@ -139,7 +143,11 @@ class FirstAccessServiceTest {
     MailService mail = mock(MailService.class);
     FirstAccessService service =
         new FirstAccessService(
-            mock(UserRepository.class), tokens, mock(PasswordEncoder.class), mail);
+            mock(UserRepository.class),
+            tokens,
+            mock(PasswordEncoder.class),
+            mail,
+            mock(RefreshSessionService.class));
     org.springframework.test.util.ReflectionTestUtils.setField(
         service, "frontendUrl", "https://app.nss.test/");
     User user = new User();
@@ -176,7 +184,8 @@ class FirstAccessServiceTest {
             mock(UserRepository.class),
             tokenRepository,
             mock(PasswordEncoder.class),
-            mock(MailService.class));
+            mock(MailService.class),
+            mock(RefreshSessionService.class));
     User user = new User();
     user.setId(12L);
     FirstAccessToken pending = pendingToken(user, "FIRST_ACCESS", "pending");
@@ -196,7 +205,8 @@ class FirstAccessServiceTest {
             mock(UserRepository.class),
             tokens,
             mock(PasswordEncoder.class),
-            mock(MailService.class));
+            mock(MailService.class),
+            mock(RefreshSessionService.class));
     User user = new User();
     user.setId(13L);
     user.setEmail("pending@nss.test");
@@ -220,8 +230,9 @@ class FirstAccessServiceTest {
     FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
     UserRepository users = mock(UserRepository.class);
     PasswordEncoder encoder = mock(PasswordEncoder.class);
+    RefreshSessionService refreshSessions = mock(RefreshSessionService.class);
     FirstAccessService service =
-        new FirstAccessService(users, tokens, encoder, mock(MailService.class));
+        new FirstAccessService(users, tokens, encoder, mock(MailService.class), refreshSessions);
     User user = new User();
     user.setEmail("reset@nss.test");
     user.setAtivo(false);
@@ -241,6 +252,7 @@ class FirstAccessServiceTest {
     org.junit.jupiter.api.Assertions.assertNotNull(token.getPasswordCreatedAt());
     org.mockito.Mockito.verify(users).save(user);
     org.mockito.Mockito.verify(tokens).save(token);
+    org.mockito.Mockito.verify(refreshSessions).revokeAllForUser(user.getId());
   }
 
   @Test
@@ -251,7 +263,8 @@ class FirstAccessServiceTest {
             mock(UserRepository.class),
             tokens,
             mock(PasswordEncoder.class),
-            mock(MailService.class));
+            mock(MailService.class),
+            mock(RefreshSessionService.class));
     User user = new User();
     user.setEmail("reset@nss.test");
     FirstAccessToken token = pendingToken(user, "PASSWORD_RESET", "expired-reset");
@@ -272,7 +285,11 @@ class FirstAccessServiceTest {
     MailService mail = mock(MailService.class);
     FirstAccessService service =
         new FirstAccessService(
-            mock(UserRepository.class), tokens, mock(PasswordEncoder.class), mail);
+            mock(UserRepository.class),
+            tokens,
+            mock(PasswordEncoder.class),
+            mail,
+            mock(RefreshSessionService.class));
     org.springframework.test.util.ReflectionTestUtils.setField(
         service, "frontendUrl", "https://app.nss.test");
     User user = new User();
@@ -305,7 +322,8 @@ class FirstAccessServiceTest {
             mock(UserRepository.class),
             tokens,
             mock(PasswordEncoder.class),
-            mock(MailService.class));
+            mock(MailService.class),
+            mock(RefreshSessionService.class));
     FirstAccessToken token = new FirstAccessToken();
     token.setStatus("COMPLETED");
     when(tokens.findById(30L)).thenReturn(Optional.of(token));
@@ -322,7 +340,8 @@ class FirstAccessServiceTest {
             mock(UserRepository.class),
             tokens,
             mock(PasswordEncoder.class),
-            mock(MailService.class));
+            mock(MailService.class),
+            mock(RefreshSessionService.class));
     FirstAccessToken token = new FirstAccessToken();
     token.setStatus("COMPLETED");
     when(tokens.findById(31L)).thenReturn(Optional.of(token));

@@ -9,8 +9,10 @@ import com.example.nss.entity.AccountType;
 import com.example.nss.entity.FirstAccessToken;
 import com.example.nss.entity.User;
 import com.example.nss.repository.FirstAccessTokenRepository;
+import com.example.nss.repository.RefreshSessionRepository;
 import com.example.nss.repository.UserRepository;
 import com.example.nss.service.MailService;
+import com.example.nss.service.RefreshSessionService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
@@ -31,6 +33,8 @@ class FirstAccessIntegrationIT {
   @Autowired MockMvc mockMvc;
   @Autowired UserRepository users;
   @Autowired FirstAccessTokenRepository tokens;
+  @Autowired RefreshSessionRepository sessions;
+  @Autowired RefreshSessionService refreshSessions;
 
   @MockitoBean MailService mail;
 
@@ -56,10 +60,11 @@ class FirstAccessIntegrationIT {
   }
 
   @Test
-  void completesPasswordResetWithoutReactivatingThePersistedAccount() throws Exception {
-    User user = persistUser("password-reset-http@nss.test", false);
+  void completesPasswordResetAndRevokesThePersistedSessions() throws Exception {
+    User user = persistUser("password-reset-http@nss.test", true);
     user.setPassword("old-password");
     users.saveAndFlush(user);
+    refreshSessions.issue(user);
     createToken(user, "password-reset-http-token", "PASSWORD_RESET");
 
     mockMvc
@@ -74,8 +79,14 @@ class FirstAccessIntegrationIT {
 
     User reset = users.findById(user.getId()).orElseThrow();
     assertNotNull(reset.getPassword());
-    assertEquals(false, reset.isAtivo());
+    assertEquals(true, reset.isAtivo());
     assertEquals("COMPLETED", tokens.findByUserId(user.getId()).orElseThrow().getStatus());
+    assertEquals(
+        1,
+        sessions.findAll().stream()
+            .filter(session -> user.getId().equals(session.getUser().getId()))
+            .filter(session -> session.getRevokedAt() != null)
+            .count());
   }
 
   @Test

@@ -60,13 +60,17 @@ antigo e tokens antigos seguem a política de transição documentada.
 
 ### P0.4 — revogação consistente de sessões
 
+Status: concluído no incremento `fix(auth): revoke sessions after password reset`.
+
 - revogar refresh sessions ao concluir reset;
 - garantir persistência da revogação quando um token expirado ou reutilizado
   gerar erro;
 - testar rotação concorrente e reutilização de refresh.
 
 Critério de aceite: reset invalida sessões anteriores e a revogação não é
-desfeita pelo rollback da resposta de erro.
+desfeita pelo rollback da resposta de erro. O reset agora chama
+`RefreshSessionService.revokeAllForUser`, com cobertura unitária e integração
+persistida.
 
 ### P0.5 — geração de tokens testável
 

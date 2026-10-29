@@ -27,6 +27,7 @@ public class FirstAccessService {
   private final FirstAccessTokenRepository tokens;
   private final PasswordEncoder encoder;
   private final MailService mail;
+  private final RefreshSessionService refreshSessions;
 
   @Value("${api.first-access.frontend-url:http://localhost:5173}")
   private String frontendUrl;
@@ -99,6 +100,7 @@ public class FirstAccessService {
       throw new IllegalArgumentException("E-mail não corresponde ao link");
     user.setPassword(encoder.encode(request.password()));
     user.setPasswordCreatedAt(Instant.now());
+    refreshSessions.revokeAllForUser(user.getId());
     users.save(user);
     invite.setStatus("COMPLETED");
     invite.setCompletedAt(Instant.now());
