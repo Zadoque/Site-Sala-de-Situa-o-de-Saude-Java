@@ -288,17 +288,17 @@
 										<limit>
 											<counter>LINE</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.48</minimum>
+											<minimum>0.90</minimum>
 										</limit>
 										<limit>
 											<counter>BRANCH</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.41</minimum>
+											<minimum>0.75</minimum>
 										</limit>
 										<limit>
 											<counter>METHOD</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.46</minimum>
+											<minimum>0.88</minimum>
 										</limit>
 									</limits>
 								</rule>
@@ -455,8 +455,8 @@
 						<param>XML</param>
 						<param>CSV</param>
 					</outputFormats>
-					<mutationThreshold>60</mutationThreshold>
-					<testStrengthThreshold>60</testStrengthThreshold>
+					<mutationThreshold>80</mutationThreshold>
+					<testStrengthThreshold>80</testStrengthThreshold>
 					<failWhenNoMutations>true</failWhenNoMutations>
 					<withHistory>true</withHistory>
 					<timestampedReports>false</timestampedReports>
