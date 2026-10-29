@@ -22,9 +22,8 @@ O JaCoCo gera os relatórios em `target/site/jacoco/` e o build impede
 regressões abaixo da linha de base atual para linhas, branches e métodos.
 
 Após o início do ciclo de API e persistência, a medição global chegou a
-69,91% de linhas, 57,14% de branches e 63,55% de métodos. Linhas e branches
-superaram a referência do ciclo; métodos ainda precisam de testes
-comportamentais adicionais.
+71,55% de linhas, 59,13% de branches e 67,98% de métodos, superando a
+referência de 5 p.p. do ciclo anterior nos três contadores.
 
 ## Classificação dos testes
 
