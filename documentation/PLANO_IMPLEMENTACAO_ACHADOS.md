@@ -192,11 +192,47 @@ integração; PIT passou com 189/210 mutações eliminadas e força de teste de
 
 ## P2 — migrações e arquitetura
 
-- preservar migrações aplicadas e criar somente versões novas;
-- testar banco vazio e atualização de banco existente no PostgreSQL;
-- escolher uma única representação de permissão;
-- proteger Controller → Service → Repository com ArchUnit;
-- garantir que contratos documentados tenham validação automatizada.
+### P2.1 — reorganização por contexto
+
+Status: concluído neste incremento.
+
+O código foi reorganizado para que `analytics` e `user` sejam contextos
+independentes dentro de `com.example.nss`. O contexto de usuário agora contém
+`api/request`, `api/response`, `api/mapper`, `domain`, `application`,
+`infrastructure`, `security`, `exception` e `web/controller`. Analytics segue
+o mesmo padrão, incluindo `exception` e `infrastructure/mapper` para o
+`EpidemiologyRowMapper`. Componentes transversais ficaram em `shared/web` e
+`shared/notification`; `NssApplication` permaneceu na raiz.
+
+O modelo JDBC `CasoResumo` foi separado do contrato HTTP
+`CasoResumoResponse`, evitando que o repositório exponha DTO de API. O
+`UserMapper` está em `user/api/mapper`, onde converte os contratos públicos
+para o domínio de usuário.
+
+### P2.2 — limites arquiteturais automatizados
+
+Status: concluído neste incremento.
+
+O ArchUnit agora valida que:
+
+- `analytics` e `user` não dependem diretamente um do outro;
+- controllers não acessam infraestrutura;
+- application não acessa web;
+- repositories não acessam web;
+- domain não depende de camadas externas;
+- api não depende de infraestrutura;
+- a direção Controller → Application → Repository não é violada.
+
+As classes de teste são excluídas da análise para evitar que a localização
+física dos testes seja confundida com dependência de produção. A regra foi
+executada com sucesso junto aos testes dos novos pacotes.
+
+### P2.3 — migrações e contratos restantes
+
+Próximos itens: preservar migrações aplicadas e criar somente versões novas,
+testar banco vazio e atualização de banco existente no PostgreSQL, escolher
+uma única representação de permissão e garantir que contratos documentados
+tenham validação automatizada.
 
 ## P3 — analytics
 

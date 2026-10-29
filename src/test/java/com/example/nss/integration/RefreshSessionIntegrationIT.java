@@ -7,12 +7,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.entity.AccountType;
-import com.example.nss.entity.RefreshSession;
-import com.example.nss.entity.User;
-import com.example.nss.repository.RefreshSessionRepository;
-import com.example.nss.repository.UserRepository;
-import com.example.nss.service.RefreshSessionService;
+import com.example.nss.user.application.RefreshSessionService;
+import com.example.nss.user.domain.AccountType;
+import com.example.nss.user.domain.RefreshSession;
+import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.repository.RefreshSessionRepository;
+import com.example.nss.user.infrastructure.repository.UserRepository;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;

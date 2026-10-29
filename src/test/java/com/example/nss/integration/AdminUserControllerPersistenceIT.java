@@ -10,9 +10,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.repository.FirstAccessTokenRepository;
-import com.example.nss.repository.UserRepository;
-import com.example.nss.service.MailService;
+import com.example.nss.shared.notification.MailService;
+import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;
+import com.example.nss.user.infrastructure.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

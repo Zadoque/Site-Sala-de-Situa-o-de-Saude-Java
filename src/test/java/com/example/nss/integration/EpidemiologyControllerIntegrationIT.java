@@ -9,12 +9,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.analytics.api.Geography;
-import com.example.nss.analytics.repository.DiseaseRow;
-import com.example.nss.analytics.repository.EpidemiologyRepository;
-import com.example.nss.analytics.repository.EpidemiologyTotals;
-import com.example.nss.analytics.repository.MetadataRow;
-import com.example.nss.analytics.repository.TerritoryAggregate;
+import com.example.nss.analytics.domain.Geography;
+import com.example.nss.analytics.infrastructure.repository.DiseaseRow;
+import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepository;
+import com.example.nss.analytics.infrastructure.repository.EpidemiologyTotals;
+import com.example.nss.analytics.infrastructure.repository.MetadataRow;
+import com.example.nss.analytics.infrastructure.repository.TerritoryAggregate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

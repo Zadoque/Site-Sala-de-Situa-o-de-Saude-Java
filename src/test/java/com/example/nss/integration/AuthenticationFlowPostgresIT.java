@@ -6,10 +6,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.entity.AccountType;
-import com.example.nss.entity.User;
-import com.example.nss.repository.UserRepository;
-import com.example.nss.security.JwtService;
+import com.example.nss.user.domain.AccountType;
+import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,7 +40,7 @@ class AuthenticationFlowPostgresIT {
   @Autowired PasswordEncoder passwordEncoder;
   @Autowired JwtService jwtService;
 
-  @MockitoBean com.example.nss.service.MailService mail;
+  @MockitoBean com.example.nss.shared.notification.MailService mail;
 
   @DynamicPropertySource
   static void databaseProperties(DynamicPropertyRegistry registry) {
