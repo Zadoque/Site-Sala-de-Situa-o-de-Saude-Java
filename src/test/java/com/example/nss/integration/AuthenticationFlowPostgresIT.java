@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -128,12 +127,10 @@ class AuthenticationFlowPostgresIT {
 
   @Test
   void rejectsExpiredAndTamperedTokensOnProtectedEndpoints() throws Exception {
-    UserDetails details =
-        org.springframework.security.core.userdetails.User.withUsername("expired@nss.test")
-            .password("ignored")
-            .roles("USER")
-            .build();
-    String expired = new JwtService(JWT_SECRET, -1).generateToken(details);
+    User expiredUser = new User();
+    expiredUser.setId(999L);
+    expiredUser.setEmail("expired@nss.test");
+    String expired = new JwtService(JWT_SECRET, -1).generateToken(expiredUser);
 
     mockMvc
         .perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + expired))

@@ -115,8 +115,9 @@ public class AuthController {
       throw new AuthenticationServiceException("A autenticação não retornou um usuário válido");
     }
 
-    String token = jwtService.generateToken(userDetails);
-    String refresh = refreshSessions.issue(userService.entityByEmail(userDetails.getUsername()));
+    com.example.nss.entity.User entity = userService.entityByEmail(userDetails.getUsername());
+    String token = jwtService.generateToken(entity);
+    String refresh = refreshSessions.issue(entity);
     addRefreshCookie(response, refresh);
     UserResponse user = userService.getByEmail(userDetails.getUsername());
     return ResponseEntity.ok(
@@ -129,7 +130,7 @@ public class AuthController {
     String token = cookie(request);
     RefreshSessionService.Rotation rotation = refreshSessions.rotateWithToken(token);
     UserDetails userDetails = userDetailsService.loadUserByUsername(rotation.user().getEmail());
-    String access = jwtService.generateToken(userDetails);
+    String access = jwtService.generateToken(rotation.user());
     addRefreshCookie(response, rotation.rawToken());
     return ResponseEntity.ok(
         new LoginResponse(

@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.nss.DTO.response.UserResponse;
 import com.example.nss.entity.User;
+import com.example.nss.security.CustomUserDetailsService;
 import com.example.nss.security.JwtService;
 import com.example.nss.service.AuthRateLimiter;
 import com.example.nss.service.FirstAccessService;
@@ -22,7 +23,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -35,7 +35,7 @@ class AuthControllerContractIT {
 
   @MockitoBean UserService userService;
   @MockitoBean AuthenticationManager authenticationManager;
-  @MockitoBean UserDetailsService userDetailsService;
+  @MockitoBean CustomUserDetailsService userDetailsService;
   @MockitoBean JwtService jwtService;
   @MockitoBean FirstAccessService firstAccessService;
   @MockitoBean RefreshSessionService refreshSessions;
@@ -109,8 +109,8 @@ class AuthControllerContractIT {
     UserResponse response = new UserResponse(7L, "User", "user@nss.test", true);
     org.mockito.Mockito.when(authentication.getPrincipal()).thenReturn(principal);
     org.mockito.Mockito.when(authenticationManager.authenticate(any())).thenReturn(authentication);
-    org.mockito.Mockito.when(jwtService.generateToken(principal)).thenReturn("access-token");
     org.mockito.Mockito.when(userService.entityByEmail("user@nss.test")).thenReturn(entity);
+    org.mockito.Mockito.when(jwtService.generateToken(entity)).thenReturn("access-token");
     org.mockito.Mockito.when(refreshSessions.issue(entity)).thenReturn("refresh-token");
     org.mockito.Mockito.when(userService.getByEmail("user@nss.test")).thenReturn(response);
 
@@ -136,6 +136,7 @@ class AuthControllerContractIT {
   @Test
   void refreshReturnsNewAccessDataAndRotatesTheRefreshCookie() throws Exception {
     User user = new User();
+    user.setId(7L);
     user.setEmail("user@nss.test");
     UserDetails principal =
         org.springframework.security.core.userdetails.User.withUsername("user@nss.test")
@@ -146,7 +147,7 @@ class AuthControllerContractIT {
         .thenReturn(new RefreshSessionService.Rotation(user, "new-token"));
     org.mockito.Mockito.when(userDetailsService.loadUserByUsername("user@nss.test"))
         .thenReturn(principal);
-    org.mockito.Mockito.when(jwtService.generateToken(principal)).thenReturn("new-access");
+    org.mockito.Mockito.when(jwtService.generateToken(user)).thenReturn("new-access");
     org.mockito.Mockito.when(userService.getByEmail("user@nss.test"))
         .thenReturn(new UserResponse(null, "User", "user@nss.test", true));
 
@@ -236,7 +237,7 @@ class AuthControllerContractIT {
     entity.setEmail("admin@nss.test");
     org.mockito.Mockito.when(authentication.getPrincipal()).thenReturn(principal);
     org.mockito.Mockito.when(authenticationManager.authenticate(any())).thenReturn(authentication);
-    org.mockito.Mockito.when(jwtService.generateToken(principal)).thenReturn("admin-access");
+    org.mockito.Mockito.when(jwtService.generateToken(entity)).thenReturn("admin-access");
     org.mockito.Mockito.when(userService.entityByEmail("admin@nss.test")).thenReturn(entity);
     org.mockito.Mockito.when(refreshSessions.issue(entity)).thenReturn("admin-refresh");
     org.mockito.Mockito.when(userService.getByEmail("admin@nss.test"))

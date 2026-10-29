@@ -4,6 +4,7 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.nss.security.CustomUserDetailsService;
 import com.example.nss.security.JwtService;
 import com.example.nss.service.FirstAccessService;
 import com.example.nss.service.RefreshSessionService;
@@ -14,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,7 +28,7 @@ class AuthRateLimitContractIT {
 
   @MockitoBean UserService userService;
   @MockitoBean AuthenticationManager authenticationManager;
-  @MockitoBean UserDetailsService userDetailsService;
+  @MockitoBean CustomUserDetailsService userDetailsService;
   @MockitoBean JwtService jwtService;
   @MockitoBean FirstAccessService firstAccessService;
   @MockitoBean RefreshSessionService refreshSessions;

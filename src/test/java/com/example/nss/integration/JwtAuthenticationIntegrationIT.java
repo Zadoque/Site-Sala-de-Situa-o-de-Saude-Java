@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -41,8 +40,8 @@ class JwtAuthenticationIntegrationIT {
   @Test
   void acceptsAValidJwtForAnAdminEndpoint() throws Exception {
     String email = "jwt-admin@nss.test";
-    persistUser(email, AccountType.ADMIN, true);
-    String token = jwtService.generateToken(details(email, "ADMIN"));
+    User user = persistUser(email, AccountType.ADMIN, true);
+    String token = jwtService.generateToken(user);
 
     mockMvc
         .perform(get("/api/v1/admin/users").header("Authorization", "Bearer " + token))
@@ -59,8 +58,8 @@ class JwtAuthenticationIntegrationIT {
   @Test
   void authenticatesAUserButStillDeniesTheAdminEndpoint() throws Exception {
     String email = "jwt-user@nss.test";
-    persistUser(email, AccountType.USER, true);
-    String token = jwtService.generateToken(details(email, "USER"));
+    User user = persistUser(email, AccountType.USER, true);
+    String token = jwtService.generateToken(user);
 
     mockMvc
         .perform(get("/api/v1/admin/users").header("Authorization", "Bearer " + token))
@@ -70,28 +69,38 @@ class JwtAuthenticationIntegrationIT {
   @Test
   void rejectsAValidJwtForADisabledUser() throws Exception {
     String email = "jwt-disabled@nss.test";
-    persistUser(email, AccountType.USER, false);
-    String token = jwtService.generateToken(details(email, "USER"));
+    User user = persistUser(email, AccountType.USER, false);
+    String token = jwtService.generateToken(user);
 
     mockMvc
         .perform(get("/api/v1/admin/users").header("Authorization", "Bearer " + token))
         .andExpect(status().isUnauthorized());
   }
 
-  private void persistUser(String email, AccountType accountType, boolean active) {
+  @Test
+  void doesNotReuseAnOldTokenWhenTheEmailIsAssignedToANewUser() throws Exception {
+    String email = "reused-email@nss.test";
+    User previousUser = persistUser(email, AccountType.USER, true);
+    String token = jwtService.generateToken(previousUser);
+
+    users.delete(previousUser);
+    users.flush();
+    User replacementUser = persistUser(email, AccountType.USER, true);
+
+    org.junit.jupiter.api.Assertions.assertNotEquals(previousUser.getId(), replacementUser.getId());
+    mockMvc
+        .perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + token))
+        .andExpect(status().isUnauthorized());
+  }
+
+  private User persistUser(String email, AccountType accountType, boolean active) {
     User user = new User();
     user.setEmail(email);
     user.setPassword("encoded-password");
     user.setAccountType(accountType);
     user.setAtivo(active);
-    users.saveAndFlush(user);
-    assertNotNull(users.findByEmail(email).orElse(null));
-  }
-
-  private UserDetails details(String email, String role) {
-    return org.springframework.security.core.userdetails.User.withUsername(email)
-        .password("ignored")
-        .roles(role)
-        .build();
+    User saved = users.saveAndFlush(user);
+    assertNotNull(saved.getId());
+    return saved;
   }
 }

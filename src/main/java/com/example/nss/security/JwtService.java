@@ -1,5 +1,6 @@
 package com.example.nss.security;
 
+import com.example.nss.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -9,7 +10,6 @@ import java.util.Date;
 import java.util.function.Function;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,28 +30,26 @@ public class JwtService {
     this.expiration = expiration;
   }
 
-  public String generateToken(UserDetails userDetails) {
+  public String generateToken(User user) {
     Date issuedAt = new Date();
     Date expirationDate = new Date(issuedAt.getTime() + expiration);
 
     return Jwts.builder()
-        .subject(userDetails.getUsername())
+        .subject(String.valueOf(user.getId()))
         .issuedAt(issuedAt)
         .expiration(expirationDate)
         .signWith(signingKey)
         .compact();
   }
 
-  public String extractUsername(String token) {
-    return extractClaim(token, Claims::getSubject);
+  public long extractUserId(String token) {
+    return Long.parseLong(extractClaim(token, Claims::getSubject));
   }
 
-  public boolean isTokenValid(String token, UserDetails userDetails) {
-    String username = extractUsername(token);
+  public boolean isTokenValid(String token, long userId, boolean enabled) {
+    long tokenUserId = extractUserId(token);
 
-    return username.equals(userDetails.getUsername())
-        && userDetails.isEnabled()
-        && !isTokenExpired(token);
+    return tokenUserId == userId && enabled && !isTokenExpired(token);
   }
 
   private boolean isTokenExpired(String token) {

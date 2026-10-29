@@ -53,13 +53,19 @@ pessimista e o comportamento foi validado em PostgreSQL via Testcontainers.
 
 ### P0.3 — identidade imutável no JWT
 
+- Status: concluído no incremento `fix(auth): bind jwt identity to user id`.
+
 - usar o ID do usuário como `sub`;
 - carregar o usuário pelo ID no filtro;
 - definir estratégia de transição para tokens emitidos com e-mail;
 - avaliar versão de credencial para invalidar access tokens após reset.
 
 Critério de aceite: reutilizar um e-mail não reutiliza a identidade de um JWT
-antigo e tokens antigos seguem a política de transição documentada.
+antigo e tokens antigos seguem a política de transição documentada. O filtro
+agora exige um `sub` numérico e tokens legados que usavam e-mail são rejeitados
+como inválidos; não há compatibilidade silenciosa com a identidade anterior.
+O versionamento de credencial para revogação imediata de access tokens após
+reset permanece como evolução complementar de segurança.
 
 ### P0.4 — revogação consistente de sessões
 

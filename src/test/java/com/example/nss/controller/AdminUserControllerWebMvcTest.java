@@ -13,6 +13,7 @@ import com.example.nss.DTO.response.ManagedUserResponse;
 import com.example.nss.DTO.response.UserPageResponse;
 import com.example.nss.entity.AccountType;
 import com.example.nss.exception.GlobalExceptionHandler;
+import com.example.nss.security.CustomUserDetailsService;
 import com.example.nss.security.JwtService;
 import com.example.nss.service.AdminUserService;
 import java.util.List;
@@ -22,7 +23,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -34,7 +34,7 @@ class AdminUserControllerWebMvcTest {
 
   @MockitoBean AdminUserService service;
   @MockitoBean JwtService jwtService;
-  @MockitoBean UserDetailsService userDetailsService;
+  @MockitoBean CustomUserDetailsService userDetailsService;
 
   @Test
   void returnsUserPageWithStableJsonContract() throws Exception {

@@ -22,6 +22,17 @@ public class CustomUserDetailsService implements UserDetailsService {
             .findByEmailIgnoreCase(EmailNormalizer.normalize(email))
             .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
+    return toUserDetails(user);
+  }
+
+  public UserDetails loadUserById(Long id) throws UsernameNotFoundException {
+    return toUserDetails(
+        userRepository
+            .findById(id)
+            .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado")));
+  }
+
+  private UserDetails toUserDetails(User user) {
     if (user.getPassword() == null)
       throw new UsernameNotFoundException("Conta ainda não configurada");
     return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())

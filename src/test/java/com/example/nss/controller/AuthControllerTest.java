@@ -63,8 +63,8 @@ class AuthControllerTest {
 
     when(authentication.getPrincipal()).thenReturn(principal);
     when(authenticationManager.authenticate(any())).thenReturn(authentication);
-    when(jwtService.generateToken(principal)).thenReturn("access-token");
     when(userService.entityByEmail("ana@example.com")).thenReturn(user);
+    when(jwtService.generateToken(user)).thenReturn("access-token");
     when(refreshSessions.issue(user)).thenReturn("refresh-token");
     when(userService.getByEmail("ana@example.com")).thenReturn(userResponse);
     ReflectionTestUtils.setField(controller, "refreshCookieName", "nss_refresh");
@@ -76,7 +76,7 @@ class AuthControllerTest {
         ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
     verify(authenticationManager).authenticate(captor.capture());
     assertEquals("ana@example.com", captor.getValue().getPrincipal());
-    verify(jwtService).generateToken(principal);
+    verify(jwtService).generateToken(user);
     verify(userDetailsService, never()).loadUserByUsername(any());
   }
 
@@ -109,6 +109,7 @@ class AuthControllerTest {
   @Test
   void refreshUsesTheRotatedPrincipalAndCookie() {
     User user = new User();
+    user.setId(7L);
     user.setEmail("ana@example.com");
     UserDetails principal =
         org.springframework.security.core.userdetails.User.withUsername("ana@example.com")
@@ -119,7 +120,7 @@ class AuthControllerTest {
     when(refreshSessions.rotateWithToken("old-token"))
         .thenReturn(new RefreshSessionService.Rotation(user, "new-token"));
     when(userDetailsService.loadUserByUsername("ana@example.com")).thenReturn(principal);
-    when(jwtService.generateToken(principal)).thenReturn("new-access");
+    when(jwtService.generateToken(user)).thenReturn("new-access");
     when(userService.getByEmail("ana@example.com"))
         .thenReturn(new UserResponse(null, "Ana", "ana@example.com", true));
     ReflectionTestUtils.setField(controller, "refreshCookieName", "nss_refresh");
@@ -129,7 +130,7 @@ class AuthControllerTest {
 
     verify(refreshSessions).rotateWithToken("old-token");
     verify(userDetailsService).loadUserByUsername("ana@example.com");
-    verify(jwtService).generateToken(principal);
+    verify(jwtService).generateToken(user);
     verify(response).addHeader(eq("Set-Cookie"), any());
   }
 
