@@ -51,12 +51,12 @@ class FirstAccessIntegrationIT {
     User configured = users.findById(user.getId()).orElseThrow();
     assertEquals("First User", configured.getNome());
     assertNotNull(configured.getPassword());
-    assertEquals(true, configured.isAtivo());
+    assertEquals(false, configured.isAtivo());
     assertEquals("COMPLETED", tokens.findByUserId(user.getId()).orElseThrow().getStatus());
   }
 
   @Test
-  void completesPasswordResetAndReactivatesThePersistedAccount() throws Exception {
+  void completesPasswordResetWithoutReactivatingThePersistedAccount() throws Exception {
     User user = persistUser("password-reset-http@nss.test", false);
     user.setPassword("old-password");
     users.saveAndFlush(user);
@@ -74,7 +74,7 @@ class FirstAccessIntegrationIT {
 
     User reset = users.findById(user.getId()).orElseThrow();
     assertNotNull(reset.getPassword());
-    assertEquals(true, reset.isAtivo());
+    assertEquals(false, reset.isAtivo());
     assertEquals("COMPLETED", tokens.findByUserId(user.getId()).orElseThrow().getStatus());
   }
 

@@ -25,7 +25,7 @@ regra pode ser observada no estado final ou na resposta da aplicação.
 
 ### P0.1 — impedir reativação indevida por primeiro acesso ou reset
 
-Status: em execução.
+Status: concluído no incremento `fix(auth): preserve administrative account blocks`.
 
 - manter `ativo` como decisão administrativa de acesso;
 - primeiro acesso configura nome e senha, mas não desbloqueia uma conta;
@@ -35,6 +35,8 @@ Status: em execução.
 
 Critério de aceite: uma conta desativada permanece `ativo=false` depois de
 concluir primeiro acesso ou reset e suas tentativas de autenticação falham.
+Os testes unitários e de integração confirmam que o estado desativado não é
+alterado.
 
 ### P0.2 — consumo único de tokens sob concorrência
 

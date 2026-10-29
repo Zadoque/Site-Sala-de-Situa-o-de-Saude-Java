@@ -99,7 +99,6 @@ public class FirstAccessService {
       throw new IllegalArgumentException("E-mail não corresponde ao link");
     user.setPassword(encoder.encode(request.password()));
     user.setPasswordCreatedAt(Instant.now());
-    user.setAtivo(true);
     users.save(user);
     invite.setStatus("COMPLETED");
     invite.setCompletedAt(Instant.now());
@@ -124,7 +123,6 @@ public class FirstAccessService {
     user.setNome(request.name().trim());
     user.setPassword(encoder.encode(request.password()));
     user.setPasswordCreatedAt(Instant.now());
-    user.setAtivo(true);
     users.save(user);
     invite.setStatus("COMPLETED");
     invite.setCompletedAt(Instant.now());

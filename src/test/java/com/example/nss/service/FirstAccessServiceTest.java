@@ -41,7 +41,7 @@ class FirstAccessServiceTest {
     assertEquals("Nome", user.getNome());
     assertEquals("encoded-password", user.getPassword());
     org.junit.jupiter.api.Assertions.assertNotNull(user.getPasswordCreatedAt());
-    org.junit.jupiter.api.Assertions.assertTrue(user.isAtivo());
+    org.junit.jupiter.api.Assertions.assertFalse(user.isAtivo());
     assertEquals("COMPLETED", token.getStatus());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getCompletedAt());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getPasswordCreatedAt());
@@ -216,7 +216,7 @@ class FirstAccessServiceTest {
   }
 
   @Test
-  void completesPasswordResetAndReactivatesTheUser() throws Exception {
+  void completesPasswordResetWithoutReactivatingADeactivatedUser() throws Exception {
     FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
     UserRepository users = mock(UserRepository.class);
     PasswordEncoder encoder = mock(PasswordEncoder.class);
@@ -235,7 +235,7 @@ class FirstAccessServiceTest {
 
     assertEquals("encoded-reset", user.getPassword());
     org.junit.jupiter.api.Assertions.assertNotNull(user.getPasswordCreatedAt());
-    org.junit.jupiter.api.Assertions.assertTrue(user.isAtivo());
+    org.junit.jupiter.api.Assertions.assertFalse(user.isAtivo());
     assertEquals("COMPLETED", token.getStatus());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getCompletedAt());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getPasswordCreatedAt());
