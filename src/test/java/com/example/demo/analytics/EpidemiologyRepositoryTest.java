@@ -13,6 +13,15 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 class EpidemiologyRepositoryTest {
   @Test
+  void rejectsUnsafeConfigurableColumnNames() {
+    var jdbc = new JdbcTemplate(new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID()));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new EpidemiologyRepository(jdbc, "year;DROP TABLE fato_casos", "month"));
+  }
+
+  @Test
   void invalidIdsAndStatusesNeverCountAsMapped() {
     var jdbc =
         new JdbcTemplate(

@@ -8,8 +8,10 @@ import static org.mockito.Mockito.*;
 import com.example.demo.analytics.api.AnalyticsResponse;
 import com.example.demo.analytics.api.EpidemiologyFilter;
 import com.example.demo.analytics.api.Geography;
+import com.example.demo.analytics.repository.DiseaseRow;
 import com.example.demo.analytics.repository.EpidemiologyRepository;
 import com.example.demo.analytics.repository.EpidemiologyTotals;
+import com.example.demo.analytics.repository.MetadataRow;
 import com.example.demo.analytics.repository.TerritoryAggregate;
 import com.example.demo.analytics.service.EpidemiologyService;
 import com.example.demo.analytics.service.TerritoryCatalog;
@@ -82,5 +84,19 @@ class EpidemiologyServiceTest {
 
     assertEquals(0L, response.totalNotifications());
     assertEquals("AVAILABLE", response.coverage().status().name());
+  }
+
+  @Test
+  void metadataIsGroupedByYearAndDiseasesKeepRepositoryOrder() {
+    when(repository.metadata())
+        .thenReturn(
+            List.of(new MetadataRow(2024, 1), new MetadataRow(2024, 2), new MetadataRow(2025, 1)));
+    when(repository.diseases())
+        .thenReturn(List.of(new DiseaseRow("DENG", "Dengue"), new DiseaseRow("COVID", "Covid-19")));
+
+    assertEquals(List.of("DENG", "COVID"), service.diseases());
+    assertEquals(List.of(2024, 2025), service.metadata().availableYears());
+    assertEquals(List.of(1, 2), service.metadata().availableMonthsByYear().get("2024"));
+    assertEquals(List.of(1), service.metadata().availableMonthsByYear().get("2025"));
   }
 }
