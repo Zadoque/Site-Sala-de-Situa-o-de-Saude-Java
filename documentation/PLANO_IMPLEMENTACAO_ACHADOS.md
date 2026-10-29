@@ -105,9 +105,14 @@ readiness retornaram 200 e um endpoint administrativo sem credencial retornou
 
 ### P1.1 — login completo
 
+Status: concluído no incremento `test(auth): cover the real login flow`.
+
 Cobrir PostgreSQL, Flyway, senha codificada, login HTTP, JWT retornado,
 `/auth/me`, autorização administrativa, senha inválida, usuário desativado,
-token expirado e assinatura inválida.
+token expirado e assinatura inválida. Esses cenários foram implementados em
+`AuthenticationFlowPostgresIT`; a integração também revelou e corrigiu o
+retorno 500 indevido para `DisabledException`, que agora retorna 401. PIT
+permaneceu em 94% de mutações eliminadas e 96% de test strength.
 
 ### P1.2 — qualidade dos testes unitários
 
