@@ -155,11 +155,18 @@ strength de 74%; portanto o gate falhou corretamente e há mutações a analisar
 antes de considerar esta fase concluída.
 
 Depois dos ciclos de reforço, o PIT passou a matar 155 de 191 mutações (81%),
-com test strength de 89%. Restam 17 mutações sem cobertura e sobreviventes
-concentradas em defaults, infraestrutura de token e ramos equivalentes. Elas
-devem ser classificadas antes de qualquer novo teste; o próximo passo é
-documentar exclusões pontuais apenas quando a mutação for comprovadamente
-equivalente.
+com test strength de 89%. A revisão dos testes encontrou uma lacuna real no
+teste de convite: ele verificava um objeto de preparação, e não a entidade
+persistida. O teste foi reescrito para capturar a entidade real e foram
+adicionados cenários de reset, expiração, convite concluído, usuário ausente,
+hash e resposta indisponível.
+
+O resultado atual do PIT é 180 de 191 mutações mortas (94%), test strength de
+96% e três mutações sem cobertura. As oito sobreviventes e as três sem
+cobertura foram classificadas em `documentation/PIT_CLASSIFICACAO_MUTACOES.md`.
+As classificadas como equivalentes, irrelevantes ou de infraestrutura não foram
+transformadas em testes artificiais nem ocultadas por exclusões amplas.
+O ciclo 5 está concluído.
 
 ## Critérios de aceitação
 

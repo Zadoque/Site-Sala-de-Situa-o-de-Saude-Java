@@ -72,6 +72,18 @@ class EpidemiologyServiceTest {
   }
 
   @Test
+  void unavailableCreatesAnExplicitUnavailableResponse() {
+    AnalyticsResponse response =
+        service.unavailable(
+            Geography.DISTRICT,
+            new EpidemiologyFilter("DENG", 2026, null, null, null, "3301009", null));
+
+    assertNull(response.totalNotifications());
+    assertEquals("UNAVAILABLE", response.coverage().status().name());
+    assertTrue(response.items().isEmpty());
+  }
+
+  @Test
   void availableZeroIsDifferentFromUnavailable() {
     when(repository.totals(any(), eq(Geography.DISTRICT), any()))
         .thenReturn(new EpidemiologyTotals(0L, 0L));
@@ -108,7 +120,8 @@ class EpidemiologyServiceTest {
                 "3301009", "Campos dos Goytacazes", "MUNICIPALITY", "3301009", null, "AVAILABLE"),
             new TerritoryCatalog.Entry(
                 "3302403", "Macaé", "MUNICIPALITY", "3302403", null, "AVAILABLE"));
-    when(catalog.forGeography(null, null, "MUNICIPALITY")).thenReturn(municipalities);
+    when(catalog.forGeography(null, null, "MUNICIPALITY"))
+        .thenReturn(List.of(municipalities.getFirst()), municipalities);
     when(repository.totals(any(), eq(Geography.MUNICIPALITY), any()))
         .thenReturn(new EpidemiologyTotals(5L, 5L));
     when(repository.aggregate(any(), eq(Geography.MUNICIPALITY), any()))
@@ -123,6 +136,7 @@ class EpidemiologyServiceTest {
     assertEquals("3301009", response.items().getFirst().code());
     assertEquals(5L, response.items().getFirst().notificationsTotal());
     assertEquals(0L, response.items().get(1).notificationsTotal());
+    verify(catalog, times(2)).forGeography(null, null, "MUNICIPALITY");
   }
 
   @Test

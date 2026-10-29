@@ -14,6 +14,8 @@ import com.example.nss.entity.RefreshSession;
 import com.example.nss.entity.User;
 import com.example.nss.repository.RefreshSessionRepository;
 import com.example.nss.repository.UserRepository;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -63,7 +65,20 @@ class RefreshSessionServiceTest {
   }
 
   @Test
-  void rotatesAnActiveRefreshTokenAndRevokesThePreviousSession() {
+  void refusesToIssueRefreshTokenWhenTheManagedUserDoesNotExist() {
+    RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    User user = new User();
+    user.setId(404L);
+    when(users.findById(404L)).thenReturn(Optional.empty());
+
+    assertThrows(BadCredentialsException.class, () -> service.issue(user));
+    verify(sessions, org.mockito.Mockito.never()).save(any(RefreshSession.class));
+  }
+
+  @Test
+  void rotatesAnActiveRefreshTokenAndRevokesThePreviousSession() throws Exception {
     RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
     UserRepository users = mock(UserRepository.class);
     RefreshSessionService service = new RefreshSessionService(sessions, users);
@@ -83,6 +98,14 @@ class RefreshSessionServiceTest {
     assertNotNull(current.getRevokedAt());
     assertNotNull(current.getReplacedBySessionId());
     verify(sessions, times(2)).save(any(RefreshSession.class));
+    ArgumentCaptor<String> hashCaptor = ArgumentCaptor.forClass(String.class);
+    verify(sessions).findByTokenHashForUpdate(hashCaptor.capture());
+    assertEquals(
+        java.util.HexFormat.of()
+            .formatHex(
+                MessageDigest.getInstance("SHA-256")
+                    .digest("opaque-refresh".getBytes(StandardCharsets.UTF_8))),
+        hashCaptor.getValue());
   }
 
   @Test
@@ -110,6 +133,7 @@ class RefreshSessionServiceTest {
     when(sessions.findByTokenHashForUpdate(any())).thenReturn(Optional.of(session));
 
     assertThrows(BadCredentialsException.class, () -> service.rotateWithToken("opaque-refresh"));
+    assertNotNull(session.getRevokedAt());
     verify(sessions).save(session);
   }
 
@@ -122,6 +146,7 @@ class RefreshSessionServiceTest {
     when(sessions.findByTokenHashForUpdate(any())).thenReturn(Optional.of(session));
 
     service.revoke("opaque-refresh");
+    service.revoke(null);
     service.revoke(" ");
 
     assertNotNull(session.getRevokedAt());

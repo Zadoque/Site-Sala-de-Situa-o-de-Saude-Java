@@ -68,10 +68,15 @@ class AdminUserServiceTest {
     var response = service.invite(request);
 
     assertEquals("new@example.com", response.email());
-    assertEquals("new@example.com", saved.getEmail());
-    assertEquals(AccountType.ADMIN, saved.getAccountType());
-    org.mockito.Mockito.verify(users).save(any(User.class));
-    verify(firstAccess).issue(any(User.class));
+    var captor = org.mockito.ArgumentCaptor.forClass(User.class);
+    org.mockito.Mockito.verify(users).save(captor.capture());
+    User invited = captor.getValue();
+    assertEquals("new@example.com", invited.getEmail());
+    assertEquals(AccountType.ADMIN, invited.getAccountType());
+    assertEquals(true, invited.isAtivo());
+    org.junit.jupiter.api.Assertions.assertNotNull(invited.getCreatedAt());
+    org.junit.jupiter.api.Assertions.assertNotNull(invited.getUpdatedAt());
+    verify(firstAccess).issue(invited);
   }
 
   @Test
@@ -128,6 +133,15 @@ class AdminUserServiceTest {
     assertEquals(null, user.getPasswordCreatedAt());
     verify(refreshSessions).revokeAllForUser(8L);
     verify(firstAccess).issuePasswordReset(user);
+  }
+
+  @Test
+  void rejectsOperationsForUnknownUsers() {
+    when(users.findById(99L)).thenReturn(Optional.empty());
+
+    assertThrows(
+        IllegalArgumentException.class, () -> service.setActive(99L, false, "admin@example.com"));
+    assertThrows(IllegalArgumentException.class, () -> service.resetPassword(99L));
   }
 
   @Test
