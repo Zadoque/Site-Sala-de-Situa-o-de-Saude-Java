@@ -229,6 +229,23 @@ meta de 5 p.p. desde a medição anterior do ciclo.
 O PIT foi executado novamente e permaneceu aprovado: 182 de 193 mutações
 mortas (94%), test strength de 96% e três mutações sem cobertura classificadas.
 
+### Ciclo 9 — contratos HTTP de epidemiologia
+
+- validar municípios disponíveis pelo `EpidemiologyService` real;
+- validar drilldown de bairro indisponível sem consultar o repositório;
+- validar endpoints de doenças e metadados;
+- executar `clean verify` e PIT antes de aceitar o incremento.
+
+O teste `EpidemiologyControllerIntegrationIT` usa o contexto Spring Security,
+`MockMvc` e o serviço epidemiológico real, isolando somente o repositório JDBC
+para controlar os dados do contrato. A cobertura de integração subiu de
+54,53% para 64,86% em linhas, de 30,56% para 39,68% em branches e de 54,90%
+para 67,16% em métodos.
+
+O PIT foi executado neste ciclo e permaneceu aprovado com 182 de 193 mutações
+mortas (94%), test strength de 96% e três mutações sem cobertura já
+classificadas.
+
 ## Critérios de aceitação
 
 - cada ciclo aumenta a métrica planejada em aproximadamente 5 p.p.;
