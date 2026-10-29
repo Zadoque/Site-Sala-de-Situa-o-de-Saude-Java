@@ -32,4 +32,15 @@ class AuthRateLimiterTest {
         RateLimitExceededException.class,
         () -> limiter.registerPasswordResetRequest("unknown@nss.test"));
   }
+
+  @Test
+  void expiresAWindowAndKeepsLoginAndPasswordResetOperationsIndependent() {
+    AuthRateLimiter expired = new AuthRateLimiter(1, 1, -1);
+    expired.loginFailed("USER@nss.test");
+    assertDoesNotThrow(() -> expired.checkLogin("user@nss.test"));
+
+    AuthRateLimiter limiter = new AuthRateLimiter(1, 1, 900);
+    limiter.loginFailed("user@nss.test");
+    assertDoesNotThrow(() -> limiter.registerPasswordResetRequest("user@nss.test"));
+  }
 }

@@ -59,17 +59,17 @@ class AdminUserServiceTest {
   @Test
   void invitesNormalizedEmailAndIssuesFirstAccess() {
     AccountInvitationRequest request =
-        new AccountInvitationRequest("  NEW@Example.COM ", AccountType.USER);
-    User saved = user(3L, "new@example.com", AccountType.USER);
+        new AccountInvitationRequest("  NEW@Example.COM ", AccountType.ADMIN);
+    User saved = user(3L, "new@example.com", AccountType.ADMIN);
     when(users.findByEmailIgnoreCase("new@example.com")).thenReturn(Optional.empty());
-    when(users.save(any(User.class))).thenReturn(saved);
+    when(users.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
     when(firstAccess.pending(saved)).thenReturn(false);
 
     var response = service.invite(request);
 
     assertEquals("new@example.com", response.email());
     assertEquals("new@example.com", saved.getEmail());
-    assertEquals(AccountType.USER, saved.getAccountType());
+    assertEquals(AccountType.ADMIN, saved.getAccountType());
     org.mockito.Mockito.verify(users).save(any(User.class));
     verify(firstAccess).issue(any(User.class));
   }
@@ -103,8 +103,10 @@ class AdminUserServiceTest {
   void protectsActorAndOtherAdminsFromDeactivation() {
     User actor = user(6L, "admin@example.com", AccountType.ADMIN);
     when(users.findById(6L)).thenReturn(Optional.of(actor));
+    when(users.save(actor)).thenReturn(actor);
     assertThrows(
         IllegalArgumentException.class, () -> service.setActive(6L, false, actor.getEmail()));
+    assertEquals(true, service.setActive(6L, true, actor.getEmail()).active());
 
     User otherAdmin = user(7L, "other@example.com", AccountType.ADMIN);
     when(users.findById(7L)).thenReturn(Optional.of(otherAdmin));
@@ -116,6 +118,7 @@ class AdminUserServiceTest {
   void resetsPasswordAndDelegatesInvitationOperations() {
     User user = user(8L, "reset@example.com", AccountType.USER);
     user.setPassword("old");
+    user.setPasswordCreatedAt(java.time.Instant.now());
     when(users.findById(8L)).thenReturn(Optional.of(user));
     when(users.save(user)).thenReturn(user);
 

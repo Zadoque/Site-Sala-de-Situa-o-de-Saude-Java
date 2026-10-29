@@ -16,7 +16,10 @@ class AnalyticsServiceTest {
   void delegatesCaseSearchToTheRepository() {
     AnalyticsRepository repository = mock(AnalyticsRepository.class);
     AnalyticsService service = new AnalyticsService(repository);
-    List<CasoResumo> expected = List.of();
+    List<CasoResumo> expected =
+        List.of(
+            new CasoResumo(
+                "DENG", 2024, 3, "3301009", "UNIT-1", "CONFIRMED", "OPEN", "F", 10, 1980, 2));
     when(repository.buscarCasos(2024, 3)).thenReturn(expected);
 
     assertEquals(expected, service.buscarCasos(2024, 3));

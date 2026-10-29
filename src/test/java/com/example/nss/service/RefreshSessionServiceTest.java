@@ -1,6 +1,7 @@
 package com.example.nss.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -17,6 +18,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.security.authentication.BadCredentialsException;
 
 class RefreshSessionServiceTest {
@@ -34,7 +36,30 @@ class RefreshSessionServiceTest {
     String token = service.issue(user);
 
     assertNotNull(token);
-    verify(sessions).save(any(RefreshSession.class));
+    ArgumentCaptor<RefreshSession> captor = ArgumentCaptor.forClass(RefreshSession.class);
+    verify(sessions).save(captor.capture());
+    RefreshSession created = captor.getValue();
+    assertEquals(user, created.getUser());
+    assertNotNull(created.getId());
+    assertNotNull(created.getCreatedAt());
+    assertNotNull(created.getExpiresAt());
+    assertNotNull(created.getTokenHash());
+    assertEquals(false, created.getTokenHash().equals(token));
+    assertFalse(token.isBlank());
+  }
+
+  @Test
+  void refusesToIssueRefreshTokenForAnInactiveManagedUser() {
+    RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    User user = new User();
+    user.setId(8L);
+    user.setAtivo(false);
+    when(users.findById(8L)).thenReturn(Optional.of(user));
+
+    assertThrows(BadCredentialsException.class, () -> service.issue(user));
+    verify(sessions, org.mockito.Mockito.never()).save(any(RefreshSession.class));
   }
 
   @Test
@@ -86,6 +111,46 @@ class RefreshSessionServiceTest {
 
     assertThrows(BadCredentialsException.class, () -> service.rotateWithToken("opaque-refresh"));
     verify(sessions).save(session);
+  }
+
+  @Test
+  void revokesOnlyAnActiveStoredSessionAndIgnoresBlankTokens() {
+    RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSession session = new RefreshSession();
+    when(sessions.findByTokenHashForUpdate(any())).thenReturn(Optional.of(session));
+
+    service.revoke("opaque-refresh");
+    service.revoke(" ");
+
+    assertNotNull(session.getRevokedAt());
+    verify(sessions).save(session);
+  }
+
+  @Test
+  void doesNotSaveARefreshSessionThatWasAlreadyRevoked() {
+    RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSession session = new RefreshSession();
+    session.setRevokedAt(Instant.now());
+    when(sessions.findByTokenHashForUpdate(any())).thenReturn(Optional.of(session));
+
+    service.revoke("opaque-refresh");
+
+    verify(sessions, org.mockito.Mockito.never()).save(any(RefreshSession.class));
+  }
+
+  @Test
+  void revokesAllSessionsForTheRequestedUser() {
+    RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    RefreshSessionService service = new RefreshSessionService(sessions, users);
+
+    service.revokeAllForUser(42L);
+
+    verify(sessions).revokeActiveByUserId(org.mockito.ArgumentMatchers.eq(42L), any());
   }
 
   private void setExpiration(RefreshSessionService service, long value) {

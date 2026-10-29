@@ -28,6 +28,7 @@ class FirstAccessServiceTest {
     FirstAccessService service = new FirstAccessService(users, tokens, encoder, mail);
     User user = new User();
     user.setEmail("user@nss.test");
+    user.setAtivo(false);
     FirstAccessToken token = pendingToken(user, "FIRST_ACCESS", "first-access-token");
     when(tokens.findByTokenHash(hash("first-access-token"))).thenReturn(Optional.of(token));
     when(encoder.encode("Password123!")).thenReturn("encoded-password");

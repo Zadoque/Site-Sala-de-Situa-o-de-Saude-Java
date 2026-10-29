@@ -151,4 +151,22 @@ class EpidemiologyServiceTest {
     assertEquals(1, response.items().size());
     assertEquals(3L, response.items().getFirst().notificationsTotal());
   }
+
+  @Test
+  void sortsTerritoryItemsByCodeBeforeReturningThem() {
+    TerritoryCatalog.Entry first =
+        new TerritoryCatalog.Entry("B", "Bairro B", "DISTRICT", "3301009", null, "AVAILABLE");
+    TerritoryCatalog.Entry second =
+        new TerritoryCatalog.Entry("A", "Bairro A", "DISTRICT", "3301009", null, "AVAILABLE");
+    when(catalog.forGeography("3301009", null, "DISTRICT")).thenReturn(List.of(first, second));
+    when(repository.totals(any(), eq(Geography.DISTRICT), any()))
+        .thenReturn(new EpidemiologyTotals(0L, 0L));
+
+    AnalyticsResponse response =
+        service.query(
+            Geography.DISTRICT,
+            new EpidemiologyFilter(null, null, null, null, null, "3301009", null));
+
+    assertEquals(List.of("A", "B"), response.items().stream().map(e -> e.code()).toList());
+  }
 }

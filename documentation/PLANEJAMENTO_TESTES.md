@@ -114,6 +114,12 @@ O incremento de cobertura está concluído, mas o ciclo permanece aberto: ainda
 faltam testes `@WebMvcTest`, PostgreSQL real e a análise das mutações
 sobreviventes do PIT.
 
+Após os testes adicionais de sessões, rate limiting, catálogo territorial e
+contratos de controller, a cobertura global chegou a 74,34% de linhas, 67,06%
+de branches e 70,94% de métodos. O PIT também passou com 115 de 191 mutações
+mortas (60%) e test strength de 91%. As 65 mutações sem cobertura permanecem
+indicadores para a próxima análise; não foram ocultadas por exclusões amplas.
+
 ### Ciclo 5 — força dos testes
 
 - executar PIT nos services de autenticação e analytics;
