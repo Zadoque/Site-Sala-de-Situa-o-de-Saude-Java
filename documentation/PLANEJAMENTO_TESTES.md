@@ -168,6 +168,19 @@ As classificadas como equivalentes, irrelevantes ou de infraestrutura não foram
 transformadas em testes artificiais nem ocultadas por exclusões amplas.
 O ciclo 5 está concluído.
 
+### Ciclo 6 — contratos HTTP de autenticação (+5 p.p. no escopo de integração)
+
+- validar payload inválido no limite HTTP e impedir chamada ao serviço;
+- validar conclusão de primeiro acesso com resposta `204`;
+- validar solicitação de reset com resposta `202` e rate limiting acionado;
+- validar logout, revogação do refresh e expiração do cookie;
+- manter o contexto Spring Security real, isolando apenas serviços de domínio.
+
+Foi adicionado `AuthControllerContractIT` com quatro cenários de contrato HTTP.
+Os testes validam status, cabeçalho `Set-Cookie`, chamadas de serviço e que a
+validação rejeita payload inválido antes de alcançar o domínio. O incremento é
+de integração real, não apenas chamada direta ao controller.
+
 ## Critérios de aceitação
 
 - cada ciclo aumenta a métrica planejada em aproximadamente 5 p.p.;
