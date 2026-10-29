@@ -110,3 +110,12 @@ token, rate limiting, autorização administrativa e contrato da API NSS v1.
 6. Adicionar Spotless, Checkstyle e análise estática ao CI.
 
 Cada etapa deve manter `./mvnw test` verde antes do próximo commit.
+
+## Status da execução
+
+As fases de organização arquitetural, mappers tipados, separação do módulo
+analítico, ArchUnit, Spotless, Checkstyle, PMD e integração das quality gates
+no CI foram concluídas. A Fase 6 foi iniciada com testes de analytics e
+autenticação, mas a validação comportamental completa dos fluxos de primeiro
+acesso, reset, refresh, autorização administrativa e contrato HTTP ainda será
+aprofundada no planejamento de testes.

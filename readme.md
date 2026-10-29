@@ -64,3 +64,7 @@ commit, execute:
 ```bash
 ./mvnw spotless:apply
 ```
+
+O JaCoCo coleta cobertura durante `test` e publica relatório HTML, XML e CSV
+em `target/site/jacoco/`. O planejamento incremental está em
+[documentation/PLANEJAMENTO_TESTES.md](documentation/PLANEJAMENTO_TESTES.md).
