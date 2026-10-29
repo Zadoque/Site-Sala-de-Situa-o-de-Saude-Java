@@ -4,6 +4,7 @@ import com.example.demo.DTO.mapper.UserMapper;
 import com.example.demo.DTO.response.UserResponse;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.security.EmailNormalizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,14 +16,14 @@ public class UserService {
     private final UserMapper mapper;
 
     public UserResponse getByEmail(String email) {
-        return repository.findByEmailIgnoreCase(email).map(mapper::toResponse)
+        return repository.findByEmailIgnoreCase(EmailNormalizer.normalize(email)).map(mapper::toResponse)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
     }
 
     @Transactional(readOnly = true)
     public User entityByEmail(String email) {
-        return repository.findByEmailIgnoreCase(email)
+        return repository.findByEmailIgnoreCase(EmailNormalizer.normalize(email))
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
     }
-    public void requestPasswordReset(String email) { repository.findByEmailIgnoreCase(email).filter(User::isAtivo).ifPresent(firstAccessService::issuePasswordReset); }
+    public void requestPasswordReset(String email) { repository.findByEmailIgnoreCase(EmailNormalizer.normalize(email)).filter(User::isAtivo).ifPresent(firstAccessService::issuePasswordReset); }
 }

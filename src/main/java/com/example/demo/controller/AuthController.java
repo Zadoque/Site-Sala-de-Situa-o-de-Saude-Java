@@ -8,6 +8,7 @@ import com.example.demo.DTO.response.LoginResponse;
 import com.example.demo.DTO.response.UserResponse;
 import com.example.demo.DTO.response.MeResponse;
 import com.example.demo.security.JwtService;
+import com.example.demo.security.EmailNormalizer;
 import com.example.demo.service.UserService;
 import com.example.demo.service.AuthRateLimiter;
 import com.example.demo.service.RefreshSessionService;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -82,24 +84,25 @@ public class AuthController {
             HttpServletResponse response
     ) {
         rateLimiter.checkLogin(request.email());
-        Authentication authentication =
+        String normalizedEmail = EmailNormalizer.normalize(request.email());
+        Authentication authenticationRequest =
                 new UsernamePasswordAuthenticationToken(
-                        request.email(),
+                        normalizedEmail,
                         request.password()
                 );
 
+        Authentication authenticationResult;
         try {
-            authenticationManager.authenticate(authentication);
+            authenticationResult = authenticationManager.authenticate(authenticationRequest);
         } catch (AuthenticationException exception) {
             rateLimiter.loginFailed(request.email());
             throw exception;
         }
         rateLimiter.loginSucceeded(request.email());
 
-        UserDetails userDetails =
-                userDetailsService.loadUserByUsername(
-                        request.email()
-                );
+        if (!(authenticationResult.getPrincipal() instanceof UserDetails userDetails)) {
+            throw new AuthenticationServiceException("A autenticação não retornou um usuário válido");
+        }
 
         String token = jwtService.generateToken(userDetails);
         String refresh = refreshSessions.issue(userService.entityByEmail(userDetails.getUsername()));

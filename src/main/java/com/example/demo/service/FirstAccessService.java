@@ -5,6 +5,7 @@ import com.example.demo.entity.FirstAccessToken;
 import com.example.demo.entity.User;
 import com.example.demo.repository.FirstAccessTokenRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.security.EmailNormalizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -57,7 +58,7 @@ public class FirstAccessService {
     @Transactional
     public void completePasswordReset(com.example.demo.DTO.request.PasswordResetCompleteRequest request) {
         FirstAccessToken invite = tokens.findByTokenHash(hash(request.token())).filter(t -> "PENDING".equals(t.getStatus()) && "PASSWORD_RESET".equals(t.getPurpose()) && t.getExpiresAt().isAfter(Instant.now())).orElseThrow(() -> new IllegalArgumentException("Link inválido ou expirado"));
-        User user = invite.getUser(); if (!user.getEmail().equalsIgnoreCase(request.email())) throw new IllegalArgumentException("E-mail não corresponde ao link");
+        User user = invite.getUser(); if (!user.getEmail().equals(EmailNormalizer.normalize(request.email()))) throw new IllegalArgumentException("E-mail não corresponde ao link");
         user.setPassword(encoder.encode(request.password())); user.setPasswordCreatedAt(Instant.now()); user.setAtivo(true); users.save(user); invite.setStatus("COMPLETED"); invite.setCompletedAt(Instant.now()); invite.setPasswordCreatedAt(Instant.now()); tokens.save(invite);
     }
 
@@ -67,7 +68,7 @@ public class FirstAccessService {
                 .filter(t -> "PENDING".equals(t.getStatus()) && "FIRST_ACCESS".equals(t.getPurpose()) && t.getExpiresAt().isAfter(Instant.now()))
                 .orElseThrow(() -> new IllegalArgumentException("Convite inválido ou expirado"));
         User user = invite.getUser();
-        if (!user.getEmail().equalsIgnoreCase(request.email())) throw new IllegalArgumentException("E-mail não corresponde ao convite");
+        if (!user.getEmail().equals(EmailNormalizer.normalize(request.email()))) throw new IllegalArgumentException("E-mail não corresponde ao convite");
         user.setNome(request.name().trim()); user.setPassword(encoder.encode(request.password()));
         user.setPasswordCreatedAt(Instant.now()); user.setAtivo(true); users.save(user);
         invite.setStatus("COMPLETED"); invite.setCompletedAt(Instant.now()); invite.setPasswordCreatedAt(Instant.now()); tokens.save(invite);

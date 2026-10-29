@@ -7,6 +7,7 @@ import com.example.demo.DTO.response.UserPageResponse;
 import com.example.demo.entity.AccountType;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.security.EmailNormalizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +31,9 @@ public class AdminUserService {
 
     @Transactional
     public ManagedUserResponse invite(AccountInvitationRequest request) {
-        if (users.findByEmailIgnoreCase(request.email()).isPresent()) throw new IllegalArgumentException("E-mail já cadastrado");
-        User user = new User(); user.setEmail(request.email().trim().toLowerCase()); user.setAccountType(request.accountType()); user.setAtivo(true); user.setCreatedAt(Instant.now()); user.setUpdatedAt(Instant.now());
+        String normalizedEmail = EmailNormalizer.normalize(request.email());
+        if (users.findByEmailIgnoreCase(normalizedEmail).isPresent()) throw new IllegalArgumentException("E-mail já cadastrado");
+        User user = new User(); user.setEmail(normalizedEmail); user.setAccountType(request.accountType()); user.setAtivo(true); user.setCreatedAt(Instant.now()); user.setUpdatedAt(Instant.now());
         User saved = users.save(user); firstAccess.issue(saved); return view(saved);
     }
 

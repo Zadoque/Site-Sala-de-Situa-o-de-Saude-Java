@@ -5,6 +5,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -22,6 +23,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(HttpServletRequest request){ return error(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Credenciais inválidas", request);
+    }
+
+    @ExceptionHandler(AuthenticationServiceException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationService(HttpServletRequest request) {
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "AUTHENTICATION_ERROR", "Não foi possível realizar o login", request);
     }
 
     @ExceptionHandler(RateLimitExceededException.class)
