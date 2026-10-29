@@ -99,4 +99,56 @@ class EpidemiologyServiceTest {
     assertEquals(List.of(1, 2), service.metadata().availableMonthsByYear().get("2024"));
     assertEquals(List.of(1), service.metadata().availableMonthsByYear().get("2025"));
   }
+
+  @Test
+  void municipalityWithoutFilterBuildsItemsFromTheCatalog() {
+    List<TerritoryCatalog.Entry> municipalities =
+        List.of(
+            new TerritoryCatalog.Entry(
+                "3301009", "Campos dos Goytacazes", "MUNICIPALITY", "3301009", null, "AVAILABLE"),
+            new TerritoryCatalog.Entry(
+                "3302403", "Macaé", "MUNICIPALITY", "3302403", null, "AVAILABLE"));
+    when(catalog.forGeography(null, null, "MUNICIPALITY")).thenReturn(municipalities);
+    when(repository.totals(any(), eq(Geography.MUNICIPALITY), any()))
+        .thenReturn(new EpidemiologyTotals(5L, 5L));
+    when(repository.aggregate(any(), eq(Geography.MUNICIPALITY), any()))
+        .thenReturn(List.of(new TerritoryAggregate("3301009", 5L)));
+
+    AnalyticsResponse response =
+        service.query(
+            Geography.MUNICIPALITY,
+            new EpidemiologyFilter(null, null, null, null, null, null, null));
+
+    assertEquals(2, response.items().size());
+    assertEquals("3301009", response.items().getFirst().code());
+    assertEquals(5L, response.items().getFirst().notificationsTotal());
+    assertEquals(0L, response.items().get(1).notificationsTotal());
+  }
+
+  @Test
+  void neighborhoodWithDistrictBuildsMappedItems() {
+    TerritoryCatalog.Entry neighborhood =
+        new TerritoryCatalog.Entry(
+            "CG_NH_CENTRO",
+            "Centro",
+            "NEIGHBORHOOD_OR_LOCALITY",
+            "3301009",
+            "CG_DIST_SEDE",
+            "AVAILABLE");
+    when(catalog.forGeography("3301009", "CG_DIST_SEDE", "NEIGHBORHOOD"))
+        .thenReturn(List.of(neighborhood));
+    when(repository.totals(any(), eq(Geography.NEIGHBORHOOD), any()))
+        .thenReturn(new EpidemiologyTotals(3L, 3L));
+    when(repository.aggregate(any(), eq(Geography.NEIGHBORHOOD), any()))
+        .thenReturn(List.of(new TerritoryAggregate("CG_NH_CENTRO", 3L)));
+
+    AnalyticsResponse response =
+        service.query(
+            Geography.NEIGHBORHOOD,
+            new EpidemiologyFilter(null, null, null, null, null, "3301009", "CG_DIST_SEDE"));
+
+    assertEquals("AVAILABLE", response.coverage().status().name());
+    assertEquals(1, response.items().size());
+    assertEquals(3L, response.items().getFirst().notificationsTotal());
+  }
 }

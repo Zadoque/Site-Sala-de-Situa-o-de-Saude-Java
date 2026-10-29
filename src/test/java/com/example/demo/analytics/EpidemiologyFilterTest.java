@@ -19,6 +19,12 @@ class EpidemiologyFilterTest {
   }
 
   @Test
+  void acceptsACompleteValidFilter() {
+    assertDoesNotThrow(
+        () -> new EpidemiologyFilter("DENG", 2026, 1, "M", "20_39", "3301009", "CG_DIST_SEDE"));
+  }
+
+  @Test
   void rejectsInvalidMonth() {
     assertThrows(
         InvalidFilterException.class,
@@ -26,10 +32,34 @@ class EpidemiologyFilterTest {
   }
 
   @Test
+  void rejectsNonPositiveYear() {
+    assertThrows(
+        InvalidFilterException.class,
+        () -> new EpidemiologyFilter("DENG", 0, null, null, null, null, null));
+  }
+
+  @Test
   void rejectsInvalidSex() {
     assertThrows(
         InvalidFilterException.class,
         () -> new EpidemiologyFilter("DENG", 2026, 1, "I", null, null, null));
+  }
+
+  @Test
+  void rejectsInvalidAgeBand() {
+    assertThrows(
+        InvalidFilterException.class,
+        () -> new EpidemiologyFilter("DENG", 2026, 1, null, "UNKNOWN", null, null));
+  }
+
+  @Test
+  void rejectsBlankDiseaseAndDistrict() {
+    assertThrows(
+        InvalidFilterException.class,
+        () -> new EpidemiologyFilter(" ", 2026, 1, null, null, null, null));
+    assertThrows(
+        InvalidFilterException.class,
+        () -> new EpidemiologyFilter("DENG", 2026, 1, null, null, null, " "));
   }
 
   @Test

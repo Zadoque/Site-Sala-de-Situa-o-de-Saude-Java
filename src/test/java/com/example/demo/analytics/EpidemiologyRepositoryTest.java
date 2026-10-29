@@ -6,6 +6,7 @@ import com.example.demo.analytics.api.EpidemiologyFilter;
 import com.example.demo.analytics.api.Geography;
 import com.example.demo.analytics.repository.EpidemiologyRepository;
 import com.example.demo.analytics.service.TerritoryCatalog;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -54,6 +55,7 @@ class EpidemiologyRepositoryTest {
     assertEquals(53L, totals.total());
     assertEquals(5L, totals.mapped());
     assertEquals(1, repository.aggregate(filter, Geography.DISTRICT, districtIds).size());
+    assertEquals(0, repository.aggregate(filter, Geography.DISTRICT, List.of()).size());
     var neighborhoods = new EpidemiologyFilter(null, null, null, null, null, "3301009", district);
     var neighborhoodIds =
         catalog.forGeography("3301009", district, "NEIGHBORHOOD").stream()

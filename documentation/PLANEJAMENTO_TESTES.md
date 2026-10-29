@@ -82,6 +82,19 @@ branches e 57,22% de métodos.
 - cobrir estados `AVAILABLE`, `PARTIAL` e `UNAVAILABLE`;
 - validar SQL parametrizado com PostgreSQL via Testcontainers.
 
+Status: concluído. Foram adicionados testes para serviço, controllers, filtros,
+repositórios e estados de disponibilidade. O ciclo elevou a cobertura global
+para 63,72% de linhas, 52,38% de branches e 60,10% de métodos, superando a
+meta de 5 p.p. em relação ao ciclo de autenticação.
+
+Observação: o cenário de persistência foi validado com H2 compatível com o SQL
+parametrizado atual. A validação com PostgreSQL via Testcontainers permanece
+como parte do ciclo de API e persistência, para evitar duplicar testes sem
+ganho comportamental nesta etapa.
+
+Próxima referência para o ciclo seguinte: 68,72% de linhas, 57,38% de
+branches e 65,10% de métodos.
+
 ### Ciclo 4 — API e persistência (+5 p.p.)
 
 - adicionar testes `@WebMvcTest` para contratos HTTP;
