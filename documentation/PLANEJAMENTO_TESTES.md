@@ -263,6 +263,24 @@ mutações mortas (94%), test strength de 96% e três mutações sem cobertura
 classificadas. O próximo ciclo deve priorizar branches restantes do fluxo de
 autenticação e sessões de refresh.
 
+### Ciclo 11 — refresh e sessões persistentes
+
+- validar rotação de refresh token com sessão persistida;
+- validar revogação persistente no logout;
+- validar rejeição de refresh expirado;
+- validar JWT de usuário desativado;
+- executar `clean verify` e PIT no mesmo ciclo.
+
+Os testes `RefreshSessionIntegrationIT` e `JwtAuthenticationIntegrationIT`
+exercitam a cadeia HTTP com `RefreshSessionService`, `RefreshSessionRepository`,
+`JwtService` e `JwtAuthenticationFilter` reais. A cobertura de integração
+subiu de 69,90% para 77,83% em linhas, de 43,65% para 49,60% em branches e
+de 70,59% para 75,00% em métodos.
+
+O PIT foi executado após o incremento e permaneceu aprovado: 182 de 193
+mutações mortas (94%), test strength de 96% e três mutações sem cobertura
+classificadas.
+
 ## Critérios de aceitação
 
 - cada ciclo aumenta a métrica planejada em aproximadamente 5 p.p.;

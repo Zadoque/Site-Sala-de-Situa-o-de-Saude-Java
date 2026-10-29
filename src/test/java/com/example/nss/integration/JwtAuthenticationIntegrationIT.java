@@ -53,6 +53,17 @@ class JwtAuthenticationIntegrationIT {
         .andExpect(status().isForbidden());
   }
 
+  @Test
+  void rejectsAValidJwtForADisabledUser() throws Exception {
+    String email = "jwt-disabled@nss.test";
+    persistUser(email, AccountType.USER, false);
+    String token = jwtService.generateToken(details(email, "USER"));
+
+    mockMvc
+        .perform(get("/api/v1/admin/users").header("Authorization", "Bearer " + token))
+        .andExpect(status().isUnauthorized());
+  }
+
   private void persistUser(String email, AccountType accountType, boolean active) {
     User user = new User();
     user.setEmail(email);
