@@ -1,7 +1,7 @@
 package com.example.demo.analytics.controller;
 
 import com.example.demo.analytics.dto.CasoResumo;
-import com.example.demo.analytics.repository.AnalyticsRepository;
+import com.example.demo.analytics.service.AnalyticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,13 +15,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AnalyticsController {
 
-    private final AnalyticsRepository analyticsRepository;
+    private final AnalyticsService analyticsService;
 
     @GetMapping("casos")
     public List<CasoResumo> buscarCasos(
             @RequestParam Integer ano,
             @RequestParam Integer mes
     ){
-        return  analyticsRepository.buscarCasos(ano,mes);
+        return analyticsService.buscarCasos(ano, mes);
     }
 }

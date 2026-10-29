@@ -4,16 +4,20 @@ import com.example.demo.analytics.api.AnalyticsResponse;
 import com.example.demo.analytics.api.CoverageStatus;
 import com.example.demo.analytics.api.EpidemiologyFilter;
 import com.example.demo.analytics.api.Geography;
+import com.example.demo.analytics.api.MetadataResponse;
 import com.example.demo.analytics.repository.EpidemiologyRepository;
 import com.example.demo.analytics.repository.EpidemiologyTotals;
+import com.example.demo.analytics.repository.MetadataRow;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +55,31 @@ public class EpidemiologyService {
 
     public AnalyticsResponse unavailable(Geography geography, EpidemiologyFilter filter) {
         return response(geography, filter, null, CoverageStatus.UNAVAILABLE, 0L, 0L, List.of());
+    }
+
+    public List<String> diseases() {
+        return repository.diseases().stream().map(row -> row.code()).toList();
+    }
+
+    public MetadataResponse metadata() {
+        Map<Integer, List<Integer>> grouped = repository.metadata().stream()
+                .collect(Collectors.groupingBy(
+                        MetadataRow::year,
+                        LinkedHashMap::new,
+                        Collectors.mapping(MetadataRow::month, Collectors.toList())
+                ));
+        return new MetadataResponse(
+                new ArrayList<>(grouped.keySet()),
+                grouped.entrySet().stream().collect(Collectors.toMap(
+                        entry -> String.valueOf(entry.getKey()),
+                        Map.Entry::getValue,
+                        (left, right) -> left,
+                        LinkedHashMap::new
+                )),
+                List.of("MUNICIPALITY", "DISTRICT", "NEIGHBORHOOD"),
+                new ArrayList<>(EpidemiologyFilter.AGE_BANDS),
+                List.of("M", "F", "ALL")
+        );
     }
 
     private AnalyticsResponse response(Geography geography, EpidemiologyFilter f, Long total, CoverageStatus status,
