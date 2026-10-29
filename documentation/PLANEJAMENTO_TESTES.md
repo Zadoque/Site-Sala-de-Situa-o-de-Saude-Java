@@ -246,6 +246,23 @@ O PIT foi executado neste ciclo e permaneceu aprovado com 182 de 193 mutações
 mortas (94%), test strength de 96% e três mutações sem cobertura já
 classificadas.
 
+### Ciclo 10 — autenticação JWT no fluxo protegido
+
+- validar JWT real em endpoint administrativo protegido;
+- validar token inválido como acesso anônimo;
+- validar usuário autenticado sem a role `ADMIN` como `403`;
+- executar `clean verify` e PIT no mesmo ciclo.
+
+O teste `JwtAuthenticationIntegrationIT` usa `JwtService`,
+`JwtAuthenticationFilter`, `CustomUserDetailsService`, banco H2 e `MockMvc`
+reais. A cobertura de integração evoluiu de 64,86% para 69,90% em linhas, de
+39,68% para 43,65% em branches e de 67,16% para 70,59% em métodos.
+
+O PIT foi executado após o incremento e permaneceu aprovado: 182 de 193
+mutações mortas (94%), test strength de 96% e três mutações sem cobertura
+classificadas. O próximo ciclo deve priorizar branches restantes do fluxo de
+autenticação e sessões de refresh.
+
 ## Critérios de aceitação
 
 - cada ciclo aumenta a métrica planejada em aproximadamente 5 p.p.;
