@@ -13,6 +13,7 @@ import com.example.nss.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +22,42 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 class FirstAccessServiceTest {
+  @Test
+  void usesTheInjectedRandomBytesInTheLinkAndPersistedHash() throws Exception {
+    FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
+    MailService mail = mock(MailService.class);
+    byte[] expectedBytes = new byte[32];
+    java.util.Arrays.fill(expectedBytes, (byte) 1);
+    FirstAccessService service =
+        new FirstAccessService(
+            mock(UserRepository.class),
+            tokens,
+            mock(PasswordEncoder.class),
+            mail,
+            mock(RefreshSessionService.class),
+            bytes -> System.arraycopy(expectedBytes, 0, bytes, 0, bytes.length));
+    org.springframework.test.util.ReflectionTestUtils.setField(
+        service, "frontendUrl", "https://app.nss.test");
+    User user = new User();
+    user.setId(41L);
+    user.setEmail("deterministic@nss.test");
+
+    service.issue(user);
+
+    String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(expectedBytes);
+    ArgumentCaptor<FirstAccessToken> tokenCaptor = ArgumentCaptor.forClass(FirstAccessToken.class);
+    ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
+    org.mockito.Mockito.verify(tokens).save(tokenCaptor.capture());
+    org.mockito.Mockito.verify(mail)
+        .sendText(
+            org.mockito.ArgumentMatchers.eq("deterministic@nss.test"),
+            org.mockito.ArgumentMatchers.anyString(),
+            bodyCaptor.capture());
+
+    assertEquals(hash(raw), tokenCaptor.getValue().getTokenHash());
+    org.junit.jupiter.api.Assertions.assertTrue(bodyCaptor.getValue().contains(raw));
+  }
+
   @Test
   void completesFirstAccessAndConsumesTheInvitation() throws Exception {
     FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);

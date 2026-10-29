@@ -84,13 +84,17 @@ de refresh expirado ou reutilizado, também validada por integração.
 
 ### P0.5 — geração de tokens testável
 
+Status: concluído no incremento `refactor(auth): make token generation testable`.
+
 - extrair uma abstração de geração segura de tokens;
 - manter `SecureRandom` na produção;
 - usar fonte determinística somente nos testes;
 - testar que os bytes aleatórios influenciam o token e o hash persistido.
 
 Critério de aceite: a remoção da geração de bytes faz um teste de segurança
-falhar sem depender de probabilidade.
+falhar sem depender de probabilidade. `SecureRandomTokenGenerator` permanece
+como implementação de produção, enquanto o teste injeta bytes fixos e valida
+o link enviado e o hash armazenado.
 
 ### P0.6 — probes de saúde funcionais
 

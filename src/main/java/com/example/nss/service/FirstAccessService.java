@@ -8,19 +8,17 @@ import com.example.nss.repository.UserRepository;
 import com.example.nss.security.EmailNormalizer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class FirstAccessService {
   private static final String PENDING_STATUS = "PENDING";
   private final UserRepository users;
@@ -35,13 +33,38 @@ public class FirstAccessService {
   @Value("${api.first-access.expiration:86400}")
   private long expirationSeconds;
 
-  private final SecureRandom random = new SecureRandom();
+  private final TokenGenerator tokenGenerator;
+
+  @Autowired
+  public FirstAccessService(
+      UserRepository users,
+      FirstAccessTokenRepository tokens,
+      PasswordEncoder encoder,
+      MailService mail,
+      RefreshSessionService refreshSessions,
+      TokenGenerator tokenGenerator) {
+    this.users = users;
+    this.tokens = tokens;
+    this.encoder = encoder;
+    this.mail = mail;
+    this.refreshSessions = refreshSessions;
+    this.tokenGenerator = tokenGenerator;
+  }
+
+  public FirstAccessService(
+      UserRepository users,
+      FirstAccessTokenRepository tokens,
+      PasswordEncoder encoder,
+      MailService mail,
+      RefreshSessionService refreshSessions) {
+    this(users, tokens, encoder, mail, refreshSessions, new SecureRandomTokenGenerator());
+  }
 
   @Transactional
   public void issue(User user) {
     tokens.findByUserId(user.getId()).ifPresent(this::deleteExistingToken);
     byte[] bytes = new byte[32];
-    random.nextBytes(bytes);
+    tokenGenerator.nextBytes(bytes);
     String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     FirstAccessToken token = new FirstAccessToken();
     token.setUser(user);
@@ -64,7 +87,7 @@ public class FirstAccessService {
   public void issuePasswordReset(User user) {
     tokens.findByUserId(user.getId()).ifPresent(this::deleteExistingToken);
     byte[] bytes = new byte[32];
-    random.nextBytes(bytes);
+    tokenGenerator.nextBytes(bytes);
     String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     FirstAccessToken token = new FirstAccessToken();
     token.setUser(user);
