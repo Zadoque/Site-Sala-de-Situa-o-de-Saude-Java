@@ -152,8 +152,20 @@ cadastro, validado com PostgreSQL e Testcontainers.
 
 ### P1.6 — contrato web
 
-Alinhar rotas, cookie, CORS (`PATCH`), CSRF, `HttpOnly`, `Secure`, `SameSite`,
-expiração e remoção do cookie.
+Status: concluído no incremento `fix(auth): secure browser authentication contract`.
+
+`/api/v1/auth` passou a ser a rota canônica; o alias `/auth` foi removido.
+Refresh e logout usam o cookie `nss_refresh` com `HttpOnly`, `Secure`
+configurável, `SameSite=Strict`, expiração configurável e remoção explícita.
+Operações baseadas em cookie exigem o token CSRF enviado pelo cookie
+`XSRF-TOKEN` e pelo header `X-XSRF-TOKEN`; login, primeiro acesso e reset
+público permanecem isentos por não dependerem de cookie de sessão. O CORS
+agora permite `PATCH`, credenciais e o header CSRF. Os contratos HTTP cobrem
+emissão do token, rejeição sem CSRF, logout, refresh e preflight com `PATCH`.
+
+Validação: `./mvnw -B verify` passou com 97 testes unitários e 48 testes de
+integração; PIT passou com 182/193 mutações eliminadas e força de teste de
+96%.
 
 ### P1.7 — rate limit e e-mail
 

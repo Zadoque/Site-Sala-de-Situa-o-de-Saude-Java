@@ -2,6 +2,7 @@ package com.example.nss.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,12 +25,14 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@TestPropertySource(properties = "api.cors.allowed-origins=http://localhost:5173")
 class AuthControllerContractIT {
   @Autowired MockMvc mockMvc;
 
@@ -83,10 +86,53 @@ class AuthControllerContractIT {
   }
 
   @Test
+  void exposesCsrfTokenForBrowserClients() throws Exception {
+    mockMvc
+        .perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(
+                "/api/v1/auth/csrf"))
+        .andExpect(status().isOk())
+        .andExpect(
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                .string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.blankOrNullString())))
+        .andExpect(
+            header().string("Set-Cookie", org.hamcrest.Matchers.containsString("XSRF-TOKEN=")));
+  }
+
+  @Test
+  void rejectsRefreshWithoutCsrfToken() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/v1/auth/refresh")
+                .cookie(new jakarta.servlet.http.Cookie("nss_refresh", "refresh-token")))
+        .andExpect(status().isForbidden());
+
+    org.mockito.Mockito.verifyNoInteractions(refreshSessions);
+  }
+
+  @Test
+  void allowsPatchInTheConfiguredBrowserCorsContract() throws Exception {
+    mockMvc
+        .perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options(
+                    "/api/v1/admin/users/1")
+                .header("Origin", "http://localhost:5173")
+                .header("Access-Control-Request-Method", "PATCH")
+                .header("Access-Control-Request-Headers", "Authorization,Content-Type"))
+        .andExpect(status().isOk())
+        .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"))
+        .andExpect(
+            header()
+                .string(
+                    "Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("PATCH")));
+  }
+
+  @Test
   void logoutRevokesTheCookieAndExpiresItOverHttp() throws Exception {
     mockMvc
         .perform(
             post("/api/v1/auth/logout")
+                .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("nss_refresh", "refresh-token")))
         .andExpect(status().isNoContent())
         .andExpect(
@@ -154,6 +200,7 @@ class AuthControllerContractIT {
     mockMvc
         .perform(
             post("/api/v1/auth/refresh")
+                .with(csrf())
                 .cookie(new jakarta.servlet.http.Cookie("nss_refresh", "old-token")))
         .andExpect(status().isOk())
         .andExpect(
@@ -216,7 +263,7 @@ class AuthControllerContractIT {
   @Test
   void logoutWithoutRefreshCookieStillClearsTheClientCookie() throws Exception {
     mockMvc
-        .perform(post("/api/v1/auth/logout"))
+        .perform(post("/api/v1/auth/logout").with(csrf()))
         .andExpect(status().isNoContent())
         .andExpect(
             header().string("Set-Cookie", org.hamcrest.Matchers.containsString("nss_refresh=")));
@@ -275,6 +322,7 @@ class AuthControllerContractIT {
     mockMvc
         .perform(
             post("/api/v1/auth/logout")
+                .with(csrf())
                 .cookie(
                     new jakarta.servlet.http.Cookie("session", "ignored"),
                     new jakarta.servlet.http.Cookie("nss_refresh", "refresh-token")))

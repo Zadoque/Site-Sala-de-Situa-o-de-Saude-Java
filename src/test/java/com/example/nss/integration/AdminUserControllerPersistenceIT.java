@@ -2,6 +2,7 @@ package com.example.nss.integration;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -39,6 +40,7 @@ class AdminUserControllerPersistenceIT {
         .perform(
             post("/api/v1/admin/users")
                 .with(user("admin@nss.test").roles("ADMIN"))
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\",\"accountType\":\"USER\"}"))
         .andExpect(status().isCreated())
@@ -58,7 +60,8 @@ class AdminUserControllerPersistenceIT {
             post(
                     "/api/v1/admin/users/invitations/{id}/renew",
                     tokens.findByUserId(id).orElseThrow().getId())
-                .with(user("admin@nss.test").roles("ADMIN")))
+                .with(user("admin@nss.test").roles("ADMIN"))
+                .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value("PENDING"));
 
@@ -66,7 +69,8 @@ class AdminUserControllerPersistenceIT {
     mockMvc
         .perform(
             post("/api/v1/admin/users/invitations/{id}/cancel", renewedInvitationId)
-                .with(user("admin@nss.test").roles("ADMIN")))
+                .with(user("admin@nss.test").roles("ADMIN"))
+                .with(csrf()))
         .andExpect(status().isNoContent());
 
     mockMvc
@@ -78,6 +82,7 @@ class AdminUserControllerPersistenceIT {
         .perform(
             patch("/api/v1/admin/users/{id}/activation", id)
                 .with(user("admin@nss.test").roles("ADMIN"))
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"active\":false}"))
         .andExpect(status().isOk())
@@ -86,7 +91,8 @@ class AdminUserControllerPersistenceIT {
     mockMvc
         .perform(
             post("/api/v1/admin/users/{id}/password-reset", id)
-                .with(user("admin@nss.test").roles("ADMIN")))
+                .with(user("admin@nss.test").roles("ADMIN"))
+                .with(csrf()))
         .andExpect(status().isNoContent());
 
     assertFalse(users.findById(id).orElseThrow().isAtivo());

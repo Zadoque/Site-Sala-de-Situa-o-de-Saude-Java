@@ -39,6 +39,9 @@ class RefreshSessionIntegrationIT {
     mockMvc
         .perform(
             post("/api/v1/auth/refresh")
+                .with(
+                    org.springframework.security.test.web.servlet.request
+                        .SecurityMockMvcRequestPostProcessors.csrf())
                 .cookie(new jakarta.servlet.http.Cookie("nss_refresh", rawToken)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.token").isNotEmpty())
@@ -62,6 +65,9 @@ class RefreshSessionIntegrationIT {
     mockMvc
         .perform(
             post("/api/v1/auth/logout")
+                .with(
+                    org.springframework.security.test.web.servlet.request
+                        .SecurityMockMvcRequestPostProcessors.csrf())
                 .cookie(new jakarta.servlet.http.Cookie("nss_refresh", rawToken)))
         .andExpect(status().isNoContent())
         .andExpect(
@@ -90,6 +96,9 @@ class RefreshSessionIntegrationIT {
     mockMvc
         .perform(
             post("/api/v1/auth/refresh")
+                .with(
+                    org.springframework.security.test.web.servlet.request
+                        .SecurityMockMvcRequestPostProcessors.csrf())
                 .cookie(new jakarta.servlet.http.Cookie("nss_refresh", rawToken)))
         .andExpect(status().isUnauthorized());
 

@@ -16,6 +16,7 @@ import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -31,6 +32,9 @@ public class SecurityConfig {
   @Value("${api.cors.allowed-origins:}")
   private String allowedOrigins;
 
+  @Value("${api.auth.secure-cookie:false}")
+  private boolean secureCookie;
+
   @Bean
   public PasswordEncoder passwordEncoder() {
     return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
@@ -43,9 +47,24 @@ public class SecurityConfig {
   }
 
   @Bean
+  CookieCsrfTokenRepository csrfTokenRepository() {
+    CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+    repository.setCookieCustomizer(
+        cookie -> cookie.secure(secureCookie).sameSite("Strict").path("/"));
+    return repository;
+  }
+
+  @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-    http.csrf(csrf -> csrf.disable())
+    http.csrf(
+            csrf ->
+                csrf.csrfTokenRepository(csrfTokenRepository())
+                    .ignoringRequestMatchers(
+                        "/api/v1/auth/login",
+                        "/api/v1/auth/first-access",
+                        "/api/v1/auth/password-reset/request",
+                        "/api/v1/auth/password-reset/complete"))
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -53,7 +72,6 @@ public class SecurityConfig {
             auth ->
                 auth.requestMatchers(
                         HttpMethod.POST,
-                        "/auth/login",
                         "/api/v1/auth/login",
                         "/api/v1/auth/refresh",
                         "/api/v1/auth/logout",
@@ -63,6 +81,7 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(
                         HttpMethod.GET,
+                        "/api/v1/auth/csrf",
                         "/actuator/health",
                         "/actuator/health/**",
                         "/actuator/prometheus")
@@ -88,8 +107,9 @@ public class SecurityConfig {
     CorsConfiguration config = new CorsConfiguration();
     if (!allowedOrigins.isBlank())
       config.setAllowedOrigins(Arrays.stream(allowedOrigins.split(",")).map(String::trim).toList());
-    config.setAllowedMethods(java.util.List.of("GET", "POST", "OPTIONS"));
-    config.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "X-Request-Id"));
+    config.setAllowedMethods(java.util.List.of("GET", "POST", "PATCH", "OPTIONS"));
+    config.setAllowedHeaders(
+        java.util.List.of("Authorization", "Content-Type", "X-Request-Id", "X-XSRF-TOKEN"));
     config.setAllowCredentials(true);
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
