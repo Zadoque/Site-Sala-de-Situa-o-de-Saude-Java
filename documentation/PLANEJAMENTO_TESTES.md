@@ -176,10 +176,16 @@ O ciclo 5 está concluído.
 - validar logout, revogação do refresh e expiração do cookie;
 - manter o contexto Spring Security real, isolando apenas serviços de domínio.
 
-Foi adicionado `AuthControllerContractIT` com quatro cenários de contrato HTTP.
-Os testes validam status, cabeçalho `Set-Cookie`, chamadas de serviço e que a
+Foram adicionados contratos HTTP para primeiro acesso, reset, login, refresh,
+logout, `/auth/me`, falha de autenticação e rate limiting. Os testes validam
+status, JSON, cabeçalho `Set-Cookie`, permissões, chamadas de serviço e que a
 validação rejeita payload inválido antes de alcançar o domínio. O incremento é
 de integração real, não apenas chamada direta ao controller.
+
+O ciclo elevou a cobertura de integração de 26,04% para 35,52% em linhas, de
+17,06% para 23,41% em branches e de 28,08% para 38,92% em métodos, superando
+a meta de 5 p.p. nas três métricas. O `clean verify` permaneceu verde, com
+Spotless, Checkstyle, PMD e ArchUnit aprovados.
 
 ## Critérios de aceitação
 
