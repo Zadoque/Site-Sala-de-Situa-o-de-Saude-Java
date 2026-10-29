@@ -34,9 +34,21 @@ Estado atual do inventário:
   integração;
 - 3 regras ArchUnit, tratadas como testes arquiteturais.
 
-A próxima etapa deve separar os testes de integração com Maven Failsafe e
-classes `*IT`, permitindo gerar uma execução JaCoCo para unitários e outra para
-integração.
+O primeiro ciclo separou os testes com Maven Surefire/Failsafe e classes `*IT`.
+As coberturas por execução são:
+
+| Execução | Linhas | Branches | Métodos |
+| --- | ---: | ---: | ---: |
+| Unitários/arquitetura | 39,82% | 39,29% | 36,45% |
+| Integração | 13,78% | 5,16% | 15,27% |
+| Global | 48,29% | 41,67% | 46,80% |
+
+Os relatórios ficam em `target/site/jacoco/unit/`,
+`target/site/jacoco/integration/` e `target/site/jacoco/`.
+
+O ciclo de separação está concluído; os próximos ciclos começam pelo aumento
+de cobertura comportamental, sem transformar a diferença entre unitário e
+integração em uma meta artificial.
 
 ## Ciclos incrementais
 
