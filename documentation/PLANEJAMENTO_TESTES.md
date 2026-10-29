@@ -30,7 +30,7 @@ separados, pois não são contadores de cobertura.
 Estado atual do inventário:
 
 - 24 testes unitários com JUnit/Mockito;
-- 1 teste de contexto Spring Boot (`DemoApplicationTests`), tratado como
+- 1 teste de contexto Spring Boot (`NssApplicationTests`), tratado como
   integração;
 - 3 regras ArchUnit, tratadas como testes arquiteturais.
 

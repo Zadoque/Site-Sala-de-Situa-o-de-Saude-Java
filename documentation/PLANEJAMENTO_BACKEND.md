@@ -16,7 +16,7 @@ usar Conventional Commits.
 ## Organização desejada
 
 ```text
-src/main/java/com/example/demo/
+src/main/java/com/example/nss/
 ├── controller/       # HTTP, validação de entrada e status de resposta
 ├── DTO/
 │   ├── mapper/       # conversões Entity <-> DTO

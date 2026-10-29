@@ -13,10 +13,10 @@
 	</parent>
 
 	<groupId>com.example</groupId>
-	<artifactId>demo</artifactId>
+	<artifactId>nss</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
-	<name>demo</name>
+	<name>nss</name>
 	<description>Sala de Situação de Saúde</description>
 
 	<properties>
