@@ -40,13 +40,16 @@ alterado.
 
 ### P0.2 — consumo único de tokens sob concorrência
 
+Status: concluído no incremento `fix(auth): serialize first-access token consumption`.
+
 - adicionar consulta com lock pessimista ou atualização condicional atômica;
 - manter validação, alteração da credencial e consumo na mesma transação;
 - rejeitar a segunda requisição concorrente sem alterar novamente a conta;
 - testar no PostgreSQL.
 
 Critério de aceite: duas requisições simultâneas com o mesmo token produzem
-exatamente uma conclusão bem-sucedida.
+exatamente uma conclusão bem-sucedida. A consulta de conclusão usa lock
+pessimista e o comportamento foi validado em PostgreSQL via Testcontainers.
 
 ### P0.3 — identidade imutável no JWT
 

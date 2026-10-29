@@ -33,7 +33,8 @@ class FirstAccessServiceTest {
     user.setEmail("user@nss.test");
     user.setAtivo(false);
     FirstAccessToken token = pendingToken(user, "FIRST_ACCESS", "first-access-token");
-    when(tokens.findByTokenHash(hash("first-access-token"))).thenReturn(Optional.of(token));
+    when(tokens.findByTokenHashForUpdate(hash("first-access-token")))
+        .thenReturn(Optional.of(token));
     when(encoder.encode("Password123!")).thenReturn("encoded-password");
 
     service.complete(
@@ -61,7 +62,8 @@ class FirstAccessServiceTest {
     User user = new User();
     user.setEmail("user@nss.test");
     FirstAccessToken token = pendingToken(user, "FIRST_ACCESS", "first-access-token");
-    when(tokens.findByTokenHash(hash("first-access-token"))).thenReturn(Optional.of(token));
+    when(tokens.findByTokenHashForUpdate(hash("first-access-token")))
+        .thenReturn(Optional.of(token));
 
     assertThrows(
         IllegalArgumentException.class,
@@ -92,7 +94,7 @@ class FirstAccessServiceTest {
             .formatHex(
                 MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8)));
     token.setTokenHash(hash);
-    when(tokens.findByTokenHash(hash)).thenReturn(Optional.of(token));
+    when(tokens.findByTokenHashForUpdate(hash)).thenReturn(Optional.of(token));
 
     assertThrows(
         IllegalArgumentException.class,
@@ -237,7 +239,7 @@ class FirstAccessServiceTest {
     user.setEmail("reset@nss.test");
     user.setAtivo(false);
     FirstAccessToken token = pendingToken(user, "PASSWORD_RESET", "reset-token");
-    when(tokens.findByTokenHash(hash("reset-token"))).thenReturn(Optional.of(token));
+    when(tokens.findByTokenHashForUpdate(hash("reset-token"))).thenReturn(Optional.of(token));
     when(encoder.encode("NewPassword123!")).thenReturn("encoded-reset");
 
     service.completePasswordReset(
@@ -269,7 +271,7 @@ class FirstAccessServiceTest {
     user.setEmail("reset@nss.test");
     FirstAccessToken token = pendingToken(user, "PASSWORD_RESET", "expired-reset");
     token.setExpiresAt(Instant.now().minusSeconds(1));
-    when(tokens.findByTokenHash(hash("expired-reset"))).thenReturn(Optional.of(token));
+    when(tokens.findByTokenHashForUpdate(hash("expired-reset"))).thenReturn(Optional.of(token));
 
     assertThrows(
         IllegalArgumentException.class,

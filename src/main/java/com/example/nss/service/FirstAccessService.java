@@ -88,7 +88,7 @@ public class FirstAccessService {
       com.example.nss.DTO.request.PasswordResetCompleteRequest request) {
     FirstAccessToken invite =
         tokens
-            .findByTokenHash(hash(request.token()))
+            .findByTokenHashForUpdate(hash(request.token()))
             .filter(
                 t ->
                     PENDING_STATUS.equals(t.getStatus())
@@ -112,7 +112,7 @@ public class FirstAccessService {
   public void complete(FirstAccessRequest request) {
     FirstAccessToken invite =
         tokens
-            .findByTokenHash(hash(request.token()))
+            .findByTokenHashForUpdate(hash(request.token()))
             .filter(
                 t ->
                     PENDING_STATUS.equals(t.getStatus())
