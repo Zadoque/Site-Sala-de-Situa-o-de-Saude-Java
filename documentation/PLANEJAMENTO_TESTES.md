@@ -6,7 +6,7 @@ Aumentar a confiança no backend com testes úteis, evitando metas artificiais.
 Cada ciclo deve elevar em aproximadamente 5 pontos percentuais a cobertura
 global de um contador, priorizando regras de negócio e fluxos de risco.
 
-## Linha de base atual
+## Linha de base inicial
 
 Medição feita com JaCoCo sobre os 28 testes executados pelo Maven:
 
@@ -21,6 +21,11 @@ Medição feita com JaCoCo sobre os 28 testes executados pelo Maven:
 O JaCoCo gera os relatórios em `target/site/jacoco/` e o build impede
 regressões abaixo da linha de base atual para linhas, branches e métodos.
 
+Após o início do ciclo de API e persistência, a medição global chegou a
+69,91% de linhas, 57,14% de branches e 63,55% de métodos. Linhas e branches
+superaram a referência do ciclo; métodos ainda precisam de testes
+comportamentais adicionais.
+
 ## Classificação dos testes
 
 Cobertura de linhas, branches e métodos é medida pelo JaCoCo. “Teste unitário”
@@ -30,7 +35,7 @@ separados, pois não são contadores de cobertura.
 Estado atual do inventário:
 
 - 24 testes unitários com JUnit/Mockito;
-- 1 teste de contexto Spring Boot (`NssApplicationTests`), tratado como
+- 1 teste de contexto Spring Boot (`NssApplicationIT`), tratado como
   integração;
 - 3 regras ArchUnit, tratadas como testes arquiteturais.
 
@@ -102,12 +107,25 @@ branches e 65,10% de métodos.
 - validar erros de validação, autenticação e autorização;
 - preservar o contrato JSON da API NSS v1.
 
+Execução iniciada com cobertura do `AdminUserService`. O próximo incremento
+deve priorizar contratos HTTP e persistência real, sempre validando respostas
+observáveis e regras de autorização.
+
+O incremento de cobertura está concluído, mas o ciclo permanece aberto: ainda
+faltam testes `@WebMvcTest`, PostgreSQL real e a análise das mutações
+sobreviventes do PIT.
+
 ### Ciclo 5 — força dos testes
 
 - executar PIT nos services de autenticação e analytics;
 - analisar mutantes sobreviventes;
 - criar testes somente para comportamentos que os mutantes demonstrarem não
   estar protegidos.
+
+Critério definido em `documentation/CRITERIOS_QUALIDADE_TESTES.md`. A primeira
+execução do PIT encontrou 191 mutações, matou 84 (44%) e registrou test
+strength de 74%; portanto o gate falhou corretamente e há mutações a analisar
+antes de considerar esta fase concluída.
 
 ## Critérios de aceitação
 

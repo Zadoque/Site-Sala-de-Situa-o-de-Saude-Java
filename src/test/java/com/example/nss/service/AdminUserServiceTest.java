@@ -68,6 +68,9 @@ class AdminUserServiceTest {
     var response = service.invite(request);
 
     assertEquals("new@example.com", response.email());
+    assertEquals("new@example.com", saved.getEmail());
+    assertEquals(AccountType.USER, saved.getAccountType());
+    org.mockito.Mockito.verify(users).save(any(User.class));
     verify(firstAccess).issue(any(User.class));
   }
 
@@ -89,9 +92,10 @@ class AdminUserServiceTest {
     when(users.save(user)).thenReturn(user);
     when(firstAccess.pending(user)).thenReturn(false);
 
-    service.setActive(5L, false, "admin@example.com");
+    var response = service.setActive(5L, false, "admin@example.com");
 
     assertEquals(false, user.isAtivo());
+    assertEquals(false, response.active());
     verify(refreshSessions).revokeAllForUser(5L);
   }
 
@@ -118,6 +122,7 @@ class AdminUserServiceTest {
     service.resetPassword(8L);
 
     assertEquals(null, user.getPassword());
+    assertEquals(null, user.getPasswordCreatedAt());
     verify(refreshSessions).revokeAllForUser(8L);
     verify(firstAccess).issuePasswordReset(user);
   }

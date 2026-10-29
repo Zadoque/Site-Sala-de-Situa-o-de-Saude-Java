@@ -37,7 +37,11 @@ class FirstAccessServiceTest {
 
     assertEquals("Nome", user.getNome());
     assertEquals("encoded-password", user.getPassword());
+    org.junit.jupiter.api.Assertions.assertNotNull(user.getPasswordCreatedAt());
+    org.junit.jupiter.api.Assertions.assertTrue(user.isAtivo());
     assertEquals("COMPLETED", token.getStatus());
+    org.junit.jupiter.api.Assertions.assertNotNull(token.getCompletedAt());
+    org.junit.jupiter.api.Assertions.assertNotNull(token.getPasswordCreatedAt());
     org.mockito.Mockito.verify(users).save(user);
     org.mockito.Mockito.verify(tokens).save(token);
   }
