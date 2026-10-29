@@ -42,7 +42,7 @@ public class RefreshSessionService {
     return raw;
   }
 
-  @Transactional
+  @Transactional(noRollbackFor = BadCredentialsException.class)
   public Rotation rotateWithToken(String rawToken) {
     if (rawToken == null || rawToken.isBlank()) {
       throw new BadCredentialsException("Refresh inválido");

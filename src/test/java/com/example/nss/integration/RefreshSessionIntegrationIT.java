@@ -92,6 +92,13 @@ class RefreshSessionIntegrationIT {
             post("/api/v1/auth/refresh")
                 .cookie(new jakarta.servlet.http.Cookie("nss_refresh", rawToken)))
         .andExpect(status().isUnauthorized());
+
+    RefreshSession revoked =
+        sessions.findAll().stream()
+            .filter(candidate -> user.getId().equals(candidate.getUser().getId()))
+            .findFirst()
+            .orElseThrow();
+    assertNotNull(revoked.getRevokedAt());
   }
 
   private User persistUser(String email, boolean active) {

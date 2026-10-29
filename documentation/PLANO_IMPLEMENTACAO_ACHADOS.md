@@ -70,7 +70,8 @@ Status: concluído no incremento `fix(auth): revoke sessions after password rese
 Critério de aceite: reset invalida sessões anteriores e a revogação não é
 desfeita pelo rollback da resposta de erro. O reset agora chama
 `RefreshSessionService.revokeAllForUser`, com cobertura unitária e integração
-persistida.
+persistida. A rotação inválida usa `noRollbackFor` para preservar a revogação
+de refresh expirado ou reutilizado, também validada por integração.
 
 ### P0.5 — geração de tokens testável
 
