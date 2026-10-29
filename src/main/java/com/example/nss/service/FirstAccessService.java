@@ -38,7 +38,7 @@ public class FirstAccessService {
 
   @Transactional
   public void issue(User user) {
-    tokens.findByUserId(user.getId()).ifPresent(tokens::delete);
+    tokens.findByUserId(user.getId()).ifPresent(this::deleteExistingToken);
     byte[] bytes = new byte[32];
     random.nextBytes(bytes);
     String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -61,7 +61,7 @@ public class FirstAccessService {
 
   @Transactional
   public void issuePasswordReset(User user) {
-    tokens.findByUserId(user.getId()).ifPresent(tokens::delete);
+    tokens.findByUserId(user.getId()).ifPresent(this::deleteExistingToken);
     byte[] bytes = new byte[32];
     random.nextBytes(bytes);
     String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -179,6 +179,11 @@ public class FirstAccessService {
         t.getStatus(),
         t.getSentAt(),
         t.getExpiresAt());
+  }
+
+  private void deleteExistingToken(FirstAccessToken token) {
+    tokens.delete(token);
+    tokens.flush();
   }
 
   private String hash(String value) {

@@ -187,6 +187,30 @@ O ciclo elevou a cobertura de integração de 26,04% para 35,52% em linhas, de
 a meta de 5 p.p. nas três métricas. O `clean verify` permaneceu verde, com
 Spotless, Checkstyle, PMD e ArchUnit aprovados.
 
+### Ciclo 7 — persistência administrativa e regressão de convites
+
+- exercitar convite, busca e desativação com `AdminUserService` real;
+- validar reset de senha com repositórios JPA e token persistido;
+- validar duplicidade de e-mail no banco;
+- executar PIT no mesmo ciclo e revisar mutações introduzidas pela correção.
+
+O teste `AdminUserServicePersistenceIT` encontrou e protegeu um defeito real:
+ao substituir um convite existente por um token de reset, o banco podia tentar
+inserir o novo registro antes de remover o antigo, violando a restrição única
+por usuário. `FirstAccessService` agora faz `flush` após remover o token
+anterior, e os testes unitário e de integração protegem esse comportamento.
+
+A cobertura de integração passou de 35,52% para 49,12% em linhas, de 23,41%
+para 28,17% em branches e de 38,92% para 47,06% em métodos. O incremento
+superou aproximadamente 5 p.p. nas métricas planejadas, com linhas e métodos
+acima da meta e branches em 4,76 p.p.
+
+O PIT foi executado após o ciclo: 182 de 193 mutações mortas (94%), test
+strength de 96% e três mutações sem cobertura, mantendo o gate aprovado. A
+mutação do `flush` foi inicialmente sobrevivente porque PIT não executa os
+testes Failsafe; foi adicionada uma asserção unitária específica para garantir
+que a regressão também seja protegida pelo mutation testing.
+
 ## Critérios de aceitação
 
 - cada ciclo aumenta a métrica planejada em aproximadamente 5 p.p.;

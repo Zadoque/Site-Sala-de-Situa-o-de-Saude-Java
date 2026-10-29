@@ -125,6 +125,7 @@ class FirstAccessServiceTest {
     org.junit.jupiter.api.Assertions.assertNotNull(token.getSentAt());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getExpiresAt());
     org.mockito.Mockito.verify(tokens).delete(previous);
+    org.mockito.Mockito.verify(tokens).flush();
     org.mockito.Mockito.verify(mail)
         .sendText(
             org.mockito.ArgumentMatchers.eq("invite@nss.test"),
@@ -159,6 +160,7 @@ class FirstAccessServiceTest {
     org.junit.jupiter.api.Assertions.assertNotNull(token.getSentAt());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getExpiresAt());
     org.mockito.Mockito.verify(tokens).delete(previous);
+    org.mockito.Mockito.verify(tokens).flush();
     org.mockito.Mockito.verify(mail)
         .sendText(
             org.mockito.ArgumentMatchers.eq("reset@nss.test"),
