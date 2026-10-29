@@ -125,6 +125,12 @@ passou a ser 77,12% de linhas, 69,05% de branches e 74,38% de métodos. Os
 relatórios separados registraram 67,64%/64,68%/64,04% para unitários e
 21,11%/14,29%/21,18% para integração.
 
+Após os testes de `UserService`, `MailService`, primeiro acesso, reset de senha,
+renovação de convite e cenários analíticos adicionais, a medição oficial mais
+recente chegou a 88,75% de linhas, 74,60% de branches e 85,22% de métodos.
+Unitários ficaram em 78,63%/69,84%/73,40% e integração em
+22,00%/15,87%/23,15%.
+
 Também foram adicionados três testes `@WebMvcTest` com `MockMvc` e um teste
 `EpidemiologyRepositoryPostgresIT` com PostgreSQL 16 via Testcontainers. O
 contrato HTTP e a persistência real estão cobertos; autorização completa por
@@ -147,6 +153,13 @@ Critério definido em `documentation/CRITERIOS_QUALIDADE_TESTES.md`. A primeira
 execução do PIT encontrou 191 mutações, matou 84 (44%) e registrou test
 strength de 74%; portanto o gate falhou corretamente e há mutações a analisar
 antes de considerar esta fase concluída.
+
+Depois dos ciclos de reforço, o PIT passou a matar 155 de 191 mutações (81%),
+com test strength de 89%. Restam 17 mutações sem cobertura e sobreviventes
+concentradas em defaults, infraestrutura de token e ramos equivalentes. Elas
+devem ser classificadas antes de qualquer novo teste; o próximo passo é
+documentar exclusões pontuais apenas quando a mutação for comprovadamente
+equivalente.
 
 ## Critérios de aceitação
 

@@ -130,6 +130,23 @@ class AdminUserServiceTest {
     verify(firstAccess).issuePasswordReset(user);
   }
 
+  @Test
+  void delegatesInvitationListingRenewalAndCancellation() {
+    var invitations =
+        List.of(
+            new com.example.nss.DTO.response.InvitationResponse(
+                1L, 2L, "a@nss.test", AccountType.USER, "PENDING", null, null));
+    var renewed = invitations.getFirst();
+    when(firstAccess.pendingInvitations()).thenReturn(invitations);
+    when(firstAccess.renew(2L)).thenReturn(renewed);
+
+    assertEquals(invitations, service.invitations());
+    assertEquals(renewed, service.renewInvitation(2L));
+    service.cancelInvitation(2L);
+
+    verify(firstAccess).cancel(2L);
+  }
+
   private static User user(Long id, String email, AccountType type) {
     User user = new User();
     user.setId(id);

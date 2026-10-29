@@ -14,8 +14,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 class FirstAccessServiceTest {
@@ -93,6 +95,139 @@ class FirstAccessServiceTest {
         IllegalArgumentException.class,
         () ->
             service.complete(new FirstAccessRequest("user@nss.test", "Nome", "Password123!", raw)));
+  }
+
+  @Test
+  void issuesInvitationAndSendsAUsableLink() {
+    FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    PasswordEncoder encoder = mock(PasswordEncoder.class);
+    MailService mail = mock(MailService.class);
+    FirstAccessService service = new FirstAccessService(users, tokens, encoder, mail);
+    org.springframework.test.util.ReflectionTestUtils.setField(
+        service, "frontendUrl", "https://app.nss.test/");
+    org.springframework.test.util.ReflectionTestUtils.setField(service, "expirationSeconds", 3600L);
+    User user = new User();
+    user.setId(11L);
+    user.setEmail("invite@nss.test");
+    when(tokens.findByUserId(11L)).thenReturn(Optional.empty());
+
+    service.issue(user);
+
+    ArgumentCaptor<FirstAccessToken> captor = ArgumentCaptor.forClass(FirstAccessToken.class);
+    org.mockito.Mockito.verify(tokens).save(captor.capture());
+    FirstAccessToken token = captor.getValue();
+    org.junit.jupiter.api.Assertions.assertEquals("FIRST_ACCESS", token.getPurpose());
+    org.junit.jupiter.api.Assertions.assertEquals("PENDING", token.getStatus());
+    org.junit.jupiter.api.Assertions.assertNotNull(token.getTokenHash());
+    org.mockito.Mockito.verify(mail)
+        .sendText(
+            org.mockito.ArgumentMatchers.eq("invite@nss.test"),
+            org.mockito.ArgumentMatchers.contains("Convite"),
+            org.mockito.ArgumentMatchers.contains("primeiro-acesso"));
+  }
+
+  @Test
+  void pendingReportsOnlyAnUnexpiredPendingToken() throws Exception {
+    FirstAccessTokenRepository tokenRepository = mock(FirstAccessTokenRepository.class);
+    FirstAccessService service =
+        new FirstAccessService(
+            mock(UserRepository.class),
+            tokenRepository,
+            mock(PasswordEncoder.class),
+            mock(MailService.class));
+    User user = new User();
+    user.setId(12L);
+    FirstAccessToken pending = pendingToken(user, "FIRST_ACCESS", "pending");
+    when(tokenRepository.findByUserId(12L)).thenReturn(Optional.of(pending));
+
+    org.junit.jupiter.api.Assertions.assertTrue(service.pending(user));
+
+    pending.setStatus("COMPLETED");
+    org.junit.jupiter.api.Assertions.assertFalse(service.pending(user));
+  }
+
+  @Test
+  void listsAndCancelsPendingInvitations() throws Exception {
+    FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
+    FirstAccessService service =
+        new FirstAccessService(
+            mock(UserRepository.class),
+            tokens,
+            mock(PasswordEncoder.class),
+            mock(MailService.class));
+    User user = new User();
+    user.setId(13L);
+    user.setEmail("pending@nss.test");
+    user.setAccountType(com.example.nss.entity.AccountType.USER);
+    FirstAccessToken token = pendingToken(user, "FIRST_ACCESS", "pending");
+    token.setId(13L);
+    when(tokens.findByStatusOrderByExpiresAtAsc("PENDING")).thenReturn(List.of(token));
+    when(tokens.findById(13L)).thenReturn(Optional.of(token));
+
+    var invitations = service.pendingInvitations();
+    service.cancel(13L);
+
+    org.junit.jupiter.api.Assertions.assertEquals(
+        "pending@nss.test", invitations.getFirst().email());
+    org.junit.jupiter.api.Assertions.assertEquals("CANCELLED", token.getStatus());
+    org.mockito.Mockito.verify(tokens).save(token);
+  }
+
+  @Test
+  void completesPasswordResetAndReactivatesTheUser() throws Exception {
+    FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    PasswordEncoder encoder = mock(PasswordEncoder.class);
+    FirstAccessService service =
+        new FirstAccessService(users, tokens, encoder, mock(MailService.class));
+    User user = new User();
+    user.setEmail("reset@nss.test");
+    user.setAtivo(false);
+    FirstAccessToken token = pendingToken(user, "PASSWORD_RESET", "reset-token");
+    when(tokens.findByTokenHash(hash("reset-token"))).thenReturn(Optional.of(token));
+    when(encoder.encode("NewPassword123!")).thenReturn("encoded-reset");
+
+    service.completePasswordReset(
+        new com.example.nss.DTO.request.PasswordResetCompleteRequest(
+            "RESET@NSS.TEST", "reset-token", "NewPassword123!"));
+
+    assertEquals("encoded-reset", user.getPassword());
+    org.junit.jupiter.api.Assertions.assertTrue(user.isAtivo());
+    assertEquals("COMPLETED", token.getStatus());
+    org.mockito.Mockito.verify(users).save(user);
+    org.mockito.Mockito.verify(tokens).save(token);
+  }
+
+  @Test
+  void renewsPendingInvitationByCancellingTheOldToken() throws Exception {
+    FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
+    MailService mail = mock(MailService.class);
+    FirstAccessService service =
+        new FirstAccessService(
+            mock(UserRepository.class), tokens, mock(PasswordEncoder.class), mail);
+    org.springframework.test.util.ReflectionTestUtils.setField(
+        service, "frontendUrl", "https://app.nss.test");
+    User user = new User();
+    user.setId(22L);
+    user.setEmail("renew@nss.test");
+    FirstAccessToken old = pendingToken(user, "FIRST_ACCESS", "old-token");
+    old.setId(22L);
+    FirstAccessToken replacement = pendingToken(user, "FIRST_ACCESS", "replacement-token");
+    replacement.setId(23L);
+    when(tokens.findById(22L)).thenReturn(Optional.of(old));
+    when(tokens.findByUserId(22L)).thenReturn(Optional.empty(), Optional.of(replacement));
+
+    var invitation = service.renew(22L);
+
+    assertEquals("CANCELLED", old.getStatus());
+    assertEquals(23L, invitation.id());
+    org.mockito.Mockito.verify(tokens).save(old);
+    org.mockito.Mockito.verify(mail)
+        .sendText(
+            org.mockito.ArgumentMatchers.eq("renew@nss.test"),
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.any());
   }
 
   private static FirstAccessToken pendingToken(User user, String purpose, String raw)

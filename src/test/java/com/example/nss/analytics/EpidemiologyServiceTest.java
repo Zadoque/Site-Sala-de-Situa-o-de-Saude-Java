@@ -169,4 +169,24 @@ class EpidemiologyServiceTest {
 
     assertEquals(List.of("A", "B"), response.items().stream().map(e -> e.code()).toList());
   }
+
+  @Test
+  void municipalityWithCodeUsesTheRequestedMunicipalityOnly() {
+    TerritoryCatalog.Entry municipality =
+        new TerritoryCatalog.Entry(
+            "3302403", "Macaé", "MUNICIPALITY", "3302403", null, "AVAILABLE");
+    when(catalog.forGeography("3302403", null, "MUNICIPALITY")).thenReturn(List.of(municipality));
+    when(repository.totals(any(), eq(Geography.MUNICIPALITY), any()))
+        .thenReturn(new EpidemiologyTotals(2L, 2L));
+    when(repository.aggregate(any(), eq(Geography.MUNICIPALITY), any()))
+        .thenReturn(List.of(new TerritoryAggregate("3302403", 2L)));
+
+    AnalyticsResponse response =
+        service.query(
+            Geography.MUNICIPALITY,
+            new EpidemiologyFilter(null, null, null, null, null, "3302403", null));
+
+    assertEquals(List.of("3302403"), response.items().stream().map(e -> e.code()).toList());
+    verify(catalog).forGeography("3302403", null, "MUNICIPALITY");
+  }
 }
