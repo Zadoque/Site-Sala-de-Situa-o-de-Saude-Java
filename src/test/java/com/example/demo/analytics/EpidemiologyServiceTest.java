@@ -29,8 +29,8 @@ class EpidemiologyServiceTest {
 
     @Test
     void totalOfficialIsNotCalculatedFromVisibleItems() {
-        when(repository.totals(any(), eq(Geography.DISTRICT))).thenReturn(new EpidemiologyTotals(10L, 7L));
-        when(repository.aggregate(any(), eq(Geography.DISTRICT))).thenReturn(List.of(new TerritoryAggregate("CG_DIST_SEDE", 7L)));
+        when(repository.totals(any(), eq(Geography.DISTRICT), any())).thenReturn(new EpidemiologyTotals(10L, 7L));
+        when(repository.aggregate(any(), eq(Geography.DISTRICT), any())).thenReturn(List.of(new TerritoryAggregate("CG_DIST_SEDE", 7L)));
 
         AnalyticsResponse response = service.query(Geography.DISTRICT,
                 new EpidemiologyFilter("DENG", 2026, 3, null, null, "3301009", null));
@@ -64,8 +64,8 @@ class EpidemiologyServiceTest {
 
     @Test
     void availableZeroIsDifferentFromUnavailable() {
-        when(repository.totals(any(), eq(Geography.DISTRICT))).thenReturn(new EpidemiologyTotals(0L, 0L));
-        when(repository.aggregate(any(), eq(Geography.DISTRICT))).thenReturn(List.of());
+        when(repository.totals(any(), eq(Geography.DISTRICT), any())).thenReturn(new EpidemiologyTotals(0L, 0L));
+        when(repository.aggregate(any(), eq(Geography.DISTRICT), any())).thenReturn(List.of());
 
         AnalyticsResponse response = service.query(Geography.DISTRICT,
                 new EpidemiologyFilter("DENG", 2026, null, null, "20_39", "3301009", null));

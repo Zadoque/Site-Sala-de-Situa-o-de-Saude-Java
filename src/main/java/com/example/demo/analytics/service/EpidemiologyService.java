@@ -29,13 +29,15 @@ public class EpidemiologyService {
         if (geography == Geography.NEIGHBORHOOD && !"CG_DIST_SEDE".equals(filter.districtCode())) {
             return response(geography, filter, null, CoverageStatus.UNAVAILABLE, 0L, 0L, List.of());
         }
-        EpidemiologyTotals totals = repository.totals(filter, geography);
+        List<TerritoryCatalog.Entry> territories = catalog.forGeography(filter.municipalityCode(), filter.districtCode(), geography.name());
+        List<String> mappedIds = territories.stream().map(TerritoryCatalog.Entry::territoryId).toList();
+        EpidemiologyTotals totals = repository.totals(filter, geography, mappedIds);
         long total = totals.total();
         long mapped = totals.mapped();
         List<AnalyticsResponse.TerritoryItem> items = new ArrayList<>();
         Map<String, Long> aggregates = new HashMap<>();
-        repository.aggregate(filter, geography).forEach(row -> aggregates.put(row.code(), row.total()));
-        for (TerritoryCatalog.Entry entry : catalog.forGeography(filter.municipalityCode(), filter.districtCode(), geography.name())) {
+        repository.aggregate(filter, geography, mappedIds).forEach(row -> aggregates.put(row.code(), row.total()));
+        for (TerritoryCatalog.Entry entry : territories) {
             items.add(new AnalyticsResponse.TerritoryItem(entry.territoryId(), entry.name(), aggregates.getOrDefault(entry.territoryId(), 0L), entry.parentDistrictId()));
         }
         if (geography == Geography.MUNICIPALITY && filter.municipalityCode() == null) {

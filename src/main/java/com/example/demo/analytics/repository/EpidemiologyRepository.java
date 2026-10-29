@@ -3,7 +3,6 @@ package com.example.demo.analytics.repository;
 import com.example.demo.analytics.api.EpidemiologyFilter;
 import com.example.demo.analytics.api.Geography;
 import com.example.demo.analytics.mapper.EpidemiologyRowMapper;
-import com.example.demo.analytics.service.TerritoryCatalog;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -16,19 +15,16 @@ public class EpidemiologyRepository {
     private final NamedParameterJdbcTemplate jdbc;
     private final String yearColumn;
     private final String monthColumn;
-    private final TerritoryCatalog catalog;
 
     public EpidemiologyRepository(@Qualifier("analyticsJdbcTemplate") org.springframework.jdbc.core.JdbcTemplate template,
                                   @org.springframework.beans.factory.annotation.Value("${analytics.schema.year-column:year}") String yearColumn,
-                                  @org.springframework.beans.factory.annotation.Value("${analytics.schema.month-column:month}") String monthColumn,
-                                  TerritoryCatalog catalog) {
+                                  @org.springframework.beans.factory.annotation.Value("${analytics.schema.month-column:month}") String monthColumn) {
         this.jdbc = new NamedParameterJdbcTemplate(template);
         this.yearColumn = identifier(yearColumn);
         this.monthColumn = identifier(monthColumn);
-        this.catalog = catalog;
     }
 
-    public List<TerritoryAggregate> aggregate(EpidemiologyFilter f, Geography geography) {
+    public List<TerritoryAggregate> aggregate(EpidemiologyFilter f, Geography geography, List<String> mappedIds) {
         String territory = switch (geography) {
             case REGION, STATE -> "NULL";
             case MUNICIPALITY -> "f.cd_mun";
@@ -40,13 +36,13 @@ public class EpidemiologyRepository {
         if (geography == Geography.MUNICIPALITY && f.municipalityCode() != null) { sql.append(" AND f.cd_mun = :municipalityCode"); p.addValue("municipalityCode", f.municipalityCode()); }
         if (geography != Geography.MUNICIPALITY && f.municipalityCode() != null) { sql.append(" AND f.cd_mun = :municipalityCode"); p.addValue("municipalityCode", f.municipalityCode()); }
         if (geography == Geography.NEIGHBORHOOD && f.districtCode() != null) { sql.append(" AND f.notification_district_id = :districtCode"); p.addValue("districtCode", f.districtCode()); }
-        sql.append(" AND ").append(mappedPredicate(f, geography, p)).append(" GROUP BY ").append(territory);
+        sql.append(" AND ").append(mappedPredicate(geography, mappedIds, p)).append(" GROUP BY ").append(territory);
         return jdbc.query(sql.toString(), p, EpidemiologyRowMapper.territoryAggregate());
     }
 
-    public EpidemiologyTotals totals(EpidemiologyFilter f, Geography geography) {
+    public EpidemiologyTotals totals(EpidemiologyFilter f, Geography geography, List<String> mappedIds) {
         MapSqlParameterSource territoryParams = new MapSqlParameterSource();
-        String mapped = mappedPredicate(f, geography, territoryParams);
+        String mapped = mappedPredicate(geography, mappedIds, territoryParams);
         StringBuilder sql = new StringBuilder("SELECT COALESCE(SUM(f.cases_total),0) AS total, COALESCE(SUM(CASE WHEN ").append(mapped).append(" THEN f.cases_total ELSE 0 END),0) AS mapped FROM analytics.fato_casos f WHERE 1=1");
         MapSqlParameterSource p = parameters(f, sql);
         p.addValues(territoryParams.getValues());
@@ -65,11 +61,9 @@ public class EpidemiologyRepository {
                 EpidemiologyRowMapper.disease()
         );
     }
-    private String mappedPredicate(EpidemiologyFilter f, Geography geography, MapSqlParameterSource p) {
-        List<String> ids = catalog.forGeography(f.municipalityCode(), f.districtCode(), geography.name())
-                .stream().map(TerritoryCatalog.Entry::territoryId).toList();
-        if (ids.isEmpty()) return "FALSE";
-        p.addValue("mappedIds", ids);
+    private String mappedPredicate(Geography geography, List<String> mappedIds, MapSqlParameterSource p) {
+        if (mappedIds.isEmpty()) return "FALSE";
+        p.addValue("mappedIds", mappedIds);
         return switch (geography) {
             case MUNICIPALITY -> "f.cd_mun IN (:mappedIds)";
             case DISTRICT -> "f.notification_district_id IN (:mappedIds) AND f.notification_territory_status IN ('NOTIFICATION_DISTRICT_ONLY','NOTIFICATION_NEIGHBORHOOD')";

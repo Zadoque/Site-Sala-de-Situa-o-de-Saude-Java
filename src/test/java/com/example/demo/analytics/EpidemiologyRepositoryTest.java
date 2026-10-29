@@ -28,13 +28,15 @@ class EpidemiologyRepositoryTest {
             {null, null, "UNMAPPED_NOTIFICATION_UNIT", 17}
         };
         for (Object[] row : rows) jdbc.update("INSERT INTO analytics.fato_casos VALUES ('3301009', ?, ?, ?, ?, 'F')", row);
-        var repository = new EpidemiologyRepository(jdbc, "ano", "mes", catalog);
+        var repository = new EpidemiologyRepository(jdbc, "ano", "mes");
         var filter = new EpidemiologyFilter(null, null, null, null, null, "3301009", null);
-        var totals = repository.totals(filter, Geography.DISTRICT);
+        var districtIds = catalog.forGeography("3301009", null, "DISTRICT").stream().map(TerritoryCatalog.Entry::territoryId).toList();
+        var totals = repository.totals(filter, Geography.DISTRICT, districtIds);
         assertEquals(53L, totals.total());
         assertEquals(5L, totals.mapped());
-        assertEquals(1, repository.aggregate(filter, Geography.DISTRICT).size());
+        assertEquals(1, repository.aggregate(filter, Geography.DISTRICT, districtIds).size());
         var neighborhoods = new EpidemiologyFilter(null, null, null, null, null, "3301009", district);
-        assertEquals(3L, repository.totals(neighborhoods, Geography.NEIGHBORHOOD).mapped());
+        var neighborhoodIds = catalog.forGeography("3301009", district, "NEIGHBORHOOD").stream().map(TerritoryCatalog.Entry::territoryId).toList();
+        assertEquals(3L, repository.totals(neighborhoods, Geography.NEIGHBORHOOD, neighborhoodIds).mapped());
     }
 }
