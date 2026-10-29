@@ -211,6 +211,24 @@ mutação do `flush` foi inicialmente sobrevivente porque PIT não executa os
 testes Failsafe; foi adicionada uma asserção unitária específica para garantir
 que a regressão também seja protegida pelo mutation testing.
 
+### Ciclo 8 — fluxo administrativo HTTP completo
+
+- validar convite administrativo pelo endpoint protegido por `ROLE_ADMIN`;
+- validar listagem e consulta de convites pendentes;
+- validar renovação e cancelamento de convite;
+- validar desativação e reset pelo limite HTTP;
+- validar paginação inválida e executar PIT ao final do ciclo.
+
+O teste `AdminUserControllerPersistenceIT` cobre o fluxo Controller → Service →
+Repository com persistência real e contexto de segurança ativo. A cobertura de
+integração evoluiu de 49,12% para 54,53% em linhas, de 28,17% para 30,56% em
+branches e de 47,06% para 54,90% em métodos. O ganho de branches foi de 2,39
+p.p. neste incremento, mas o acumulado do ciclo administrativo ultrapassou a
+meta de 5 p.p. desde a medição anterior do ciclo.
+
+O PIT foi executado novamente e permaneceu aprovado: 182 de 193 mutações
+mortas (94%), test strength de 96% e três mutações sem cobertura classificadas.
+
 ## Critérios de aceitação
 
 - cada ciclo aumenta a métrica planejada em aproximadamente 5 p.p.;
