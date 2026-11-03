@@ -13,6 +13,10 @@ impedir que a porcentagem seja aumentada por testes artificiais.
 - 10 mutações sem cobertura;
 - 15 mutações sobreviventes ou não cobertas no relatório atual.
 
+Na execução por módulo, `analytics` teve 33 mutantes gerados, 27 mortos,
+score de 82% e test strength de 96%; `user` teve 166 gerados, 147 mortos,
+score de 89% e test strength de 91%.
+
 Os gates de 80% para mutation score e test strength continuam ativos no Maven,
 com `failWhenNoMutations=true`.
 

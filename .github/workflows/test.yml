@@ -27,7 +27,16 @@ jobs:
           java-version: "21"
           cache: maven
       - name: Run mutation testing quality gate
-        run: ./mvnw -B test-compile org.pitest:pitest-maven:mutationCoverage
+        run: |
+          ./mvnw -B test-compile org.pitest:pitest-maven:mutationCoverage
+          ./mvnw -B test-compile org.pitest:pitest-maven:mutationCoverage \
+            '-DtargetClasses=com.example.nss.analytics.application.*,com.example.nss.analytics.domain.*' \
+            '-DtargetTests=com.example.nss.analytics.*' \
+            '-DreportDirectory=target/pit-reports/analytics'
+          ./mvnw -B test-compile org.pitest:pitest-maven:mutationCoverage \
+            '-DtargetClasses=com.example.nss.user.application.*,com.example.nss.user.domain.*' \
+            '-DtargetTests=com.example.nss.user.*' \
+            '-DreportDirectory=target/pit-reports/user'
 
   container:
     runs-on: ubuntu-24.04
