@@ -1,15 +1,16 @@
 package com.example.nss.user.application;
 
 import com.example.nss.shared.notification.MailService;
+import com.example.nss.user.application.command.FirstAccessCommand;
+import com.example.nss.user.application.command.PasswordResetCommand;
+import com.example.nss.user.application.query.InvitationResult;
+import com.example.nss.user.application.query.InvitationView;
+import com.example.nss.user.domain.UserAccount;
 import com.example.nss.user.infrastructure.persistence.FirstAccessToken;
 import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.security.EmailNormalizer;
-import com.example.nss.user.application.command.FirstAccessCommand;
-import com.example.nss.user.application.command.PasswordResetCommand;
-import com.example.nss.user.application.query.InvitationResult;
-import com.example.nss.user.application.query.InvitationView;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -65,6 +66,33 @@ public class FirstAccessService {
   }
 
   @Transactional
+  public void issue(UserAccount user) {
+    User entity = users.findById(user.getId()).orElseGet(() -> toEntity(user));
+    tokens.findByUserId(user.getId()).ifPresent(this::deleteExistingToken);
+    byte[] bytes = new byte[32];
+    tokenGenerator.nextBytes(bytes);
+    String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    FirstAccessToken token = new FirstAccessToken();
+    token.setUser(entity);
+    token.setTokenHash(hash(raw));
+    token.setStatus(PENDING_STATUS);
+    token.setPurpose("FIRST_ACCESS");
+    token.setSentAt(Instant.now());
+    token.setExpiresAt(Instant.now().plus(Duration.ofSeconds(expirationSeconds)));
+    tokens.save(token);
+    String link = frontendUrl.replaceAll("/$", "") + "/primeiro-acesso?token=" + raw;
+    mail.sendTextAfterCommit(
+        user.getEmail(),
+        "Convite de primeiro acesso ao NSS",
+        "Acesse o NSS pelo link abaixo para criar seu nome e senha:\n\n"
+            + link
+            + "\n\nEste convite expira em 24 horas e só pode ser usado uma vez.");
+  }
+
+  /**
+   * Compatibility entry point for persistence-focused tests; production callers use UserAccount.
+   */
+  @Deprecated
   public void issue(User user) {
     tokens.findByUserId(user.getId()).ifPresent(this::deleteExistingToken);
     byte[] bytes = new byte[32];
@@ -88,6 +116,30 @@ public class FirstAccessService {
   }
 
   @Transactional
+  public void issuePasswordReset(UserAccount user) {
+    User entity = users.findById(user.getId()).orElseGet(() -> toEntity(user));
+    tokens.findByUserId(user.getId()).ifPresent(this::deleteExistingToken);
+    byte[] bytes = new byte[32];
+    tokenGenerator.nextBytes(bytes);
+    String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    FirstAccessToken token = new FirstAccessToken();
+    token.setUser(entity);
+    token.setTokenHash(hash(raw));
+    token.setStatus(PENDING_STATUS);
+    token.setPurpose("PASSWORD_RESET");
+    token.setSentAt(Instant.now());
+    token.setExpiresAt(Instant.now().plus(Duration.ofSeconds(expirationSeconds)));
+    tokens.save(token);
+    String link = frontendUrl.replaceAll("/$", "") + "/redefinir-senha?token=" + raw;
+    mail.sendTextAfterCommit(
+        user.getEmail(),
+        "Redefinição de senha do NSS",
+        "Use o link abaixo para criar uma nova senha:\n\n"
+            + link
+            + "\n\nEste link expira em 7 dias e só pode ser usado uma vez.");
+  }
+
+  @Deprecated
   public void issuePasswordReset(User user) {
     tokens.findByUserId(user.getId()).ifPresent(this::deleteExistingToken);
     byte[] bytes = new byte[32];
@@ -111,8 +163,7 @@ public class FirstAccessService {
   }
 
   @Transactional
-  public void completePasswordReset(
-      PasswordResetCommand request) {
+  public void completePasswordReset(PasswordResetCommand request) {
     FirstAccessToken invite =
         tokens
             .findByTokenHashForUpdate(hash(request.token()))
@@ -159,11 +210,16 @@ public class FirstAccessService {
     tokens.save(invite);
   }
 
-  public boolean pending(User user) {
+  public boolean pending(UserAccount user) {
     return tokens
         .findByUserId(user.getId())
         .map(t -> PENDING_STATUS.equals(t.getStatus()) && t.getExpiresAt().isAfter(Instant.now()))
         .orElse(false);
+  }
+
+  @Deprecated
+  public boolean pending(User user) {
+    return pending(toDomain(user));
   }
 
   @Transactional(readOnly = true)
@@ -181,7 +237,7 @@ public class FirstAccessService {
       throw new IllegalArgumentException("Convite não está pendente");
     old.setStatus("CANCELLED");
     tokens.save(old);
-    issue(old.getUser());
+    issue(toDomain(old.getUser()));
     return tokens.findByUserId(old.getUser().getId()).map(this::view).orElseThrow();
   }
 
@@ -206,6 +262,34 @@ public class FirstAccessService {
         t.getStatus(),
         t.getSentAt(),
         t.getExpiresAt());
+  }
+
+  private UserAccount toDomain(User user) {
+    UserAccount account = new UserAccount();
+    account.setId(user.getId());
+    account.setNome(user.getNome());
+    account.setEmail(user.getEmail());
+    account.setPassword(user.getPassword());
+    account.setAccountType(user.getAccountType());
+    account.setAtivo(user.isAtivo());
+    account.setCreatedAt(user.getCreatedAt());
+    account.setUpdatedAt(user.getUpdatedAt());
+    account.setPasswordCreatedAt(user.getPasswordCreatedAt());
+    return account;
+  }
+
+  private User toEntity(UserAccount account) {
+    User user = new User();
+    user.setId(account.getId());
+    user.setNome(account.getNome());
+    user.setEmail(account.getEmail());
+    user.setPassword(account.getPassword());
+    user.setAccountType(account.getAccountType());
+    user.setAtivo(account.isAtivo());
+    user.setCreatedAt(account.getCreatedAt());
+    user.setUpdatedAt(account.getUpdatedAt());
+    user.setPasswordCreatedAt(account.getPasswordCreatedAt());
+    return user;
   }
 
   private void deleteExistingToken(FirstAccessToken token) {

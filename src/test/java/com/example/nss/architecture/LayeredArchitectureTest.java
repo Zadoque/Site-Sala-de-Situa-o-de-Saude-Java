@@ -1,7 +1,7 @@
 package com.example.nss.architecture;
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
@@ -92,8 +92,12 @@ class LayeredArchitectureTest {
           .should()
           .dependOnClassesThat()
           .resideInAnyPackage(
-              "org.springframework..", "jakarta.persistence..", "org.hibernate..",
-              "org.springframework.jdbc..", "jakarta.servlet..", "..infrastructure..");
+              "org.springframework..",
+              "jakarta.persistence..",
+              "org.hibernate..",
+              "org.springframework.jdbc..",
+              "jakarta.servlet..",
+              "..infrastructure..");
 
   @ArchTest
   static final ArchRule persistence_entities_are_in_infrastructure =

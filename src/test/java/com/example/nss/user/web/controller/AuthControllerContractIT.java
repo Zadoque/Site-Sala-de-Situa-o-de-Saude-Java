@@ -11,7 +11,7 @@ import com.example.nss.user.application.AuthRateLimiter;
 import com.example.nss.user.application.FirstAccessService;
 import com.example.nss.user.application.RefreshSessionService;
 import com.example.nss.user.application.UserService;
-import com.example.nss.user.infrastructure.persistence.User;
+import com.example.nss.user.domain.UserAccount;
 import com.example.nss.user.security.CustomUserDetailsService;
 import com.example.nss.user.security.JwtService;
 import com.example.nss.user.web.response.UserResponse;
@@ -149,7 +149,7 @@ class AuthControllerContractIT {
             .roles("USER")
             .build();
     Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
-    User entity = new User();
+    UserAccount entity = new UserAccount();
     entity.setId(7L);
     entity.setEmail("user@nss.test");
     UserResponse response = new UserResponse(7L, "User", "user@nss.test", true);
@@ -181,7 +181,7 @@ class AuthControllerContractIT {
 
   @Test
   void refreshReturnsNewAccessDataAndRotatesTheRefreshCookie() throws Exception {
-    User user = new User();
+    UserAccount user = new UserAccount();
     user.setId(7L);
     user.setEmail("user@nss.test");
     UserDetails principal =
@@ -279,7 +279,7 @@ class AuthControllerContractIT {
             .roles("ADMIN")
             .build();
     Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
-    User entity = new User();
+    UserAccount entity = new UserAccount();
     entity.setId(11L);
     entity.setEmail("admin@nss.test");
     org.mockito.Mockito.when(authentication.getPrincipal()).thenReturn(principal);

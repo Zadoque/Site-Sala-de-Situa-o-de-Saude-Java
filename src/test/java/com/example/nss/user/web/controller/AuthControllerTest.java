@@ -12,7 +12,7 @@ import com.example.nss.user.application.AuthRateLimiter;
 import com.example.nss.user.application.FirstAccessService;
 import com.example.nss.user.application.RefreshSessionService;
 import com.example.nss.user.application.UserService;
-import com.example.nss.user.infrastructure.persistence.User;
+import com.example.nss.user.domain.UserAccount;
 import com.example.nss.user.security.JwtService;
 import com.example.nss.user.web.request.LoginRequest;
 import com.example.nss.user.web.response.UserResponse;
@@ -56,7 +56,7 @@ class AuthControllerTest {
             .password("ignored")
             .roles("USER")
             .build();
-    User user = new User();
+    UserAccount user = new UserAccount();
     user.setId(7L);
     user.setEmail("ana@example.com");
     UserResponse userResponse = new UserResponse(7L, "Ana", "ana@example.com", true);
@@ -103,12 +103,12 @@ class AuthControllerTest {
         () -> controller.login(new LoginRequest("user@example.com", "secret"), response));
 
     verify(userService, never()).entityByEmail(any());
-    verify(refreshSessions, never()).issue(any());
+    verify(refreshSessions, never()).issue(any(com.example.nss.user.domain.UserAccount.class));
   }
 
   @Test
   void refreshUsesTheRotatedPrincipalAndCookie() {
-    User user = new User();
+    UserAccount user = new UserAccount();
     user.setId(7L);
     user.setEmail("ana@example.com");
     UserDetails principal =

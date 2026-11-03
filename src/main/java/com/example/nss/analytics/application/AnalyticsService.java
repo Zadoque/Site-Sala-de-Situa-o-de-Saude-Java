@@ -1,8 +1,8 @@
 package com.example.nss.analytics.application;
 
 import com.example.nss.analytics.application.port.AnalyticsQueryPort;
-import com.example.nss.analytics.application.query.CasoResumo;
 import com.example.nss.analytics.application.query.CaseResult;
+import com.example.nss.analytics.application.query.CasoResumo;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

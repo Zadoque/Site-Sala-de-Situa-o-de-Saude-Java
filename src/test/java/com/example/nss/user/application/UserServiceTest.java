@@ -7,8 +7,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.infrastructure.persistence.User;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.application.port.UserGateway;
+import com.example.nss.user.domain.UserAccount;
 import com.example.nss.user.web.mapper.UserMapper;
 import com.example.nss.user.web.response.UserResponse;
 import java.util.Optional;
@@ -16,18 +16,18 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 class UserServiceTest {
-  private final UserRepository repository = mock(UserRepository.class);
+  private final UserGateway repository = mock(UserGateway.class);
   private final FirstAccessService firstAccess = mock(FirstAccessService.class);
   private final UserService service =
       new UserService(repository, firstAccess, Mappers.getMapper(UserMapper.class));
 
   @Test
   void findsUserByNormalizedEmailAsResponseAndEntity() {
-    User user = user("ana@example.com", true);
-    when(repository.findByEmailIgnoreCase("ana@example.com")).thenReturn(Optional.of(user));
+    UserAccount user = user("ana@example.com", true);
+    when(repository.findByEmail("ana@example.com")).thenReturn(Optional.of(user));
 
     UserResponse response = service.getByEmail(" ANA@EXAMPLE.COM ");
-    User entity = service.entityByEmail(" ANA@EXAMPLE.COM ");
+    UserAccount entity = service.entityByEmail(" ANA@EXAMPLE.COM ");
 
     assertEquals(user.getEmail(), response.email());
     assertEquals(user, entity);
@@ -35,7 +35,7 @@ class UserServiceTest {
 
   @Test
   void rejectsUnknownUser() {
-    when(repository.findByEmailIgnoreCase("missing@example.com")).thenReturn(Optional.empty());
+    when(repository.findByEmail("missing@example.com")).thenReturn(Optional.empty());
 
     assertThrows(IllegalArgumentException.class, () -> service.getByEmail("missing@example.com"));
     assertThrows(
@@ -44,11 +44,10 @@ class UserServiceTest {
 
   @Test
   void requestsResetOnlyForAnActiveUser() {
-    User active = user("active@example.com", true);
-    User inactive = user("inactive@example.com", false);
-    when(repository.findByEmailIgnoreCase("active@example.com")).thenReturn(Optional.of(active));
-    when(repository.findByEmailIgnoreCase("inactive@example.com"))
-        .thenReturn(Optional.of(inactive));
+    UserAccount active = user("active@example.com", true);
+    UserAccount inactive = user("inactive@example.com", false);
+    when(repository.findByEmail("active@example.com")).thenReturn(Optional.of(active));
+    when(repository.findByEmail("inactive@example.com")).thenReturn(Optional.of(inactive));
 
     service.requestPasswordReset("active@example.com");
     service.requestPasswordReset("inactive@example.com");
@@ -57,8 +56,8 @@ class UserServiceTest {
     verify(firstAccess, never()).issuePasswordReset(inactive);
   }
 
-  private static User user(String email, boolean active) {
-    User user = new User();
+  private static UserAccount user(String email, boolean active) {
+    UserAccount user = new UserAccount();
     user.setId(1L);
     user.setEmail(email);
     user.setNome("Ana");

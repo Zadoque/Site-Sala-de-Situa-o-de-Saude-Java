@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import com.example.nss.analytics.application.AnalyticsService;
 import com.example.nss.analytics.application.query.CaseResult;
-import com.example.nss.analytics.web.response.CasoResumoResponse;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

@@ -5,10 +5,16 @@ import java.time.Instant;
 
 public interface ManagedUserView {
   Long id();
+
   String email();
+
   String name();
+
   AccountType accountType();
+
   boolean active();
+
   boolean firstAccessPending();
+
   Instant passwordCreatedAt();
 }

@@ -50,18 +50,37 @@ public class EpidemiologyController {
   @GetMapping("/metadata")
   public MetadataResponse metadata() {
     MetadataResult m = service.metadata();
-    return new MetadataResponse(m.availableYears(), m.availableMonthsByYear(), m.supportedGeographies(),
-        m.supportedAgeBands(), m.supportedSexes());
+    return new MetadataResponse(
+        m.availableYears(),
+        m.availableMonthsByYear(),
+        m.supportedGeographies(),
+        m.supportedAgeBands(),
+        m.supportedSexes());
   }
 
   private AnalyticsResponse response(AnalyticsResult r) {
-    return new AnalyticsResponse(r.metric(), r.geography(),
-        new AnalyticsResponse.FilterResponse(r.filters().disease(), r.filters().year(), r.filters().month(),
-            r.filters().sex(), r.filters().ageBand(), r.filters().municipalityCode(), r.filters().districtCode()),
-        r.totalNotifications(), new AnalyticsResponse.Coverage(r.coverage().status(),
-            r.coverage().mappedNotificationsTotal(), r.coverage().unmappedNotificationsTotal()),
-        r.items().stream().map(i -> new AnalyticsResponse.TerritoryItem(i.code(), i.name(), i.notificationsTotal(),
-            i.parentDistrictId())).toList());
+    return new AnalyticsResponse(
+        r.metric(),
+        r.geography(),
+        new AnalyticsResponse.FilterResponse(
+            r.filters().disease(),
+            r.filters().year(),
+            r.filters().month(),
+            r.filters().sex(),
+            r.filters().ageBand(),
+            r.filters().municipalityCode(),
+            r.filters().districtCode()),
+        r.totalNotifications(),
+        new AnalyticsResponse.Coverage(
+            r.coverage().status(),
+            r.coverage().mappedNotificationsTotal(),
+            r.coverage().unmappedNotificationsTotal()),
+        r.items().stream()
+            .map(
+                i ->
+                    new AnalyticsResponse.TerritoryItem(
+                        i.code(), i.name(), i.notificationsTotal(), i.parentDistrictId()))
+            .toList());
   }
 
   public record FilterRequest(

@@ -1,8 +1,8 @@
 package com.example.nss.analytics.web.controller;
 
 import com.example.nss.analytics.application.AnalyticsService;
-import com.example.nss.analytics.web.response.CasoResumoResponse;
 import com.example.nss.analytics.application.query.CaseResult;
+import com.example.nss.analytics.web.response.CasoResumoResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +24,17 @@ public class AnalyticsController {
   }
 
   private CasoResumoResponse toResponse(CaseResult c) {
-    return new CasoResumoResponse(c.codigoDoenca(), c.ano(), c.mes(), c.codigoMunicipio(), c.codigoUnidade(),
-        c.classificacao(), c.evolucao(), c.sexo(), c.semanaNotificacao(), c.anoNascimento(), c.totalCasos());
+    return new CasoResumoResponse(
+        c.codigoDoenca(),
+        c.ano(),
+        c.mes(),
+        c.codigoMunicipio(),
+        c.codigoUnidade(),
+        c.classificacao(),
+        c.evolucao(),
+        c.sexo(),
+        c.semanaNotificacao(),
+        c.anoNascimento(),
+        c.totalCasos());
   }
 }

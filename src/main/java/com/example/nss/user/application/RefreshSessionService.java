@@ -1,7 +1,6 @@
 package com.example.nss.user.application;
 
-import com.example.nss.user.infrastructure.persistence.RefreshSession;
-import com.example.nss.user.infrastructure.persistence.User;
+import com.example.nss.user.domain.UserAccount;
 import com.example.nss.user.infrastructure.repository.RefreshSessionRepository;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
@@ -29,8 +28,8 @@ public class RefreshSessionService {
   private long expirationMillis;
 
   @Transactional
-  public String issue(User user) {
-    User managedUser =
+  public String issue(UserAccount user) {
+    com.example.nss.user.infrastructure.persistence.User managedUser =
         users
             .findById(user.getId())
             .orElseThrow(() -> new BadCredentialsException("Conta não encontrada"));
@@ -42,12 +41,18 @@ public class RefreshSessionService {
     return raw;
   }
 
+  @Deprecated
+  @Transactional
+  public String issue(com.example.nss.user.infrastructure.persistence.User user) {
+    return issue(toDomain(user));
+  }
+
   @Transactional(noRollbackFor = BadCredentialsException.class)
   public Rotation rotateWithToken(String rawToken) {
     if (rawToken == null || rawToken.isBlank()) {
       throw new BadCredentialsException("Refresh inválido");
     }
-    RefreshSession current =
+    com.example.nss.user.infrastructure.persistence.RefreshSession current =
         sessions
             .findByTokenHashForUpdate(hash(rawToken))
             .orElseThrow(() -> new BadCredentialsException("Refresh inválido"));
@@ -62,12 +67,13 @@ public class RefreshSessionService {
       throw new BadCredentialsException("Refresh inválido");
     }
     String replacementRaw = randomToken();
-    RefreshSession replacement = newSession(current.getUser(), replacementRaw);
+    com.example.nss.user.infrastructure.persistence.RefreshSession replacement =
+        newSession(current.getUser(), replacementRaw);
     sessions.save(replacement);
     current.setRevokedAt(now);
     current.setReplacedBySessionId(replacement.getId());
     sessions.save(current);
-    return new Rotation(current.getUser(), replacementRaw);
+    return new Rotation(toDomain(current.getUser()), replacementRaw);
   }
 
   @Transactional
@@ -91,14 +97,30 @@ public class RefreshSessionService {
     sessions.revokeActiveByUserId(userId, Instant.now());
   }
 
-  private RefreshSession newSession(User user, String rawToken) {
-    RefreshSession session = new RefreshSession();
+  private com.example.nss.user.infrastructure.persistence.RefreshSession newSession(
+      com.example.nss.user.infrastructure.persistence.User user, String rawToken) {
+    com.example.nss.user.infrastructure.persistence.RefreshSession session =
+        new com.example.nss.user.infrastructure.persistence.RefreshSession();
     session.setId(UUID.randomUUID());
     session.setUser(user);
     session.setTokenHash(hash(rawToken));
     session.setCreatedAt(Instant.now());
     session.setExpiresAt(Instant.now().plus(Duration.ofMillis(expirationMillis)));
     return session;
+  }
+
+  private UserAccount toDomain(com.example.nss.user.infrastructure.persistence.User user) {
+    UserAccount account = new UserAccount();
+    account.setId(user.getId());
+    account.setEmail(user.getEmail());
+    account.setAtivo(user.isAtivo());
+    account.setNome(user.getNome());
+    account.setAccountType(user.getAccountType());
+    account.setPassword(user.getPassword());
+    account.setCreatedAt(user.getCreatedAt());
+    account.setUpdatedAt(user.getUpdatedAt());
+    account.setPasswordCreatedAt(user.getPasswordCreatedAt());
+    return account;
   }
 
   private String randomToken() {
@@ -117,7 +139,7 @@ public class RefreshSessionService {
     }
   }
 
-  public record Rotation(User user, String rawToken) {
+  public record Rotation(UserAccount user, String rawToken) {
     public String email() {
       return user.getEmail();
     }

@@ -1,5 +1,6 @@
 package com.example.nss.user.security;
 
+import com.example.nss.user.domain.UserAccount;
 import com.example.nss.user.infrastructure.persistence.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -31,6 +32,10 @@ public class JwtService {
   }
 
   public String generateToken(User user) {
+    return generateToken(user.getId());
+  }
+
+  public String generateToken(UserAccount user) {
     return generateToken(user.getId());
   }
 

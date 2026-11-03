@@ -2,10 +2,10 @@ package com.example.nss.analytics.application;
 
 import com.example.nss.analytics.application.port.EpidemiologyQueryPort;
 import com.example.nss.analytics.application.port.TerritoryCatalogPort;
-import com.example.nss.analytics.application.query.EpidemiologyTotals;
 import com.example.nss.analytics.application.query.AnalyticsResult;
-import com.example.nss.analytics.application.query.MetadataResult;
+import com.example.nss.analytics.application.query.EpidemiologyTotals;
 import com.example.nss.analytics.application.query.MetadataEntry;
+import com.example.nss.analytics.application.query.MetadataResult;
 import com.example.nss.analytics.application.query.Municipality;
 import com.example.nss.analytics.domain.CoverageStatus;
 import com.example.nss.analytics.domain.EpidemiologyFilter;

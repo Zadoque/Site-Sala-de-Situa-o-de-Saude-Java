@@ -5,9 +5,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.nss.analytics.application.query.CaseResult;
 import com.example.nss.analytics.application.query.CasoResumo;
 import com.example.nss.analytics.infrastructure.repository.AnalyticsRepository;
-import com.example.nss.analytics.application.query.CaseResult;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

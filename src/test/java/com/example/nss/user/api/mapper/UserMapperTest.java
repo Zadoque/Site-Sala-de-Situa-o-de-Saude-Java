@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.infrastructure.persistence.User;
+import com.example.nss.user.domain.UserAccount;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
@@ -14,7 +14,7 @@ class UserMapperTest {
 
   @Test
   void mapsUserToPublicResponse() {
-    User user = user();
+    UserAccount user = user();
 
     var response = mapper.toResponse(user);
 
@@ -26,7 +26,7 @@ class UserMapperTest {
 
   @Test
   void mapsUserToManagedResponse() {
-    User user = user();
+    UserAccount user = user();
 
     var response = mapper.toManagedResponse(user, true);
 
@@ -37,8 +37,8 @@ class UserMapperTest {
     assertTrue(response.firstAccessPending());
   }
 
-  private User user() {
-    User user = new User();
+  private UserAccount user() {
+    UserAccount user = new UserAccount();
     user.setId(7L);
     user.setNome("Ana Saúde");
     user.setEmail("ana@example.com");

@@ -3,27 +3,24 @@ package com.example.nss.user.application;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.application.query.InvitationView;
+import com.example.nss.user.application.port.UserGateway;
 import com.example.nss.user.application.query.InvitationResult;
-import com.example.nss.user.infrastructure.persistence.User;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.application.query.InvitationView;
+import com.example.nss.user.domain.AccountType;
+import com.example.nss.user.domain.UserAccount;
 import com.example.nss.user.web.mapper.UserMapper;
 import com.example.nss.user.web.request.AccountInvitationRequest;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 
 class AdminUserServiceTest {
-  private final UserRepository users = mock(UserRepository.class);
+  private final UserGateway users = mock(UserGateway.class);
   private final FirstAccessService firstAccess = mock(FirstAccessService.class);
   private final RefreshSessionService refreshSessions = mock(RefreshSessionService.class);
   private final UserMapper mapper = Mappers.getMapper(UserMapper.class);
@@ -32,24 +29,23 @@ class AdminUserServiceTest {
 
   @Test
   void searchesWithoutTermUsingCappedPageSize() {
-    User user = user(1L, "ana@example.com", AccountType.USER);
-    when(users.findAll(any(org.springframework.data.domain.Pageable.class)))
-        .thenReturn(new PageImpl<>(List.of(user), PageRequest.of(0, 60), 1));
+    UserAccount user = user(1L, "ana@example.com", AccountType.USER);
+    when(users.search("  ", 0, 60))
+        .thenReturn(new UserGateway.Page(List.of(user), 0, 60, false, 1));
     when(firstAccess.pending(user)).thenReturn(true);
 
     var page = service.search("  ", 0, 100);
 
     assertEquals(1, page.items().size());
     assertEquals(60, page.size());
-    verify(users).findAll(any(org.springframework.data.domain.Pageable.class));
+    verify(users).search("  ", 0, 60);
   }
 
   @Test
   void searchesWithTermAndMapsPendingInvitation() {
-    User user = user(2L, "bruno@example.com", AccountType.ADMIN);
-    when(users.findByNomeContainingIgnoreCaseOrEmailContainingIgnoreCase(
-            eq("bruno"), eq("bruno"), any()))
-        .thenReturn(new PageImpl<>(List.of(user), PageRequest.of(1, 10), 11));
+    UserAccount user = user(2L, "bruno@example.com", AccountType.ADMIN);
+    when(users.search("bruno", 1, 10))
+        .thenReturn(new UserGateway.Page(List.of(user), 1, 10, true, 11));
     when(firstAccess.pending(user)).thenReturn(false);
 
     var page = service.search("bruno", 1, 10);
@@ -62,17 +58,17 @@ class AdminUserServiceTest {
   void invitesNormalizedEmailAndIssuesFirstAccess() {
     AccountInvitationRequest request =
         new AccountInvitationRequest("  NEW@Example.COM ", AccountType.ADMIN);
-    User saved = user(3L, "new@example.com", AccountType.ADMIN);
-    when(users.findByEmailIgnoreCase("new@example.com")).thenReturn(Optional.empty());
-    when(users.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    UserAccount saved = user(3L, "new@example.com", AccountType.ADMIN);
+    when(users.findByEmail("new@example.com")).thenReturn(Optional.empty());
+    when(users.save(any(UserAccount.class))).thenAnswer(invocation -> invocation.getArgument(0));
     when(firstAccess.pending(saved)).thenReturn(false);
 
     var response = service.invite(request);
 
     assertEquals("new@example.com", response.email());
-    var captor = org.mockito.ArgumentCaptor.forClass(User.class);
+    var captor = org.mockito.ArgumentCaptor.forClass(UserAccount.class);
     org.mockito.Mockito.verify(users).save(captor.capture());
-    User invited = captor.getValue();
+    UserAccount invited = captor.getValue();
     assertEquals("new@example.com", invited.getEmail());
     assertEquals(AccountType.ADMIN, invited.getAccountType());
     assertEquals(true, invited.isAtivo());
@@ -83,8 +79,8 @@ class AdminUserServiceTest {
 
   @Test
   void rejectsDuplicateInvitation() {
-    User existing = user(4L, "existing@example.com", AccountType.USER);
-    when(users.findByEmailIgnoreCase("existing@example.com")).thenReturn(Optional.of(existing));
+    UserAccount existing = user(4L, "existing@example.com", AccountType.USER);
+    when(users.findByEmail("existing@example.com")).thenReturn(Optional.of(existing));
 
     assertThrows(
         IllegalArgumentException.class,
@@ -94,7 +90,7 @@ class AdminUserServiceTest {
 
   @Test
   void deactivatesUserAndRevokesSessions() {
-    User user = user(5L, "user@example.com", AccountType.USER);
+    UserAccount user = user(5L, "user@example.com", AccountType.USER);
     when(users.findById(5L)).thenReturn(Optional.of(user));
     when(users.save(user)).thenReturn(user);
     when(firstAccess.pending(user)).thenReturn(false);
@@ -108,14 +104,14 @@ class AdminUserServiceTest {
 
   @Test
   void protectsActorAndOtherAdminsFromDeactivation() {
-    User actor = user(6L, "admin@example.com", AccountType.ADMIN);
+    UserAccount actor = user(6L, "admin@example.com", AccountType.ADMIN);
     when(users.findById(6L)).thenReturn(Optional.of(actor));
     when(users.save(actor)).thenReturn(actor);
     assertThrows(
         IllegalArgumentException.class, () -> service.setActive(6L, false, actor.getEmail()));
     assertEquals(true, service.setActive(6L, true, actor.getEmail()).active());
 
-    User otherAdmin = user(7L, "other@example.com", AccountType.ADMIN);
+    UserAccount otherAdmin = user(7L, "other@example.com", AccountType.ADMIN);
     when(users.findById(7L)).thenReturn(Optional.of(otherAdmin));
     assertThrows(
         IllegalArgumentException.class, () -> service.setActive(7L, false, "admin@example.com"));
@@ -123,7 +119,7 @@ class AdminUserServiceTest {
 
   @Test
   void resetsPasswordAndDelegatesInvitationOperations() {
-    User user = user(8L, "reset@example.com", AccountType.USER);
+    UserAccount user = user(8L, "reset@example.com", AccountType.USER);
     user.setPassword("old");
     user.setPasswordCreatedAt(java.time.Instant.now());
     when(users.findById(8L)).thenReturn(Optional.of(user));
@@ -150,8 +146,7 @@ class AdminUserServiceTest {
   void delegatesInvitationListingRenewalAndCancellation() {
     List<InvitationView> invitations =
         List.of(
-            new InvitationResult(
-                1L, 2L, "a@nss.test", AccountType.USER, "PENDING", null, null));
+            new InvitationResult(1L, 2L, "a@nss.test", AccountType.USER, "PENDING", null, null));
     var renewed = invitations.getFirst();
     when(firstAccess.pendingInvitations()).thenReturn(invitations);
     when(firstAccess.renew(2L)).thenReturn(renewed);
@@ -163,8 +158,8 @@ class AdminUserServiceTest {
     verify(firstAccess).cancel(2L);
   }
 
-  private static User user(Long id, String email, AccountType type) {
-    User user = new User();
+  private static UserAccount user(Long id, String email, AccountType type) {
+    UserAccount user = new UserAccount();
     user.setId(id);
     user.setEmail(email);
     user.setNome(email.substring(0, email.indexOf('@')));

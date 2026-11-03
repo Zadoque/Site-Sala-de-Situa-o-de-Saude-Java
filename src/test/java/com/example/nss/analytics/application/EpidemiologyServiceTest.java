@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.example.nss.analytics.application.port.TerritoryCatalogPort;
+import com.example.nss.analytics.application.query.AnalyticsResult;
 import com.example.nss.analytics.application.query.Disease;
 import com.example.nss.analytics.application.query.EpidemiologyTotals;
 import com.example.nss.analytics.application.query.MetadataEntry;
@@ -13,7 +14,6 @@ import com.example.nss.analytics.application.query.TerritoryAggregate;
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepository;
-import com.example.nss.analytics.application.query.AnalyticsResult;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

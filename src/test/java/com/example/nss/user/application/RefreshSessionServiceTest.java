@@ -93,7 +93,7 @@ class RefreshSessionServiceTest {
 
     RefreshSessionService.Rotation rotation = service.rotateWithToken("opaque-refresh");
 
-    assertEquals(user, rotation.user());
+    assertEquals(user.getEmail(), rotation.email());
     assertNotNull(rotation.rawToken());
     assertNotNull(current.getRevokedAt());
     assertNotNull(current.getReplacedBySessionId());
