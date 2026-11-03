@@ -1,4 +1,4 @@
-package com.example.nss.architecture.fixtures;
+package com.example.architecture.fixtures;
 
 import com.example.nss.analytics.infrastructure.repository.AnalyticsRepository;
 

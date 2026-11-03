@@ -1,18 +1,20 @@
 # Classificação das mutações sobreviventes
 
-Este documento registra a revisão do relatório PIT do ciclo 5. O objetivo é
+Este documento registra a revisão do relatório PIT da branch
+`refactor/modular-architecture-national-api`. O objetivo é
 impedir que a porcentagem seja aumentada por testes artificiais.
 
 ## Resultado atual
 
-- 191 mutações geradas;
-- 180 mortas;
-- mutation score: 94%;
-- test strength: 96%;
-- 3 mutações sem cobertura;
-- 8 mutações sobreviventes.
+- 196 mutações geradas;
+- 171 mortas;
+- mutation score: 87%;
+- test strength: 92%;
+- 10 mutações sem cobertura;
+- 15 mutações sobreviventes ou não cobertas no relatório atual.
 
-O gate de 60% continua ativo no Maven.
+Os gates de 80% para mutation score e test strength continuam ativos no Maven,
+com `failWhenNoMutations=true`.
 
 ## Mutações sem cobertura
 

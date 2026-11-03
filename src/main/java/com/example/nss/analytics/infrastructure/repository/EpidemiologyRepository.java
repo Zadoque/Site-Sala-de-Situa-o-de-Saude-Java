@@ -31,6 +31,7 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
     this.monthColumn = identifier(monthColumn);
   }
 
+  @Override
   public List<TerritoryAggregate> aggregate(
       EpidemiologyFilter f, Geography geography, List<String> mappedIds) {
     String territory =
@@ -75,6 +76,7 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
     return jdbc.query(sql.toString(), p, EpidemiologyRowMapper.territoryAggregate());
   }
 
+  @Override
   public EpidemiologyTotals totals(
       EpidemiologyFilter f, Geography geography, List<String> mappedIds) {
     MapSqlParameterSource territoryParams = new MapSqlParameterSource();

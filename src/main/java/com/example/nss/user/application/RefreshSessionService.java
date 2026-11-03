@@ -1,10 +1,8 @@
 package com.example.nss.user.application;
 
+import com.example.nss.user.application.port.RefreshSessionGateway;
+import com.example.nss.user.application.port.UserGateway;
 import com.example.nss.user.domain.UserAccount;
-import com.example.nss.user.infrastructure.persistence.RefreshSession;
-import com.example.nss.user.infrastructure.persistence.User;
-import com.example.nss.user.infrastructure.repository.RefreshSessionRepository;
-import com.example.nss.user.infrastructure.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -22,65 +20,100 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class RefreshSessionService {
-  private final RefreshSessionRepository sessions;
-  private final UserRepository users;
+  private final RefreshSessionGateway sessions;
+  private final UserGateway users;
   private final SecureRandom random = new SecureRandom();
 
-  @Value("${api.auth.refresh-expiration:604800000}") private long expirationMillis;
+  @Value("${api.auth.refresh-expiration:604800000}")
+  private long expirationMillis;
 
   @Transactional
   public String issue(UserAccount user) {
-    User managedUser = users.findById(user.getId())
-        .orElseThrow(() -> new BadCredentialsException("Conta não encontrada"));
-    if (!managedUser.isAtivo()) throw new BadCredentialsException("Conta desativada");
-    String raw = randomToken(); sessions.save(newSession(managedUser, raw)); return raw;
+    UserAccount managed =
+        users
+            .findById(user.getId())
+            .orElseThrow(() -> new BadCredentialsException("Conta não encontrada"));
+    if (!managed.isAtivo()) throw new BadCredentialsException("Conta desativada");
+    String raw = randomToken();
+    sessions.save(newSession(managed, raw));
+    return raw;
   }
-
-  @Transactional
-  public String issue(User user) { return issue(toDomain(user)); }
 
   @Transactional(noRollbackFor = BadCredentialsException.class)
   public Rotation rotateWithToken(String rawToken) {
-    if (rawToken == null || rawToken.isBlank()) throw new BadCredentialsException("Refresh inválido");
-    RefreshSession current = sessions.findByTokenHashForUpdate(hash(rawToken))
-        .orElseThrow(() -> new BadCredentialsException("Refresh inválido"));
+    if (rawToken == null || rawToken.isBlank())
+      throw new BadCredentialsException("Refresh inválido");
+    RefreshSessionGateway.SessionData current =
+        sessions
+            .findByTokenHashForUpdate(hash(rawToken))
+            .orElseThrow(() -> new BadCredentialsException("Refresh inválido"));
     Instant now = Instant.now();
-    if (current.getRevokedAt() != null || !current.getExpiresAt().isAfter(now) || !current.getUser().isAtivo()) {
-      if (current.getRevokedAt() == null) { current.setRevokedAt(now); sessions.save(current); }
+    if (current.getRevokedAt() != null
+        || !current.getExpiresAt().isAfter(now)
+        || !current.getUser().isAtivo()) {
+      if (current.getRevokedAt() == null) {
+        current.setRevokedAt(now);
+        sessions.save(current);
+      }
       throw new BadCredentialsException("Refresh inválido");
     }
-    String replacementRaw = randomToken(); RefreshSession replacement = newSession(current.getUser(), replacementRaw);
-    sessions.save(replacement); current.setRevokedAt(now); current.setReplacedBySessionId(replacement.getId());
-    sessions.save(current); return new Rotation(toDomain(current.getUser()), replacementRaw);
+    String replacementRaw = randomToken();
+    RefreshSessionGateway.SessionData replacement = newSession(current.getUser(), replacementRaw);
+    sessions.save(replacement);
+    current.setRevokedAt(now);
+    current.setReplacedBySessionId(replacement.getId());
+    sessions.save(current);
+    return new Rotation(current.getUser(), replacementRaw);
   }
 
   @Transactional
   public void revoke(String rawToken) {
     if (rawToken == null || rawToken.isBlank()) return;
-    sessions.findByTokenHashForUpdate(hash(rawToken)).ifPresent(session -> {
-      if (session.getRevokedAt() == null) { session.setRevokedAt(Instant.now()); sessions.save(session); }
-    });
+    sessions
+        .findByTokenHashForUpdate(hash(rawToken))
+        .ifPresent(
+            session -> {
+              if (session.getRevokedAt() == null) {
+                session.setRevokedAt(Instant.now());
+                sessions.save(session);
+              }
+            });
   }
 
-  @Transactional public void revokeAllForUser(Long userId) { sessions.revokeActiveByUserId(userId, Instant.now()); }
-
-  private RefreshSession newSession(User user, String rawToken) {
-    RefreshSession session = new RefreshSession(); session.setId(UUID.randomUUID()); session.setUser(user);
-    session.setTokenHash(hash(rawToken)); session.setCreatedAt(Instant.now());
-    session.setExpiresAt(Instant.now().plus(Duration.ofMillis(expirationMillis))); return session;
+  @Transactional
+  public void revokeAllForUser(Long userId) {
+    sessions.revokeActiveByUserId(userId, Instant.now());
   }
 
-  private UserAccount toDomain(User user) {
-    UserAccount account = new UserAccount(); account.setId(user.getId()); account.setEmail(user.getEmail());
-    account.setAtivo(user.isAtivo()); account.setNome(user.getNome()); account.setAccountType(user.getAccountType());
-    account.setPassword(user.getPassword()); account.setCreatedAt(user.getCreatedAt()); account.setUpdatedAt(user.getUpdatedAt());
-    account.setPasswordCreatedAt(user.getPasswordCreatedAt()); return account;
+  private RefreshSessionGateway.SessionData newSession(UserAccount user, String rawToken) {
+    RefreshSessionGateway.SessionData session = new RefreshSessionGateway.SessionData();
+    session.setId(UUID.randomUUID());
+    session.setUser(user);
+    session.setTokenHash(hash(rawToken));
+    session.setCreatedAt(Instant.now());
+    session.setExpiresAt(Instant.now().plus(Duration.ofMillis(expirationMillis)));
+    return session;
   }
 
-  private String randomToken() { byte[] bytes = new byte[32]; random.nextBytes(bytes); return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes); }
+  private String randomToken() {
+    byte[] bytes = new byte[32];
+    random.nextBytes(bytes);
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+  }
+
   private String hash(String value) {
-    try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))); }
-    catch (Exception exception) { throw new IllegalStateException("Não foi possível proteger o refresh token", exception); }
+    try {
+      return HexFormat.of()
+          .formatHex(
+              MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));
+    } catch (Exception e) {
+      throw new IllegalStateException("Não foi possível proteger o refresh token", e);
+    }
   }
-  public record Rotation(UserAccount user, String rawToken) { public String email() { return user.getEmail(); } }
+
+  public record Rotation(UserAccount user, String rawToken) {
+    public String email() {
+      return user.getEmail();
+    }
+  }
 }

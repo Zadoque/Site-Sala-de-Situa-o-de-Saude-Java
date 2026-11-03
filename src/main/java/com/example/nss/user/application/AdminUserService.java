@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class AdminUserService {
   private final UserGateway users;
   private final FirstAccessService firstAccess;

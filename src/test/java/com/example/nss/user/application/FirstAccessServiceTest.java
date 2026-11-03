@@ -31,8 +31,8 @@ class FirstAccessServiceTest {
     java.util.Arrays.fill(expectedBytes, (byte) 1);
     FirstAccessService service =
         new FirstAccessService(
-            mock(UserRepository.class),
-            tokens,
+            LegacyUserTestAdapters.users(mock(UserRepository.class)),
+            LegacyUserTestAdapters.tokens(tokens),
             mock(PasswordEncoder.class),
             mail,
             mock(RefreshSessionService.class),
@@ -43,7 +43,7 @@ class FirstAccessServiceTest {
     user.setId(41L);
     user.setEmail("deterministic@nss.test");
 
-    service.issue(user);
+    service.issue(LegacyUserTestAdapters.domain(user));
 
     String raw = Base64.getUrlEncoder().withoutPadding().encodeToString(expectedBytes);
     ArgumentCaptor<FirstAccessToken> tokenCaptor = ArgumentCaptor.forClass(FirstAccessToken.class);
@@ -66,10 +66,16 @@ class FirstAccessServiceTest {
     PasswordEncoder encoder = mock(PasswordEncoder.class);
     MailService mail = mock(MailService.class);
     FirstAccessService service =
-        new FirstAccessService(users, tokens, encoder, mail, mock(RefreshSessionService.class));
+        new FirstAccessService(
+            LegacyUserTestAdapters.users(users),
+            LegacyUserTestAdapters.tokens(tokens),
+            encoder,
+            mail,
+            mock(RefreshSessionService.class));
     User user = new User();
     user.setEmail("user@nss.test");
     user.setAtivo(false);
+    when(users.findByEmailIgnoreCase("user@nss.test")).thenReturn(Optional.of(user));
     FirstAccessToken token = pendingToken(user, "FIRST_ACCESS", "first-access-token");
     when(tokens.findByTokenHashForUpdate(hash("first-access-token")))
         .thenReturn(Optional.of(token));
@@ -96,7 +102,12 @@ class FirstAccessServiceTest {
     PasswordEncoder encoder = mock(PasswordEncoder.class);
     MailService mail = mock(MailService.class);
     FirstAccessService service =
-        new FirstAccessService(users, tokens, encoder, mail, mock(RefreshSessionService.class));
+        new FirstAccessService(
+            LegacyUserTestAdapters.users(users),
+            LegacyUserTestAdapters.tokens(tokens),
+            encoder,
+            mail,
+            mock(RefreshSessionService.class));
     User user = new User();
     user.setEmail("user@nss.test");
     FirstAccessToken token = pendingToken(user, "FIRST_ACCESS", "first-access-token");
@@ -118,7 +129,12 @@ class FirstAccessServiceTest {
     PasswordEncoder encoder = mock(PasswordEncoder.class);
     MailService mail = mock(MailService.class);
     FirstAccessService service =
-        new FirstAccessService(users, tokens, encoder, mail, mock(RefreshSessionService.class));
+        new FirstAccessService(
+            LegacyUserTestAdapters.users(users),
+            LegacyUserTestAdapters.tokens(tokens),
+            encoder,
+            mail,
+            mock(RefreshSessionService.class));
     User user = new User();
     user.setEmail("user@nss.test");
     FirstAccessToken token = new FirstAccessToken();
@@ -147,7 +163,12 @@ class FirstAccessServiceTest {
     PasswordEncoder encoder = mock(PasswordEncoder.class);
     MailService mail = mock(MailService.class);
     FirstAccessService service =
-        new FirstAccessService(users, tokens, encoder, mail, mock(RefreshSessionService.class));
+        new FirstAccessService(
+            LegacyUserTestAdapters.users(users),
+            LegacyUserTestAdapters.tokens(tokens),
+            encoder,
+            mail,
+            mock(RefreshSessionService.class));
     org.springframework.test.util.ReflectionTestUtils.setField(
         service, "frontendUrl", "https://app.nss.test/");
     org.springframework.test.util.ReflectionTestUtils.setField(service, "expirationSeconds", 3600L);
@@ -157,7 +178,7 @@ class FirstAccessServiceTest {
     FirstAccessToken previous = new FirstAccessToken();
     when(tokens.findByUserId(11L)).thenReturn(Optional.of(previous));
 
-    service.issue(user);
+    service.issue(LegacyUserTestAdapters.domain(user));
 
     ArgumentCaptor<FirstAccessToken> captor = ArgumentCaptor.forClass(FirstAccessToken.class);
     org.mockito.Mockito.verify(tokens).save(captor.capture());
@@ -165,7 +186,7 @@ class FirstAccessServiceTest {
     org.junit.jupiter.api.Assertions.assertEquals("FIRST_ACCESS", token.getPurpose());
     org.junit.jupiter.api.Assertions.assertEquals("PENDING", token.getStatus());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getTokenHash());
-    org.junit.jupiter.api.Assertions.assertEquals(user, token.getUser());
+    org.junit.jupiter.api.Assertions.assertEquals(user.getEmail(), token.getUser().getEmail());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getSentAt());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getExpiresAt());
     org.mockito.Mockito.verify(tokens).delete(previous);
@@ -183,8 +204,8 @@ class FirstAccessServiceTest {
     MailService mail = mock(MailService.class);
     FirstAccessService service =
         new FirstAccessService(
-            mock(UserRepository.class),
-            tokens,
+            LegacyUserTestAdapters.users(mock(UserRepository.class)),
+            LegacyUserTestAdapters.tokens(tokens),
             mock(PasswordEncoder.class),
             mail,
             mock(RefreshSessionService.class));
@@ -196,14 +217,14 @@ class FirstAccessServiceTest {
     FirstAccessToken previous = new FirstAccessToken();
     when(tokens.findByUserId(14L)).thenReturn(Optional.of(previous));
 
-    service.issuePasswordReset(user);
+    service.issuePasswordReset(LegacyUserTestAdapters.domain(user));
 
     ArgumentCaptor<FirstAccessToken> captor = ArgumentCaptor.forClass(FirstAccessToken.class);
     org.mockito.Mockito.verify(tokens).save(captor.capture());
     FirstAccessToken token = captor.getValue();
     assertEquals("PASSWORD_RESET", token.getPurpose());
     assertEquals("PENDING", token.getStatus());
-    assertEquals(user, token.getUser());
+    assertEquals(user.getEmail(), token.getUser().getEmail());
     org.junit.jupiter.api.Assertions.assertEquals(64, token.getTokenHash().length());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getSentAt());
     org.junit.jupiter.api.Assertions.assertNotNull(token.getExpiresAt());
@@ -221,8 +242,8 @@ class FirstAccessServiceTest {
     FirstAccessTokenRepository tokenRepository = mock(FirstAccessTokenRepository.class);
     FirstAccessService service =
         new FirstAccessService(
-            mock(UserRepository.class),
-            tokenRepository,
+            LegacyUserTestAdapters.users(mock(UserRepository.class)),
+            LegacyUserTestAdapters.tokens(tokenRepository),
             mock(PasswordEncoder.class),
             mock(MailService.class),
             mock(RefreshSessionService.class));
@@ -231,10 +252,12 @@ class FirstAccessServiceTest {
     FirstAccessToken pending = pendingToken(user, "FIRST_ACCESS", "pending");
     when(tokenRepository.findByUserId(12L)).thenReturn(Optional.of(pending));
 
-    org.junit.jupiter.api.Assertions.assertTrue(service.pending(user));
+    org.junit.jupiter.api.Assertions.assertTrue(
+        service.pending(LegacyUserTestAdapters.domain(user)));
 
     pending.setStatus("COMPLETED");
-    org.junit.jupiter.api.Assertions.assertFalse(service.pending(user));
+    org.junit.jupiter.api.Assertions.assertFalse(
+        service.pending(LegacyUserTestAdapters.domain(user)));
   }
 
   @Test
@@ -242,8 +265,8 @@ class FirstAccessServiceTest {
     FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
     FirstAccessService service =
         new FirstAccessService(
-            mock(UserRepository.class),
-            tokens,
+            LegacyUserTestAdapters.users(mock(UserRepository.class)),
+            LegacyUserTestAdapters.tokens(tokens),
             mock(PasswordEncoder.class),
             mock(MailService.class),
             mock(RefreshSessionService.class));
@@ -272,10 +295,16 @@ class FirstAccessServiceTest {
     PasswordEncoder encoder = mock(PasswordEncoder.class);
     RefreshSessionService refreshSessions = mock(RefreshSessionService.class);
     FirstAccessService service =
-        new FirstAccessService(users, tokens, encoder, mock(MailService.class), refreshSessions);
+        new FirstAccessService(
+            LegacyUserTestAdapters.users(users),
+            LegacyUserTestAdapters.tokens(tokens),
+            encoder,
+            mock(MailService.class),
+            refreshSessions);
     User user = new User();
     user.setEmail("reset@nss.test");
     user.setAtivo(false);
+    when(users.findByEmailIgnoreCase("reset@nss.test")).thenReturn(Optional.of(user));
     FirstAccessToken token = pendingToken(user, "PASSWORD_RESET", "reset-token");
     when(tokens.findByTokenHashForUpdate(hash("reset-token"))).thenReturn(Optional.of(token));
     when(encoder.encode("NewPassword123!")).thenReturn("encoded-reset");
@@ -300,8 +329,8 @@ class FirstAccessServiceTest {
     FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
     FirstAccessService service =
         new FirstAccessService(
-            mock(UserRepository.class),
-            tokens,
+            LegacyUserTestAdapters.users(mock(UserRepository.class)),
+            LegacyUserTestAdapters.tokens(tokens),
             mock(PasswordEncoder.class),
             mock(MailService.class),
             mock(RefreshSessionService.class));
@@ -325,8 +354,8 @@ class FirstAccessServiceTest {
     MailService mail = mock(MailService.class);
     FirstAccessService service =
         new FirstAccessService(
-            mock(UserRepository.class),
-            tokens,
+            LegacyUserTestAdapters.users(mock(UserRepository.class)),
+            LegacyUserTestAdapters.tokens(tokens),
             mock(PasswordEncoder.class),
             mail,
             mock(RefreshSessionService.class));
@@ -359,8 +388,8 @@ class FirstAccessServiceTest {
     FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
     FirstAccessService service =
         new FirstAccessService(
-            mock(UserRepository.class),
-            tokens,
+            LegacyUserTestAdapters.users(mock(UserRepository.class)),
+            LegacyUserTestAdapters.tokens(tokens),
             mock(PasswordEncoder.class),
             mock(MailService.class),
             mock(RefreshSessionService.class));
@@ -377,8 +406,8 @@ class FirstAccessServiceTest {
     FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
     FirstAccessService service =
         new FirstAccessService(
-            mock(UserRepository.class),
-            tokens,
+            LegacyUserTestAdapters.users(mock(UserRepository.class)),
+            LegacyUserTestAdapters.tokens(tokens),
             mock(PasswordEncoder.class),
             mock(MailService.class),
             mock(RefreshSessionService.class));

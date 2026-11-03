@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.nss.user.application.LegacyUserTestAdapters;
 import com.example.nss.user.application.RefreshSessionService;
 import com.example.nss.user.domain.AccountType;
 import com.example.nss.user.infrastructure.persistence.RefreshSession;
@@ -34,7 +35,7 @@ class RefreshSessionIntegrationIT {
   @Test
   void rotatesAPersistentRefreshSessionThroughTheHttpEndpoint() throws Exception {
     User user = persistUser("refresh-rotate@nss.test", true);
-    String rawToken = refreshSessions.issue(user);
+    String rawToken = refreshSessions.issue(LegacyUserTestAdapters.domain(user));
 
     mockMvc
         .perform(
@@ -60,7 +61,7 @@ class RefreshSessionIntegrationIT {
   @Test
   void logoutRevokesThePersistentRefreshSession() throws Exception {
     User user = persistUser("refresh-logout@nss.test", true);
-    String rawToken = refreshSessions.issue(user);
+    String rawToken = refreshSessions.issue(LegacyUserTestAdapters.domain(user));
 
     mockMvc
         .perform(
@@ -84,7 +85,7 @@ class RefreshSessionIntegrationIT {
   @Test
   void rejectsAnExpiredPersistentRefreshSession() throws Exception {
     User user = persistUser("refresh-expired@nss.test", true);
-    String rawToken = refreshSessions.issue(user);
+    String rawToken = refreshSessions.issue(LegacyUserTestAdapters.domain(user));
     RefreshSession session =
         sessions.findAll().stream()
             .filter(candidate -> user.getId().equals(candidate.getUser().getId()))

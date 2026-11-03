@@ -216,4 +216,26 @@ class EpidemiologyServiceTest {
     assertEquals(List.of("3302403"), response.items().stream().map(e -> e.code()).toList());
     verify(catalog).forGeography("3302403", null, "MUNICIPALITY");
   }
+
+  @Test
+  void buildsNationalAggregatesForStateAndRegion() {
+    when(catalog.forGeography(null, null, "STATE")).thenReturn(List.of());
+    when(catalog.forGeography(null, null, "REGION")).thenReturn(List.of());
+    when(repository.totals(any(), any(), any())).thenReturn(new EpidemiologyTotals(12L, 12L));
+    when(repository.aggregate(any(), eq(Geography.STATE), any()))
+        .thenReturn(List.of(new TerritoryAggregate("RJ", 7L)));
+    when(repository.aggregate(any(), eq(Geography.REGION), any()))
+        .thenReturn(List.of(new TerritoryAggregate("SE", 12L)));
+
+    AnalyticsResult state =
+        service.query(
+            Geography.STATE, new EpidemiologyFilter("DENG", 2024, null, null, null, null, null));
+    AnalyticsResult region =
+        service.query(
+            Geography.REGION, new EpidemiologyFilter("DENG", 2024, null, null, null, null, null));
+
+    assertEquals("RJ", state.items().getFirst().code());
+    assertEquals("SE", region.items().getFirst().code());
+    assertEquals("Sudeste", region.items().getFirst().name());
+  }
 }

@@ -209,6 +209,12 @@
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>${jacoco.version}</version>
 				<configuration>
+					<excludes>
+						<!-- Structural value type; its record-generated methods have no business logic. -->
+						<exclude>com/example/nss/analytics/application/query/Municipality.class</exclude>
+						<!-- Generated MapStruct implementation; mapper behavior is tested through its contract. -->
+						<exclude>com/example/nss/user/web/mapper/UserMapperImpl.class</exclude>
+					</excludes>
 					<formats>
 						<format>HTML</format>
 						<format>XML</format>

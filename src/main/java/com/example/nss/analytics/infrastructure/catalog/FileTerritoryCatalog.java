@@ -23,6 +23,7 @@ public class FileTerritoryCatalog
     this.entries = load();
   }
 
+  @Override
   public List<com.example.nss.analytics.application.port.TerritoryCatalogPort.Entry> forGeography(
       String municipalityCode, String districtCode, String geography) {
     if (DISTRICT.equals(geography))
@@ -43,6 +44,7 @@ public class FileTerritoryCatalog
     return List.of();
   }
 
+  @Override
   public Optional<com.example.nss.analytics.application.port.TerritoryCatalogPort.Entry> find(
       String id) {
     return Optional.ofNullable(entries.get(id));

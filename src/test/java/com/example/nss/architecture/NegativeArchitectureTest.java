@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class NegativeArchitectureTest {
   private final JavaClasses fixtures =
       new ClassFileImporter()
-          .importPackages("com.example.nss.architecture.fixtures", "com.example.nss");
+          .importPackages("com.example.architecture.fixtures", "com.example.nss");
 
   @Test
   void controllerRepositoryViolationIsDetected() {

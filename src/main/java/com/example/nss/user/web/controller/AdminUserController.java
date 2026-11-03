@@ -1,6 +1,9 @@
 package com.example.nss.user.web.controller;
 
 import com.example.nss.user.application.AdminUserService;
+import com.example.nss.user.application.query.InvitationView;
+import com.example.nss.user.application.query.ManagedUserView;
+import com.example.nss.user.application.query.UserPageView;
 import com.example.nss.user.web.request.AccountInvitationRequest;
 import com.example.nss.user.web.request.ActivationRequest;
 import com.example.nss.user.web.response.InvitationResponse;
@@ -28,19 +31,26 @@ public class AdminUserController {
     if (page < 0 || size < 1 || size > 60) {
       throw new IllegalArgumentException("page deve ser >= 0 e size deve estar entre 1 e 60");
     }
-    return service.search(search, page, size);
+    UserPageView result = service.<UserPageView>search(search, page, size);
+    return new UserPageResponse(
+        result.items().stream().map(this::toResponse).toList(),
+        result.page(),
+        result.size(),
+        result.hasNext(),
+        result.totalItems());
   }
 
   @PostMapping
   public ResponseEntity<ManagedUserResponse> invite(
       @Valid @RequestBody AccountInvitationRequest request) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.invite(request));
+    ManagedUserView result = service.<ManagedUserView>invite(request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(result));
   }
 
   @PatchMapping("/{id}/activation")
   public ManagedUserResponse activation(
       @PathVariable Long id, @Valid @RequestBody ActivationRequest request, Authentication auth) {
-    return service.setActive(id, request.active(), auth.getName());
+    return toResponse(service.<ManagedUserView>setActive(id, request.active(), auth.getName()));
   }
 
   @PostMapping("/{id}/password-reset")
@@ -51,12 +61,34 @@ public class AdminUserController {
 
   @GetMapping("/invitations")
   public List<InvitationResponse> invitations() {
-    return service.invitations();
+    return service.invitations().stream().map(this::toResponse).toList();
   }
 
   @PostMapping("/invitations/{id}/renew")
   public InvitationResponse renew(@PathVariable Long id) {
-    return service.renewInvitation(id);
+    return toResponse(service.<InvitationView>renewInvitation(id));
+  }
+
+  private InvitationResponse toResponse(InvitationView invitation) {
+    return new InvitationResponse(
+        invitation.id(),
+        invitation.userId(),
+        invitation.email(),
+        invitation.accountType(),
+        invitation.status(),
+        invitation.sentAt(),
+        invitation.expiresAt());
+  }
+
+  private ManagedUserResponse toResponse(ManagedUserView user) {
+    return new ManagedUserResponse(
+        user.id(),
+        user.email(),
+        user.name(),
+        user.accountType(),
+        user.active(),
+        user.firstAccessPending(),
+        user.passwordCreatedAt());
   }
 
   @PostMapping("/invitations/{id}/cancel")

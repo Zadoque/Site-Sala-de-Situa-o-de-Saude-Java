@@ -10,10 +10,12 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface UserMapper extends UserMapperPort {
 
+  @Override
   UserResponse toResponse(UserAccount user);
 
   @Mapping(target = "name", source = "user.nome")
   @Mapping(target = "active", source = "user.ativo")
   @Mapping(target = "firstAccessPending", source = "firstAccessPending")
+  @Override
   ManagedUserResponse toManagedResponse(UserAccount user, boolean firstAccessPending);
 }

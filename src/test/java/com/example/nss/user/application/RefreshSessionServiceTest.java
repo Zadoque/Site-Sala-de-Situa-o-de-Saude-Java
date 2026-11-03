@@ -28,20 +28,22 @@ class RefreshSessionServiceTest {
   void issuesARefreshTokenForAnActiveManagedUser() {
     RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
     UserRepository users = mock(UserRepository.class);
-    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSessionService service =
+        new RefreshSessionService(
+            LegacyUserTestAdapters.sessions(sessions), LegacyUserTestAdapters.users(users));
     setExpiration(service, 60_000L);
     User user = new User();
     user.setId(7L);
     user.setAtivo(true);
     when(users.findById(7L)).thenReturn(java.util.Optional.of(user));
 
-    String token = service.issue(user);
+    String token = service.issue(LegacyUserTestAdapters.domain(user));
 
     assertNotNull(token);
     ArgumentCaptor<RefreshSession> captor = ArgumentCaptor.forClass(RefreshSession.class);
     verify(sessions).save(captor.capture());
     RefreshSession created = captor.getValue();
-    assertEquals(user, created.getUser());
+    assertEquals(user.getEmail(), created.getUser().getEmail());
     assertNotNull(created.getId());
     assertNotNull(created.getCreatedAt());
     assertNotNull(created.getExpiresAt());
@@ -54,13 +56,16 @@ class RefreshSessionServiceTest {
   void refusesToIssueRefreshTokenForAnInactiveManagedUser() {
     RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
     UserRepository users = mock(UserRepository.class);
-    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSessionService service =
+        new RefreshSessionService(
+            LegacyUserTestAdapters.sessions(sessions), LegacyUserTestAdapters.users(users));
     User user = new User();
     user.setId(8L);
     user.setAtivo(false);
     when(users.findById(8L)).thenReturn(Optional.of(user));
 
-    assertThrows(BadCredentialsException.class, () -> service.issue(user));
+    assertThrows(
+        BadCredentialsException.class, () -> service.issue(LegacyUserTestAdapters.domain(user)));
     verify(sessions, org.mockito.Mockito.never()).save(any(RefreshSession.class));
   }
 
@@ -68,12 +73,15 @@ class RefreshSessionServiceTest {
   void refusesToIssueRefreshTokenWhenTheManagedUserDoesNotExist() {
     RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
     UserRepository users = mock(UserRepository.class);
-    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSessionService service =
+        new RefreshSessionService(
+            LegacyUserTestAdapters.sessions(sessions), LegacyUserTestAdapters.users(users));
     User user = new User();
     user.setId(404L);
     when(users.findById(404L)).thenReturn(Optional.empty());
 
-    assertThrows(BadCredentialsException.class, () -> service.issue(user));
+    assertThrows(
+        BadCredentialsException.class, () -> service.issue(LegacyUserTestAdapters.domain(user)));
     verify(sessions, org.mockito.Mockito.never()).save(any(RefreshSession.class));
   }
 
@@ -81,7 +89,9 @@ class RefreshSessionServiceTest {
   void rotatesAnActiveRefreshTokenAndRevokesThePreviousSession() throws Exception {
     RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
     UserRepository users = mock(UserRepository.class);
-    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSessionService service =
+        new RefreshSessionService(
+            LegacyUserTestAdapters.sessions(sessions), LegacyUserTestAdapters.users(users));
     setExpiration(service, 60_000L);
     User user = new User();
     user.setAtivo(true);
@@ -112,7 +122,9 @@ class RefreshSessionServiceTest {
   void rejectsBlankOrUnknownRefreshTokens() {
     RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
     UserRepository users = mock(UserRepository.class);
-    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSessionService service =
+        new RefreshSessionService(
+            LegacyUserTestAdapters.sessions(sessions), LegacyUserTestAdapters.users(users));
     when(sessions.findByTokenHashForUpdate(any())).thenReturn(java.util.Optional.empty());
 
     assertThrows(BadCredentialsException.class, () -> service.rotateWithToken(" "));
@@ -123,7 +135,9 @@ class RefreshSessionServiceTest {
   void rejectsRefreshForAnInactiveUserAndRevokesTheStoredSession() {
     RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
     UserRepository users = mock(UserRepository.class);
-    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSessionService service =
+        new RefreshSessionService(
+            LegacyUserTestAdapters.sessions(sessions), LegacyUserTestAdapters.users(users));
     setExpiration(service, 60_000L);
     User user = new User();
     user.setAtivo(false);
@@ -141,7 +155,9 @@ class RefreshSessionServiceTest {
   void revokesOnlyAnActiveStoredSessionAndIgnoresBlankTokens() {
     RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
     UserRepository users = mock(UserRepository.class);
-    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSessionService service =
+        new RefreshSessionService(
+            LegacyUserTestAdapters.sessions(sessions), LegacyUserTestAdapters.users(users));
     RefreshSession session = new RefreshSession();
     when(sessions.findByTokenHashForUpdate(any())).thenReturn(Optional.of(session));
 
@@ -157,7 +173,9 @@ class RefreshSessionServiceTest {
   void doesNotSaveARefreshSessionThatWasAlreadyRevoked() {
     RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
     UserRepository users = mock(UserRepository.class);
-    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSessionService service =
+        new RefreshSessionService(
+            LegacyUserTestAdapters.sessions(sessions), LegacyUserTestAdapters.users(users));
     RefreshSession session = new RefreshSession();
     session.setRevokedAt(Instant.now());
     when(sessions.findByTokenHashForUpdate(any())).thenReturn(Optional.of(session));
@@ -171,7 +189,9 @@ class RefreshSessionServiceTest {
   void revokesAllSessionsForTheRequestedUser() {
     RefreshSessionRepository sessions = mock(RefreshSessionRepository.class);
     UserRepository users = mock(UserRepository.class);
-    RefreshSessionService service = new RefreshSessionService(sessions, users);
+    RefreshSessionService service =
+        new RefreshSessionService(
+            LegacyUserTestAdapters.sessions(sessions), LegacyUserTestAdapters.users(users));
 
     service.revokeAllForUser(42L);
 

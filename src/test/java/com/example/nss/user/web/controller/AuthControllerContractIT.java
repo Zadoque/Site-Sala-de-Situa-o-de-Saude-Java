@@ -193,9 +193,9 @@ class AuthControllerContractIT {
         .thenReturn(new RefreshSessionService.Rotation(user, "new-token"));
     org.mockito.Mockito.when(userDetailsService.loadUserByUsername("user@nss.test"))
         .thenReturn(principal);
-    org.mockito.Mockito.when(jwtService.generateToken(user)).thenReturn("new-access");
+    org.mockito.Mockito.when(jwtService.generateToken(7L)).thenReturn("new-access");
     org.mockito.Mockito.when(userService.getByEmail("user@nss.test"))
-        .thenReturn(new UserResponse(null, "User", "user@nss.test", true));
+        .thenReturn(new UserResponse(7L, "User", "user@nss.test", true));
 
     mockMvc
         .perform(

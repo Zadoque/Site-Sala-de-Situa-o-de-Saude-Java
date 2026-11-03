@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.nss.shared.notification.MailService;
+import com.example.nss.user.application.LegacyUserTestAdapters;
 import com.example.nss.user.application.RefreshSessionService;
 import com.example.nss.user.domain.AccountType;
 import com.example.nss.user.infrastructure.persistence.FirstAccessToken;
@@ -64,7 +65,7 @@ class FirstAccessIntegrationIT {
     User user = persistUser("password-reset-http@nss.test", true);
     user.setPassword("old-password");
     users.saveAndFlush(user);
-    refreshSessions.issue(user);
+    refreshSessions.issue(LegacyUserTestAdapters.domain(user));
     createToken(user, "password-reset-http-token", "PASSWORD_RESET");
 
     mockMvc

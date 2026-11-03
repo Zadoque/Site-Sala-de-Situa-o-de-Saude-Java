@@ -13,8 +13,8 @@ testes unitários, integração PostgreSQL, contratos HTTP e revisão arquitetur
 ## Estado da implementação
 
 As regras de dependência entre módulos, domínio, web e infraestrutura estão
-implementadas e os testes negativos demonstram rejeição de violações. A regra
-que proíbe aplicação -> infraestrutura permanece deliberadamente bloqueante:
-`FirstAccessService` e `RefreshSessionService` ainda precisam concluir a
-extração dos gateways de persistência. Portanto, a suíte arquitetural e o CI
-não são declarados verdes enquanto essa pendência existir.
+implementadas e os testes negativos demonstram rejeição de violações. Os
+fluxos de primeiro acesso e refresh usam `FirstAccessGateway` e
+`RefreshSessionGateway` na aplicação, com adapters JPA somente na
+infraestrutura. A suíte arquitetural contém 16 testes verdes, incluindo três
+fixtures negativas.

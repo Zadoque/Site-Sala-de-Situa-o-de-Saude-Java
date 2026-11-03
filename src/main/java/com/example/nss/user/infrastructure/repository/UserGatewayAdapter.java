@@ -14,18 +14,22 @@ import org.springframework.stereotype.Component;
 public class UserGatewayAdapter implements UserGateway {
   private final UserRepository repository;
 
+  @Override
   public Optional<UserAccount> findByEmail(String email) {
     return repository.findByEmailIgnoreCase(email).map(this::toDomain);
   }
 
+  @Override
   public Optional<UserAccount> findById(Long id) {
     return repository.findById(id).map(this::toDomain);
   }
 
+  @Override
   public UserAccount save(UserAccount user) {
     return toDomain(repository.save(toEntity(user)));
   }
 
+  @Override
   public Page search(String search, int page, int size) {
     var pageable = PageRequest.of(page, size, Sort.by("email").ascending());
     var result =
