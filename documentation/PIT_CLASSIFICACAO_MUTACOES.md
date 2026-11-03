@@ -6,8 +6,8 @@ impedir que a porcentagem seja aumentada por testes artificiais.
 
 ## Resultado atual
 
-- 196 mutações geradas;
-- 171 mortas;
+- 199 mutações geradas;
+- 174 mortas;
 - mutation score: 87%;
 - test strength: 92%;
 - 10 mutações sem cobertura;

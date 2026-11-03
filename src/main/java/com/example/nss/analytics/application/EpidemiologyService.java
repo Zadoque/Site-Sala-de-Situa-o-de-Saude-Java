@@ -27,6 +27,12 @@ public class EpidemiologyService {
   private final TerritoryCatalogPort catalog;
 
   public AnalyticsResult query(Geography geography, EpidemiologyFilter filter) {
+    if (filter.municipalityCode() != null
+        && filter.ufCode() != null
+        && !repository.municipalityBelongsToUf(filter.municipalityCode(), filter.ufCode())) {
+      throw new com.example.nss.analytics.exception.InvalidFilterException(
+          "municipalityCode não pertence à UF informada");
+    }
     List<TerritoryCatalogPort.Entry> territories =
         catalog.forGeography(filter.municipalityCode(), filter.districtCode(), geography.name());
     if (geography == Geography.MUNICIPALITY) {
@@ -149,7 +155,8 @@ public class EpidemiologyService {
             f.sex(),
             f.ageBand(),
             f.municipalityCode(),
-            f.districtCode()),
+            f.districtCode(),
+            f.ufCode()),
         total,
         new AnalyticsResult.Coverage(status, mapped, unmapped),
         items);

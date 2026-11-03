@@ -67,4 +67,17 @@ class EpidemiologyFilterTest {
         InvalidFilterException.class,
         () -> new EpidemiologyFilter("DENG", 2026, 1, null, null, "x", null));
   }
+
+  @Test
+  void acceptsOfficialTwoDigitUfCode() {
+    assertEquals(
+        "33", new EpidemiologyFilter("DENG", null, null, null, null, null, null, "33").ufCode());
+  }
+
+  @Test
+  void rejectsMalformedUfCode() {
+    assertThrows(
+        InvalidFilterException.class,
+        () -> new EpidemiologyFilter("DENG", null, null, null, null, null, null, "RJ"));
+  }
 }

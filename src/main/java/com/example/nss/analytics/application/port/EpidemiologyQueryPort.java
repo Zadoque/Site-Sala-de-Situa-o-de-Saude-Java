@@ -21,4 +21,6 @@ public interface EpidemiologyQueryPort {
   List<MetadataEntry> metadata();
 
   List<Municipality> municipalities(String ufCode);
+
+  boolean municipalityBelongsToUf(String municipalityCode, String ufCode);
 }

@@ -9,6 +9,8 @@ inspecionado. A suíte final passou 48 testes de integração, incluindo
 `EpidemiologyRepositoryPostgresIT`, com PostgreSQL 16 em Testcontainers. Ela
 confirma SQL parametrizado, filtros, agregações e separação do datasource
 operacional, mas não substitui uma execução contra o schema serving publicado.
+Também há cenários PostgreSQL para seleção do snapshot mais recente por
+município e para filtragem pelo código IBGE da UF.
 
 O catálogo municipal e de doenças é resolvido dinamicamente por
 `dim_municipio`, `dim_doenca` e `pipeline_publications`; portanto não há um

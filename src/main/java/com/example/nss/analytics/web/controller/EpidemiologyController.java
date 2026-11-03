@@ -69,7 +69,8 @@ public class EpidemiologyController {
             r.filters().sex(),
             r.filters().ageBand(),
             r.filters().municipalityCode(),
-            r.filters().districtCode()),
+            r.filters().districtCode(),
+            r.filters().ufCode()),
         r.totalNotifications(),
         new AnalyticsResponse.Coverage(
             r.coverage().status(),
@@ -90,10 +91,22 @@ public class EpidemiologyController {
       String sex,
       String ageBand,
       String municipalityCode,
-      String districtCode) {
+      String districtCode,
+      String ufCode) {
+    public FilterRequest(
+        String disease,
+        Integer year,
+        Integer month,
+        String sex,
+        String ageBand,
+        String municipalityCode,
+        String districtCode) {
+      this(disease, year, month, sex, ageBand, municipalityCode, districtCode, null);
+    }
+
     EpidemiologyFilter toFilter() {
       return new EpidemiologyFilter(
-          disease, year, month, sex, ageBand, municipalityCode, districtCode);
+          disease, year, month, sex, ageBand, municipalityCode, districtCode, ufCode);
     }
   }
 

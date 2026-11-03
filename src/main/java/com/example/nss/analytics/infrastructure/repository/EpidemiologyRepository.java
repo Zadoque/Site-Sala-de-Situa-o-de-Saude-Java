@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class EpidemiologyRepository implements EpidemiologyQueryPort {
+  private static final String MUNICIPALITY_PARAMETER = "municipalityCode";
   private final NamedParameterJdbcTemplate jdbc;
   private final String yearColumn;
   private final String monthColumn;
@@ -58,17 +59,19 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
             .append(" WHERE 1=1");
     MapSqlParameterSource p = parameters(f, sql);
     if (geography == Geography.MUNICIPALITY && f.municipalityCode() != null) {
-      sql.append(" AND f.cd_mun = :municipalityCode");
-      p.addValue("municipalityCode", f.municipalityCode());
+      sql.append(" AND f.cd_mun = :" + MUNICIPALITY_PARAMETER);
+      p.addValue(MUNICIPALITY_PARAMETER, f.municipalityCode());
     }
     if (geography != Geography.MUNICIPALITY && f.municipalityCode() != null) {
-      sql.append(" AND f.cd_mun = :municipalityCode");
-      p.addValue("municipalityCode", f.municipalityCode());
+      sql.append(" AND f.cd_mun = :" + MUNICIPALITY_PARAMETER);
+      p.addValue(MUNICIPALITY_PARAMETER, f.municipalityCode());
     }
     if (geography == Geography.NEIGHBORHOOD && f.districtCode() != null) {
       sql.append(" AND f.notification_district_id = :districtCode");
       p.addValue("districtCode", f.districtCode());
     }
+    appendUfFilter(f, sql, p);
+    sql.append(currentPublicationPredicate());
     sql.append(" AND ")
         .append(mappedPredicate(geography, mappedIds, p))
         .append(" GROUP BY ")
@@ -89,13 +92,15 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
     MapSqlParameterSource p = parameters(f, sql);
     p.addValues(territoryParams.getValues());
     if (f.municipalityCode() != null) {
-      sql.append(" AND f.cd_mun = :municipalityCode");
-      p.addValue("municipalityCode", f.municipalityCode());
+      sql.append(" AND f.cd_mun = :" + MUNICIPALITY_PARAMETER);
+      p.addValue(MUNICIPALITY_PARAMETER, f.municipalityCode());
     }
     if (geography == Geography.NEIGHBORHOOD && f.districtCode() != null) {
       sql.append(" AND f.notification_district_id = :districtCode");
       p.addValue("districtCode", f.districtCode());
     }
+    appendUfFilter(f, sql, p);
+    sql.append(currentPublicationPredicate());
     return jdbc.queryForObject(
         sql.toString(),
         p,
@@ -135,7 +140,9 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
             + yearColumn
             + " AS year, "
             + monthColumn
-            + " AS month FROM analytics.fato_casos GROUP BY "
+            + " AS month FROM analytics.fato_casos f WHERE 1=1"
+            + currentPublicationPredicate()
+            + " GROUP BY "
             + yearColumn
             + ", "
             + monthColumn
@@ -164,6 +171,30 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
                 rs.getString("cd_uf").trim(), rs.getString("nm_uf")));
   }
 
+  @Override
+  public boolean municipalityBelongsToUf(String municipalityCode, String ufCode) {
+    Integer count =
+        jdbc.queryForObject(
+            "SELECT count(*) FROM analytics.dim_municipio "
+                + "WHERE cd_mun = :"
+                + MUNICIPALITY_PARAMETER
+                + " AND cd_uf = :ufCode",
+            new MapSqlParameterSource()
+                .addValue(MUNICIPALITY_PARAMETER, municipalityCode)
+                .addValue("ufCode", ufCode),
+            Integer.class);
+    return count != null && count == 1;
+  }
+
+  private void appendUfFilter(
+      EpidemiologyFilter filter, StringBuilder sql, MapSqlParameterSource parameters) {
+    if (filter.ufCode() == null) return;
+    sql.append(
+        " AND f.cd_mun IN (SELECT uf_municipality.cd_mun FROM analytics.dim_municipio uf_municipality "
+            + "WHERE uf_municipality.cd_uf = :ufCode)");
+    parameters.addValue("ufCode", filter.ufCode());
+  }
+
   private MapSqlParameterSource parameters(EpidemiologyFilter f, StringBuilder sql) {
     MapSqlParameterSource p = new MapSqlParameterSource();
     if (f.disease() != null) {
@@ -185,6 +216,30 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
       p.addValue("ageBand", f.ageBand());
     }
     return p;
+  }
+
+  /** Restricts facts to the latest completed publication for each municipal recorte. */
+  private String currentPublicationPredicate() {
+    return " AND EXISTS ("
+        + "SELECT 1 FROM analytics.pipeline_publications current_publication"
+        + " WHERE current_publication.disease_codigo = f.disease_codigo"
+        + " AND current_publication.ano = f.ano"
+        + " AND TRIM(current_publication.cd_mun) = TRIM(f.cd_mun)"
+        + " AND current_publication.batch_id = f.batch_id"
+        + " AND current_publication.source_extracted_at = ("
+        + "SELECT MAX(newer.source_extracted_at)"
+        + " FROM analytics.pipeline_publications newer"
+        + " WHERE newer.disease_codigo = f.disease_codigo"
+        + " AND newer.ano = f.ano"
+        + " AND TRIM(newer.cd_mun) = TRIM(f.cd_mun))"
+        + " AND current_publication.published_at = ("
+        + "SELECT MAX(same_source.published_at)"
+        + " FROM analytics.pipeline_publications same_source"
+        + " WHERE same_source.disease_codigo = f.disease_codigo"
+        + " AND same_source.ano = f.ano"
+        + " AND TRIM(same_source.cd_mun) = TRIM(f.cd_mun)"
+        + " AND same_source.source_extracted_at = current_publication.source_extracted_at)"
+        + ")";
   }
 
   private static String identifier(String value) {

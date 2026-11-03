@@ -238,4 +238,17 @@ class EpidemiologyServiceTest {
     assertEquals("SE", region.items().getFirst().code());
     assertEquals("Sudeste", region.items().getFirst().name());
   }
+
+  @Test
+  void rejectsMunicipalityFromAnotherUf() {
+    when(repository.municipalityBelongsToUf("3301009", "35")).thenReturn(false);
+
+    assertThrows(
+        com.example.nss.analytics.exception.InvalidFilterException.class,
+        () ->
+            service.query(
+                Geography.MUNICIPALITY,
+                new EpidemiologyFilter("DENG", 2024, null, null, null, "3301009", null, "35")));
+    verifyNoMoreInteractions(repository);
+  }
 }
