@@ -12,7 +12,7 @@ operacional, mas não substitui uma execução contra o schema serving publicado
 Também há cenários PostgreSQL para seleção do snapshot mais recente por
 município e para filtragem pelo código IBGE da UF.
 
-O CI remoto do commit `f3619ae` passou integralmente: [workflow 41657502646](https://github.com/Zadoque/Site-Sala-de-Situa-o-de-Saude-Java/actions/runs/41657502646), incluindo os jobs `mutation`, `verify` e `container`.
+O CI remoto do commit `8fa53eb` passou integralmente: [workflow 41658679149](https://github.com/Zadoque/Site-Sala-de-Situa-o-de-Saude-Java/actions/runs/41658679149), incluindo os jobs `mutation`, `verify` e `container`.
 
 O catálogo municipal e de doenças é resolvido dinamicamente por
 `dim_municipio`, `dim_doenca` e `pipeline_publications`; portanto não há um
