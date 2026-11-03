@@ -1,4 +1,4 @@
-package com.example.nss.user.api.mapper;
+package com.example.nss.user.web.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

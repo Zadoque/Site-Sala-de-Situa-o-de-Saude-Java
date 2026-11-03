@@ -2,9 +2,10 @@ package com.example.nss.analytics.infrastructure.repository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.example.nss.analytics.application.TerritoryCatalog;
+import com.example.nss.analytics.application.port.TerritoryCatalogPort;
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
+import com.example.nss.analytics.infrastructure.catalog.FileTerritoryCatalog;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ class EpidemiologyRepositoryTest {
     jdbc.execute("CREATE SCHEMA analytics");
     jdbc.execute(
         "CREATE TABLE analytics.fato_casos (cd_mun VARCHAR, notification_district_id VARCHAR, notification_neighborhood_id VARCHAR, notification_territory_status VARCHAR, cases_total INT, cd_sexo VARCHAR)");
-    var catalog = new TerritoryCatalog();
+    var catalog = new FileTerritoryCatalog();
     String district = "CG_DIST_SEDE";
     String neighborhood =
         catalog.forGeography("3301009", district, "NEIGHBORHOOD").getFirst().territoryId();
@@ -48,7 +49,7 @@ class EpidemiologyRepositoryTest {
     var filter = new EpidemiologyFilter(null, null, null, null, null, "3301009", null);
     var districtIds =
         catalog.forGeography("3301009", null, "DISTRICT").stream()
-            .map(TerritoryCatalog.Entry::territoryId)
+            .map(TerritoryCatalogPort.Entry::territoryId)
             .toList();
     var totals = repository.totals(filter, Geography.DISTRICT, districtIds);
     assertEquals(53L, totals.total());
@@ -58,7 +59,7 @@ class EpidemiologyRepositoryTest {
     var neighborhoods = new EpidemiologyFilter(null, null, null, null, null, "3301009", district);
     var neighborhoodIds =
         catalog.forGeography("3301009", district, "NEIGHBORHOOD").stream()
-            .map(TerritoryCatalog.Entry::territoryId)
+            .map(TerritoryCatalogPort.Entry::territoryId)
             .toList();
     assertEquals(
         3L, repository.totals(neighborhoods, Geography.NEIGHBORHOOD, neighborhoodIds).mapped());

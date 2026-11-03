@@ -1,8 +1,8 @@
 package com.example.nss.analytics.infrastructure.mapper;
 
-import com.example.nss.analytics.infrastructure.repository.DiseaseRow;
-import com.example.nss.analytics.infrastructure.repository.MetadataRow;
-import com.example.nss.analytics.infrastructure.repository.TerritoryAggregate;
+import com.example.nss.analytics.application.query.Disease;
+import com.example.nss.analytics.application.query.MetadataEntry;
+import com.example.nss.analytics.application.query.TerritoryAggregate;
 import org.springframework.jdbc.core.RowMapper;
 
 public final class EpidemiologyRowMapper {
@@ -13,13 +13,13 @@ public final class EpidemiologyRowMapper {
         new TerritoryAggregate(resultSet.getString("code"), resultSet.getLong("total"));
   }
 
-  public static RowMapper<DiseaseRow> disease() {
+  public static RowMapper<Disease> disease() {
     return (resultSet, rowNumber) ->
-        new DiseaseRow(resultSet.getString("code"), resultSet.getString("name"));
+        new Disease(resultSet.getString("code"), resultSet.getString("name"));
   }
 
-  public static RowMapper<MetadataRow> metadata() {
+  public static RowMapper<MetadataEntry> metadata() {
     return (resultSet, rowNumber) ->
-        new MetadataRow(resultSet.getInt("year"), resultSet.getInt("month"));
+        new MetadataEntry(resultSet.getInt("year"), resultSet.getInt("month"));
   }
 }

@@ -443,12 +443,16 @@
 				</dependencies>
 				<configuration>
 					<targetClasses>
-						<param>com.example.nss.service.*</param>
-						<param>com.example.nss.analytics.service.*</param>
+						<param>com.example.nss.user.application.*</param>
+						<param>com.example.nss.user.domain.*</param>
+						<param>com.example.nss.analytics.application.*</param>
+						<param>com.example.nss.analytics.domain.*</param>
 					</targetClasses>
 					<targetTests>
-						<param>com.example.nss.service.*</param>
+						<param>com.example.nss.user.application.*</param>
+						<param>com.example.nss.user.domain.*</param>
 						<param>com.example.nss.analytics.*</param>
+						<param>com.example.nss.architecture.*</param>
 					</targetTests>
 					<outputFormats>
 						<param>HTML</param>

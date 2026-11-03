@@ -1,17 +1,17 @@
 package com.example.nss.user.web.controller;
 
-import com.example.nss.user.api.request.FirstAccessRequest;
-import com.example.nss.user.api.request.LoginRequest;
-import com.example.nss.user.api.request.PasswordResetCompleteRequest;
-import com.example.nss.user.api.request.PasswordResetRequest;
-import com.example.nss.user.api.response.LoginResponse;
-import com.example.nss.user.api.response.MeResponse;
-import com.example.nss.user.api.response.UserResponse;
 import com.example.nss.user.application.AuthRateLimiter;
 import com.example.nss.user.application.RefreshSessionService;
 import com.example.nss.user.application.UserService;
 import com.example.nss.user.security.EmailNormalizer;
 import com.example.nss.user.security.JwtService;
+import com.example.nss.user.web.request.FirstAccessRequest;
+import com.example.nss.user.web.request.LoginRequest;
+import com.example.nss.user.web.request.PasswordResetCompleteRequest;
+import com.example.nss.user.web.request.PasswordResetRequest;
+import com.example.nss.user.web.response.LoginResponse;
+import com.example.nss.user.web.response.MeResponse;
+import com.example.nss.user.web.response.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;

@@ -7,12 +7,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 import com.example.nss.shared.notification.MailService;
-import com.example.nss.user.api.request.AccountInvitationRequest;
 import com.example.nss.user.domain.AccountType;
 import com.example.nss.user.domain.FirstAccessToken;
 import com.example.nss.user.domain.User;
 import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;
 import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.web.request.AccountInvitationRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -8,14 +8,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.api.request.LoginRequest;
-import com.example.nss.user.api.response.UserResponse;
 import com.example.nss.user.application.AuthRateLimiter;
 import com.example.nss.user.application.FirstAccessService;
 import com.example.nss.user.application.RefreshSessionService;
 import com.example.nss.user.application.UserService;
 import com.example.nss.user.domain.User;
 import com.example.nss.user.security.JwtService;
+import com.example.nss.user.web.request.LoginRequest;
+import com.example.nss.user.web.response.UserResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

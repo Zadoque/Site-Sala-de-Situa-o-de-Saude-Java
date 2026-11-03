@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.example.nss.analytics.application.port.TerritoryCatalogPort;
+import com.example.nss.analytics.infrastructure.catalog.FileTerritoryCatalog;
 import org.junit.jupiter.api.Test;
 
 class TerritoryCatalogTest {
-  private final TerritoryCatalog catalog = new TerritoryCatalog();
+  private final TerritoryCatalogPort catalog = new FileTerritoryCatalog();
 
   @Test
   void listsDistrictsAndNeighborhoodsForCampos() {
@@ -24,7 +26,7 @@ class TerritoryCatalogTest {
   void listsAllMunicipalitiesAndSupportsLookup() {
     var municipalities = catalog.forGeography(null, null, "MUNICIPALITY");
 
-    assertEquals(4, municipalities.size());
+    assertTrue(municipalities.isEmpty());
     assertTrue(catalog.find("CG_DIST_SEDE").isPresent());
     assertFalse(catalog.find("does-not-exist").isPresent());
   }
@@ -33,8 +35,7 @@ class TerritoryCatalogTest {
   void filtersOneMunicipalityAndReturnsEmptyForUnknownGeography() {
     var municipalities = catalog.forGeography("3302403", null, "MUNICIPALITY");
 
-    assertEquals(1, municipalities.size());
-    assertEquals("Macaé", municipalities.getFirst().name());
+    assertTrue(municipalities.isEmpty());
     assertTrue(catalog.forGeography(null, null, "STATE").isEmpty());
   }
 

@@ -8,11 +8,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.api.mapper.UserMapper;
-import com.example.nss.user.api.request.AccountInvitationRequest;
 import com.example.nss.user.domain.AccountType;
 import com.example.nss.user.domain.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.web.mapper.UserMapper;
+import com.example.nss.user.web.request.AccountInvitationRequest;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -148,7 +148,7 @@ class AdminUserServiceTest {
   void delegatesInvitationListingRenewalAndCancellation() {
     var invitations =
         List.of(
-            new com.example.nss.user.api.response.InvitationResponse(
+            new com.example.nss.user.web.response.InvitationResponse(
                 1L, 2L, "a@nss.test", AccountType.USER, "PENDING", null, null));
     var renewed = invitations.getFirst();
     when(firstAccess.pendingInvitations()).thenReturn(invitations);

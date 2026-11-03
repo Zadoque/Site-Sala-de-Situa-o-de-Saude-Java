@@ -1,11 +1,11 @@
 package com.example.nss.user.web.controller;
 
-import com.example.nss.user.api.request.AccountInvitationRequest;
-import com.example.nss.user.api.request.ActivationRequest;
-import com.example.nss.user.api.response.InvitationResponse;
-import com.example.nss.user.api.response.ManagedUserResponse;
-import com.example.nss.user.api.response.UserPageResponse;
 import com.example.nss.user.application.AdminUserService;
+import com.example.nss.user.web.request.AccountInvitationRequest;
+import com.example.nss.user.web.request.ActivationRequest;
+import com.example.nss.user.web.response.InvitationResponse;
+import com.example.nss.user.web.response.ManagedUserResponse;
+import com.example.nss.user.web.response.UserPageResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

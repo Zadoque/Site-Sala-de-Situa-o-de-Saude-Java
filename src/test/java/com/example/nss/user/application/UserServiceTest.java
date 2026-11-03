@@ -7,10 +7,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.api.mapper.UserMapper;
-import com.example.nss.user.api.response.UserResponse;
 import com.example.nss.user.domain.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.web.mapper.UserMapper;
+import com.example.nss.user.web.response.UserResponse;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;

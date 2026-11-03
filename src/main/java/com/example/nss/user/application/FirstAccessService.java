@@ -1,12 +1,12 @@
 package com.example.nss.user.application;
 
 import com.example.nss.shared.notification.MailService;
-import com.example.nss.user.api.request.FirstAccessRequest;
 import com.example.nss.user.domain.FirstAccessToken;
 import com.example.nss.user.domain.User;
 import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.security.EmailNormalizer;
+import com.example.nss.user.web.request.FirstAccessRequest;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -109,7 +109,7 @@ public class FirstAccessService {
 
   @Transactional
   public void completePasswordReset(
-      com.example.nss.user.api.request.PasswordResetCompleteRequest request) {
+      com.example.nss.user.web.request.PasswordResetCompleteRequest request) {
     FirstAccessToken invite =
         tokens
             .findByTokenHashForUpdate(hash(request.token()))
@@ -164,12 +164,12 @@ public class FirstAccessService {
   }
 
   @Transactional(readOnly = true)
-  public java.util.List<com.example.nss.user.api.response.InvitationResponse> pendingInvitations() {
+  public java.util.List<com.example.nss.user.web.response.InvitationResponse> pendingInvitations() {
     return tokens.findByStatusOrderByExpiresAtAsc(PENDING_STATUS).stream().map(this::view).toList();
   }
 
   @Transactional
-  public com.example.nss.user.api.response.InvitationResponse renew(Long id) {
+  public com.example.nss.user.web.response.InvitationResponse renew(Long id) {
     FirstAccessToken old =
         tokens
             .findById(id)
@@ -194,8 +194,8 @@ public class FirstAccessService {
     }
   }
 
-  private com.example.nss.user.api.response.InvitationResponse view(FirstAccessToken t) {
-    return new com.example.nss.user.api.response.InvitationResponse(
+  private com.example.nss.user.web.response.InvitationResponse view(FirstAccessToken t) {
+    return new com.example.nss.user.web.response.InvitationResponse(
         t.getId(),
         t.getUser().getId(),
         t.getUser().getEmail(),

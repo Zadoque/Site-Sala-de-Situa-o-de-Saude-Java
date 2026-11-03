@@ -1,13 +1,15 @@
 package com.example.nss.analytics.application;
 
-import com.example.nss.analytics.api.response.AnalyticsResponse;
-import com.example.nss.analytics.api.response.MetadataResponse;
+import com.example.nss.analytics.application.port.EpidemiologyQueryPort;
+import com.example.nss.analytics.application.port.TerritoryCatalogPort;
+import com.example.nss.analytics.application.query.EpidemiologyTotals;
+import com.example.nss.analytics.application.query.MetadataEntry;
+import com.example.nss.analytics.application.query.Municipality;
 import com.example.nss.analytics.domain.CoverageStatus;
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
-import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepository;
-import com.example.nss.analytics.infrastructure.repository.EpidemiologyTotals;
-import com.example.nss.analytics.infrastructure.repository.MetadataRow;
+import com.example.nss.analytics.web.response.AnalyticsResponse;
+import com.example.nss.analytics.web.response.MetadataResponse;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,22 +23,28 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class EpidemiologyService {
-  private static final String CAMPOS = "3301009";
-  private final EpidemiologyRepository repository;
-  private final TerritoryCatalog catalog;
+  private final EpidemiologyQueryPort repository;
+  private final TerritoryCatalogPort catalog;
 
   public AnalyticsResponse query(Geography geography, EpidemiologyFilter filter) {
-    if (geography != Geography.MUNICIPALITY
-        && filter.municipalityCode() != null
-        && !CAMPOS.equals(filter.municipalityCode())) {
-      return response(geography, filter, null, CoverageStatus.UNAVAILABLE, 0L, 0L, List.of());
-    }
-    if (geography == Geography.NEIGHBORHOOD && !"CG_DIST_SEDE".equals(filter.districtCode())) {
-      return response(geography, filter, null, CoverageStatus.UNAVAILABLE, 0L, 0L, List.of());
-    }
-    List<TerritoryCatalog.Entry> territories =
+    List<TerritoryCatalogPort.Entry> territories =
         catalog.forGeography(filter.municipalityCode(), filter.districtCode(), geography.name());
-    List<String> mappedIds = territories.stream().map(TerritoryCatalog.Entry::territoryId).toList();
+    if (geography == Geography.MUNICIPALITY) {
+      List<TerritoryCatalogPort.Entry> fileCatalog = territories;
+      territories =
+          repository.municipalities(null).stream()
+              .filter(
+                  m ->
+                      filter.municipalityCode() == null
+                          || m.code().equals(filter.municipalityCode()))
+              .map(this::municipalityEntry)
+              .toList();
+      if (territories.isEmpty()) territories = fileCatalog;
+    } else if (geography == Geography.NEIGHBORHOOD && territories.isEmpty()) {
+      return unavailable(geography, filter);
+    }
+    List<String> mappedIds =
+        territories.stream().map(TerritoryCatalogPort.Entry::territoryId).toList();
     EpidemiologyTotals totals = repository.totals(filter, geography, mappedIds);
     long total = totals.total();
     long mapped = totals.mapped();
@@ -45,7 +53,17 @@ public class EpidemiologyService {
     repository
         .aggregate(filter, geography, mappedIds)
         .forEach(row -> aggregates.put(row.code(), row.total()));
-    for (TerritoryCatalog.Entry entry : territories) {
+    if (geography == Geography.STATE || geography == Geography.REGION) {
+      aggregates.forEach(
+          (code, value) ->
+              items.add(
+                  new AnalyticsResponse.TerritoryItem(
+                      code,
+                      geography == Geography.REGION ? regionName(code) : stateName(code),
+                      value,
+                      null)));
+    }
+    for (TerritoryCatalogPort.Entry entry : territories) {
       items.add(
           new AnalyticsResponse.TerritoryItem(
               entry.territoryId(),
@@ -53,20 +71,34 @@ public class EpidemiologyService {
               aggregates.getOrDefault(entry.territoryId(), 0L),
               entry.parentDistrictId()));
     }
-    if (geography == Geography.MUNICIPALITY && filter.municipalityCode() == null) {
-      items = new ArrayList<>();
-      for (TerritoryCatalog.Entry entry : catalog.forGeography(null, null, geography.name()))
-        items.add(
-            new AnalyticsResponse.TerritoryItem(
-                entry.territoryId(),
-                entry.name(),
-                aggregates.getOrDefault(entry.territoryId(), 0L),
-                null));
-    }
     items.sort(Comparator.comparing(AnalyticsResponse.TerritoryItem::code));
     CoverageStatus status =
         total == 0 || mapped == total ? CoverageStatus.AVAILABLE : CoverageStatus.PARTIAL;
     return response(geography, filter, total, status, mapped, total - mapped, items);
+  }
+
+  private TerritoryCatalogPort.Entry municipalityEntry(Municipality municipality) {
+    return new TerritoryCatalogPort.Entry(
+        municipality.code(),
+        municipality.name(),
+        "MUNICIPALITY",
+        municipality.code(),
+        null,
+        "AVAILABLE");
+  }
+
+  private String regionName(String code) {
+    return switch (code) {
+      case "N" -> "Norte";
+      case "NE" -> "Nordeste";
+      case "SE" -> "Sudeste";
+      case "S" -> "Sul";
+      default -> "Centro-Oeste";
+    };
+  }
+
+  private String stateName(String code) {
+    return code;
   }
 
   public AnalyticsResponse unavailable(Geography geography, EpidemiologyFilter filter) {
@@ -82,9 +114,9 @@ public class EpidemiologyService {
         repository.metadata().stream()
             .collect(
                 Collectors.groupingBy(
-                    MetadataRow::year,
+                    MetadataEntry::year,
                     LinkedHashMap::new,
-                    Collectors.mapping(MetadataRow::month, Collectors.toList())));
+                    Collectors.mapping(MetadataEntry::month, Collectors.toList())));
     return new MetadataResponse(
         new ArrayList<>(grouped.keySet()),
         grouped.entrySet().stream()

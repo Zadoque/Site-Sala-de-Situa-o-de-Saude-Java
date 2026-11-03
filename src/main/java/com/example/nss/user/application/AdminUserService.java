@@ -1,13 +1,13 @@
 package com.example.nss.user.application;
 
-import com.example.nss.user.api.mapper.UserMapper;
-import com.example.nss.user.api.request.AccountInvitationRequest;
-import com.example.nss.user.api.response.ManagedUserResponse;
-import com.example.nss.user.api.response.UserPageResponse;
 import com.example.nss.user.domain.AccountType;
 import com.example.nss.user.domain.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.security.EmailNormalizer;
+import com.example.nss.user.web.mapper.UserMapper;
+import com.example.nss.user.web.request.AccountInvitationRequest;
+import com.example.nss.user.web.response.ManagedUserResponse;
+import com.example.nss.user.web.response.UserPageResponse;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -92,11 +92,11 @@ public class AdminUserService {
     firstAccess.issuePasswordReset(user);
   }
 
-  public java.util.List<com.example.nss.user.api.response.InvitationResponse> invitations() {
+  public java.util.List<com.example.nss.user.web.response.InvitationResponse> invitations() {
     return firstAccess.pendingInvitations();
   }
 
-  public com.example.nss.user.api.response.InvitationResponse renewInvitation(Long id) {
+  public com.example.nss.user.web.response.InvitationResponse renewInvitation(Long id) {
     return firstAccess.renew(id);
   }
 

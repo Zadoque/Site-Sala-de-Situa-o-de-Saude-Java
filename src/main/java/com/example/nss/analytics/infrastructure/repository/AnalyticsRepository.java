@@ -1,12 +1,14 @@
 package com.example.nss.analytics.infrastructure.repository;
 
+import com.example.nss.analytics.application.port.AnalyticsQueryPort;
+import com.example.nss.analytics.application.query.CasoResumo;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class AnalyticsRepository {
+public class AnalyticsRepository implements AnalyticsQueryPort {
 
   private final JdbcTemplate jdbcTemplate;
 
@@ -14,6 +16,7 @@ public class AnalyticsRepository {
     this.jdbcTemplate = jdbcTemplate;
   }
 
+  @Override
   public List<CasoResumo> buscarCasos(Integer ano, Integer mes) {
     String sql =
         """

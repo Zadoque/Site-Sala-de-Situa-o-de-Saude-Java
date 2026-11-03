@@ -3,10 +3,10 @@ package com.example.nss.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.example.nss.shared.notification.MailService;
-import com.example.nss.user.api.request.AccountInvitationRequest;
 import com.example.nss.user.application.AdminUserService;
 import com.example.nss.user.domain.AccountType;
 import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.web.request.AccountInvitationRequest;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;

@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.api.request.AccountInvitationRequest;
-import com.example.nss.user.api.request.ActivationRequest;
-import com.example.nss.user.api.response.InvitationResponse;
-import com.example.nss.user.api.response.ManagedUserResponse;
-import com.example.nss.user.api.response.UserPageResponse;
 import com.example.nss.user.application.AdminUserService;
 import com.example.nss.user.domain.AccountType;
+import com.example.nss.user.web.request.AccountInvitationRequest;
+import com.example.nss.user.web.request.ActivationRequest;
+import com.example.nss.user.web.response.InvitationResponse;
+import com.example.nss.user.web.response.ManagedUserResponse;
+import com.example.nss.user.web.response.UserPageResponse;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

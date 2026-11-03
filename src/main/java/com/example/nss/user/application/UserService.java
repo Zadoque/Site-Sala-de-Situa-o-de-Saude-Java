@@ -1,10 +1,10 @@
 package com.example.nss.user.application;
 
-import com.example.nss.user.api.mapper.UserMapper;
-import com.example.nss.user.api.response.UserResponse;
 import com.example.nss.user.domain.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.security.EmailNormalizer;
+import com.example.nss.user.web.mapper.UserMapper;
+import com.example.nss.user.web.response.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

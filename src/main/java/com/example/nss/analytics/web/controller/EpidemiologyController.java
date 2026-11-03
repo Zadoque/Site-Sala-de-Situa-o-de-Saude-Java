@@ -1,10 +1,10 @@
 package com.example.nss.analytics.web.controller;
 
-import com.example.nss.analytics.api.response.AnalyticsResponse;
-import com.example.nss.analytics.api.response.MetadataResponse;
 import com.example.nss.analytics.application.EpidemiologyService;
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
+import com.example.nss.analytics.web.response.AnalyticsResponse;
+import com.example.nss.analytics.web.response.MetadataResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

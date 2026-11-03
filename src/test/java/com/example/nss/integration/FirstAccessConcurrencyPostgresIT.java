@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.example.nss.shared.notification.MailService;
-import com.example.nss.user.api.request.FirstAccessRequest;
 import com.example.nss.user.application.FirstAccessService;
 import com.example.nss.user.domain.AccountType;
 import com.example.nss.user.domain.FirstAccessToken;
 import com.example.nss.user.domain.User;
 import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;
 import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.web.request.FirstAccessRequest;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;

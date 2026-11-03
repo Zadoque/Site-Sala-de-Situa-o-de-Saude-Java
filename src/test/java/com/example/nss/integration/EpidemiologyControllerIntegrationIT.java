@@ -9,12 +9,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.nss.analytics.application.query.Disease;
+import com.example.nss.analytics.application.query.EpidemiologyTotals;
+import com.example.nss.analytics.application.query.MetadataEntry;
+import com.example.nss.analytics.application.query.TerritoryAggregate;
 import com.example.nss.analytics.domain.Geography;
-import com.example.nss.analytics.infrastructure.repository.DiseaseRow;
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepository;
-import com.example.nss.analytics.infrastructure.repository.EpidemiologyTotals;
-import com.example.nss.analytics.infrastructure.repository.MetadataRow;
-import com.example.nss.analytics.infrastructure.repository.TerritoryAggregate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,8 +69,8 @@ class EpidemiologyControllerIntegrationIT {
 
   @Test
   void exposesDiseasesAndMetadataThroughTheRealController() throws Exception {
-    when(repository.diseases()).thenReturn(List.of(new DiseaseRow("DENG", "Dengue")));
-    when(repository.metadata()).thenReturn(List.of(new MetadataRow(2026, 1)));
+    when(repository.diseases()).thenReturn(List.of(new Disease("DENG", "Dengue")));
+    when(repository.metadata()).thenReturn(List.of(new MetadataEntry(2026, 1)));
 
     mockMvc
         .perform(get("/api/v1/diseases").with(user("analyst@nss.test").roles("USER")))

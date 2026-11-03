@@ -1,5 +1,10 @@
 package com.example.nss.analytics.infrastructure.repository;
 
+import com.example.nss.analytics.application.port.EpidemiologyQueryPort;
+import com.example.nss.analytics.application.query.Disease;
+import com.example.nss.analytics.application.query.EpidemiologyTotals;
+import com.example.nss.analytics.application.query.MetadataEntry;
+import com.example.nss.analytics.application.query.TerritoryAggregate;
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
 import com.example.nss.analytics.infrastructure.mapper.EpidemiologyRowMapper;
@@ -10,7 +15,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class EpidemiologyRepository {
+public class EpidemiologyRepository implements EpidemiologyQueryPort {
   private final NamedParameterJdbcTemplate jdbc;
   private final String yearColumn;
   private final String monthColumn;
@@ -30,7 +35,12 @@ public class EpidemiologyRepository {
       EpidemiologyFilter f, Geography geography, List<String> mappedIds) {
     String territory =
         switch (geography) {
-          case REGION, STATE -> "NULL";
+          case REGION ->
+              "CASE WHEN m.cd_uf IN ('11','12','13','14','15','16','17') THEN 'N' "
+                  + "WHEN m.cd_uf IN ('21','22','23','24','25','26','27','28','29') THEN 'NE' "
+                  + "WHEN m.cd_uf IN ('31','32','33','35') THEN 'SE' "
+                  + "WHEN m.cd_uf IN ('41','42','43') THEN 'S' ELSE 'CO' END";
+          case STATE -> "m.cd_uf";
           case MUNICIPALITY -> "f.cd_mun";
           case DISTRICT -> "f.notification_district_id";
           case NEIGHBORHOOD -> "f.notification_neighborhood_id";
@@ -38,7 +48,9 @@ public class EpidemiologyRepository {
     StringBuilder sql =
         new StringBuilder("SELECT ")
             .append(territory)
-            .append(" AS code, SUM(f.cases_total) AS total FROM analytics.fato_casos f WHERE 1=1");
+            .append(
+                " AS code, SUM(f.cases_total) AS total FROM analytics.fato_casos f "
+                    + "JOIN analytics.dim_municipio m ON m.cd_mun = f.cd_mun WHERE 1=1");
     MapSqlParameterSource p = parameters(f, sql);
     if (geography == Geography.MUNICIPALITY && f.municipalityCode() != null) {
       sql.append(" AND f.cd_mun = :municipalityCode");
@@ -85,15 +97,19 @@ public class EpidemiologyRepository {
             new EpidemiologyTotals(resultSet.getLong("total"), resultSet.getLong("mapped")));
   }
 
-  public List<DiseaseRow> diseases() {
+  @Override
+  public List<Disease> diseases() {
     return jdbc.query(
-        "SELECT codigo AS code, nome AS name FROM analytics.dim_doenca ORDER BY codigo",
+        "SELECT d.codigo AS code, d.nome AS name FROM analytics.dim_doenca d "
+            + "WHERE EXISTS (SELECT 1 FROM analytics.pipeline_publications p "
+            + "WHERE p.disease_codigo = d.codigo) ORDER BY d.codigo",
         java.util.Map.of(),
         EpidemiologyRowMapper.disease());
   }
 
   private String mappedPredicate(
       Geography geography, List<String> mappedIds, MapSqlParameterSource p) {
+    if (geography == Geography.REGION || geography == Geography.STATE) return "TRUE";
     if (mappedIds.isEmpty()) return "FALSE";
     p.addValue("mappedIds", mappedIds);
     return switch (geography) {
@@ -106,7 +122,8 @@ public class EpidemiologyRepository {
     };
   }
 
-  public List<MetadataRow> metadata() {
+  @Override
+  public List<MetadataEntry> metadata() {
     return jdbc.query(
         "SELECT "
             + yearColumn
@@ -122,6 +139,23 @@ public class EpidemiologyRepository {
             + monthColumn,
         java.util.Map.of(),
         EpidemiologyRowMapper.metadata());
+  }
+
+  @Override
+  public List<com.example.nss.analytics.application.query.Municipality> municipalities(
+      String ufCode) {
+    String sql = "SELECT cd_mun, nm_mun, cd_uf, nm_uf FROM analytics.dim_municipio";
+    if (ufCode != null) sql += " WHERE cd_uf = :ufCode";
+    sql += " ORDER BY cd_mun";
+    MapSqlParameterSource parameters = new MapSqlParameterSource();
+    if (ufCode != null) parameters.addValue("ufCode", ufCode);
+    return jdbc.query(
+        sql,
+        parameters,
+        (rs, row) ->
+            new com.example.nss.analytics.application.query.Municipality(
+                rs.getString("cd_mun").trim(), rs.getString("nm_mun"),
+                rs.getString("cd_uf").trim(), rs.getString("nm_uf")));
   }
 
   private MapSqlParameterSource parameters(EpidemiologyFilter f, StringBuilder sql) {

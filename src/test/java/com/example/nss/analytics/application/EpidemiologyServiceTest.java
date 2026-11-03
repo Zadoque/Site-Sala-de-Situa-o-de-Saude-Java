@@ -5,14 +5,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.example.nss.analytics.api.response.AnalyticsResponse;
+import com.example.nss.analytics.application.port.TerritoryCatalogPort;
+import com.example.nss.analytics.application.query.Disease;
+import com.example.nss.analytics.application.query.EpidemiologyTotals;
+import com.example.nss.analytics.application.query.MetadataEntry;
+import com.example.nss.analytics.application.query.TerritoryAggregate;
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
-import com.example.nss.analytics.infrastructure.repository.DiseaseRow;
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepository;
-import com.example.nss.analytics.infrastructure.repository.EpidemiologyTotals;
-import com.example.nss.analytics.infrastructure.repository.MetadataRow;
-import com.example.nss.analytics.infrastructure.repository.TerritoryAggregate;
+import com.example.nss.analytics.web.response.AnalyticsResponse;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,11 +24,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class EpidemiologyServiceTest {
   @Mock EpidemiologyRepository repository;
-  @Mock TerritoryCatalog catalog;
+  @Mock TerritoryCatalogPort catalog;
   @InjectMocks EpidemiologyService service;
 
   @Test
   void totalOfficialIsNotCalculatedFromVisibleItems() {
+    when(catalog.forGeography("3301009", null, "DISTRICT"))
+        .thenReturn(
+            List.of(
+                new TerritoryCatalogPort.Entry(
+                    "CG_DIST_SEDE", "Sede", "DISTRICT", "3301009", null, "AVAILABLE")));
     when(repository.totals(any(), eq(Geography.DISTRICT), any()))
         .thenReturn(new EpidemiologyTotals(10L, 7L));
     when(repository.aggregate(any(), eq(Geography.DISTRICT), any()))
@@ -58,15 +64,17 @@ class EpidemiologyServiceTest {
   }
 
   @Test
-  void nonCamposIntramunicipalDrilldownIsUnavailable() {
+  void nationalCatalogDoesNotRejectAValidMunicipality() {
+    when(repository.totals(any(), eq(Geography.DISTRICT), any()))
+        .thenReturn(new EpidemiologyTotals(0L, 0L));
+    when(repository.aggregate(any(), eq(Geography.DISTRICT), any())).thenReturn(List.of());
     AnalyticsResponse response =
         service.query(
             Geography.DISTRICT,
             new EpidemiologyFilter("DENG", null, null, null, null, "3302205", null));
 
-    assertNull(response.totalNotifications());
-    assertEquals("UNAVAILABLE", response.coverage().status().name());
-    verifyNoInteractions(repository);
+    assertEquals(0L, response.totalNotifications());
+    assertEquals("AVAILABLE", response.coverage().status().name());
   }
 
   @Test
@@ -83,6 +91,11 @@ class EpidemiologyServiceTest {
 
   @Test
   void availableZeroIsDifferentFromUnavailable() {
+    when(catalog.forGeography("3301009", null, "DISTRICT"))
+        .thenReturn(
+            List.of(
+                new TerritoryCatalogPort.Entry(
+                    "CG_DIST_SEDE", "Sede", "DISTRICT", "3301009", null, "AVAILABLE")));
     when(repository.totals(any(), eq(Geography.DISTRICT), any()))
         .thenReturn(new EpidemiologyTotals(0L, 0L));
     when(repository.aggregate(any(), eq(Geography.DISTRICT), any())).thenReturn(List.of());
@@ -100,9 +113,12 @@ class EpidemiologyServiceTest {
   void metadataIsGroupedByYearAndDiseasesKeepRepositoryOrder() {
     when(repository.metadata())
         .thenReturn(
-            List.of(new MetadataRow(2024, 1), new MetadataRow(2024, 2), new MetadataRow(2025, 1)));
+            List.of(
+                new MetadataEntry(2024, 1),
+                new MetadataEntry(2024, 2),
+                new MetadataEntry(2025, 1)));
     when(repository.diseases())
-        .thenReturn(List.of(new DiseaseRow("DENG", "Dengue"), new DiseaseRow("COVID", "Covid-19")));
+        .thenReturn(List.of(new Disease("DENG", "Dengue"), new Disease("COVID", "Covid-19")));
 
     assertEquals(List.of("DENG", "COVID"), service.diseases());
     assertEquals(List.of(2024, 2025), service.metadata().availableYears());
@@ -112,11 +128,11 @@ class EpidemiologyServiceTest {
 
   @Test
   void municipalityWithoutFilterBuildsItemsFromTheCatalog() {
-    List<TerritoryCatalog.Entry> municipalities =
+    List<TerritoryCatalogPort.Entry> municipalities =
         List.of(
-            new TerritoryCatalog.Entry(
+            new TerritoryCatalogPort.Entry(
                 "3301009", "Campos dos Goytacazes", "MUNICIPALITY", "3301009", null, "AVAILABLE"),
-            new TerritoryCatalog.Entry(
+            new TerritoryCatalogPort.Entry(
                 "3302403", "Macaé", "MUNICIPALITY", "3302403", null, "AVAILABLE"));
     when(catalog.forGeography(null, null, "MUNICIPALITY"))
         .thenReturn(List.of(municipalities.getFirst()), municipalities);
@@ -130,17 +146,16 @@ class EpidemiologyServiceTest {
             Geography.MUNICIPALITY,
             new EpidemiologyFilter(null, null, null, null, null, null, null));
 
-    assertEquals(2, response.items().size());
+    assertEquals(1, response.items().size());
     assertEquals("3301009", response.items().getFirst().code());
     assertEquals(5L, response.items().getFirst().notificationsTotal());
-    assertEquals(0L, response.items().get(1).notificationsTotal());
-    verify(catalog, times(2)).forGeography(null, null, "MUNICIPALITY");
+    verify(catalog).forGeography(null, null, "MUNICIPALITY");
   }
 
   @Test
   void neighborhoodWithDistrictBuildsMappedItems() {
-    TerritoryCatalog.Entry neighborhood =
-        new TerritoryCatalog.Entry(
+    TerritoryCatalogPort.Entry neighborhood =
+        new TerritoryCatalogPort.Entry(
             "CG_NH_CENTRO",
             "Centro",
             "NEIGHBORHOOD_OR_LOCALITY",
@@ -166,10 +181,10 @@ class EpidemiologyServiceTest {
 
   @Test
   void sortsTerritoryItemsByCodeBeforeReturningThem() {
-    TerritoryCatalog.Entry first =
-        new TerritoryCatalog.Entry("B", "Bairro B", "DISTRICT", "3301009", null, "AVAILABLE");
-    TerritoryCatalog.Entry second =
-        new TerritoryCatalog.Entry("A", "Bairro A", "DISTRICT", "3301009", null, "AVAILABLE");
+    TerritoryCatalogPort.Entry first =
+        new TerritoryCatalogPort.Entry("B", "Bairro B", "DISTRICT", "3301009", null, "AVAILABLE");
+    TerritoryCatalogPort.Entry second =
+        new TerritoryCatalogPort.Entry("A", "Bairro A", "DISTRICT", "3301009", null, "AVAILABLE");
     when(catalog.forGeography("3301009", null, "DISTRICT")).thenReturn(List.of(first, second));
     when(repository.totals(any(), eq(Geography.DISTRICT), any()))
         .thenReturn(new EpidemiologyTotals(0L, 0L));
@@ -184,8 +199,8 @@ class EpidemiologyServiceTest {
 
   @Test
   void municipalityWithCodeUsesTheRequestedMunicipalityOnly() {
-    TerritoryCatalog.Entry municipality =
-        new TerritoryCatalog.Entry(
+    TerritoryCatalogPort.Entry municipality =
+        new TerritoryCatalogPort.Entry(
             "3302403", "Macaé", "MUNICIPALITY", "3302403", null, "AVAILABLE");
     when(catalog.forGeography("3302403", null, "MUNICIPALITY")).thenReturn(List.of(municipality));
     when(repository.totals(any(), eq(Geography.MUNICIPALITY), any()))
