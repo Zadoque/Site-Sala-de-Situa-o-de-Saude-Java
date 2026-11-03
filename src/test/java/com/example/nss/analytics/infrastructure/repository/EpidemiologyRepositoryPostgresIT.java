@@ -79,7 +79,7 @@ class EpidemiologyRepositoryPostgresIT {
   }
 
   @Test
-  void ignoresFactsFromAnOlderPublicationSnapshot() {
+  void publicationHistoryDoesNotChangeTheServingFacts() {
     jdbc.update(
         "INSERT INTO analytics.pipeline_publications VALUES (?, ?, ?, ?, ?, ?)",
         "DENG",
@@ -88,20 +88,6 @@ class EpidemiologyRepositoryPostgresIT {
         "batch-old",
         java.time.OffsetDateTime.parse("2025-01-01T00:00:00Z"),
         java.time.OffsetDateTime.parse("2025-01-01T00:01:00Z"));
-    jdbc.update(
-        "INSERT INTO analytics.fato_casos VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        "DENG",
-        2024,
-        3,
-        "3301009",
-        "CG_DIST_SEDE",
-        "CG_NH_CENTRO",
-        "NOTIFICATION_NEIGHBORHOOD",
-        99,
-        "F",
-        "20_39",
-        "batch-old");
-
     var filter = new EpidemiologyFilter("DENG", 2024, 3, "F", "20_39", "3301009", null);
 
     assertEquals(

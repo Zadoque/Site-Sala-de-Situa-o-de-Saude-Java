@@ -71,7 +71,6 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
       p.addValue("districtCode", f.districtCode());
     }
     appendUfFilter(f, sql, p);
-    sql.append(currentPublicationPredicate());
     sql.append(" AND ")
         .append(mappedPredicate(geography, mappedIds, p))
         .append(" GROUP BY ")
@@ -100,7 +99,6 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
       p.addValue("districtCode", f.districtCode());
     }
     appendUfFilter(f, sql, p);
-    sql.append(currentPublicationPredicate());
     return jdbc.queryForObject(
         sql.toString(),
         p,
@@ -141,7 +139,6 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
             + " AS year, "
             + monthColumn
             + " AS month FROM analytics.fato_casos f WHERE 1=1"
-            + currentPublicationPredicate()
             + " GROUP BY "
             + yearColumn
             + ", "
@@ -216,30 +213,6 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
       p.addValue("ageBand", f.ageBand());
     }
     return p;
-  }
-
-  /** Restricts facts to the latest completed publication for each municipal recorte. */
-  private String currentPublicationPredicate() {
-    return " AND EXISTS ("
-        + "SELECT 1 FROM analytics.pipeline_publications current_publication"
-        + " WHERE current_publication.disease_codigo = f.disease_codigo"
-        + " AND current_publication.ano = f.ano"
-        + " AND TRIM(current_publication.cd_mun) = TRIM(f.cd_mun)"
-        + " AND current_publication.batch_id = f.batch_id"
-        + " AND current_publication.source_extracted_at = ("
-        + "SELECT MAX(newer.source_extracted_at)"
-        + " FROM analytics.pipeline_publications newer"
-        + " WHERE newer.disease_codigo = f.disease_codigo"
-        + " AND newer.ano = f.ano"
-        + " AND TRIM(newer.cd_mun) = TRIM(f.cd_mun))"
-        + " AND current_publication.published_at = ("
-        + "SELECT MAX(same_source.published_at)"
-        + " FROM analytics.pipeline_publications same_source"
-        + " WHERE same_source.disease_codigo = f.disease_codigo"
-        + " AND same_source.ano = f.ano"
-        + " AND TRIM(same_source.cd_mun) = TRIM(f.cd_mun)"
-        + " AND same_source.source_extracted_at = current_publication.source_extracted_at)"
-        + ")";
   }
 
   private static String identifier(String value) {
