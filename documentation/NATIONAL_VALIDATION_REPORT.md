@@ -5,7 +5,7 @@ inspecionada. O contrato confirma identidade municipal IBGE de sete dígitos,
 `dim_municipio`, `dim_doenca`, `fato_casos` e `pipeline_publications`.
 
 A validação local usa fixtures PostgreSQL/H2 compatíveis com o contrato
-inspecionado. A suíte final passou 48 testes de integração, incluindo
+inspecionado. A suíte final passou 50 testes de integração, incluindo
 `EpidemiologyRepositoryPostgresIT`, com PostgreSQL 16 em Testcontainers. Ela
 confirma SQL parametrizado, filtros, agregações e separação do datasource
 operacional, mas não substitui uma execução contra o schema serving publicado.
