@@ -9,7 +9,7 @@ strength de 92%. Os sobreviventes estão classificados em
 
 JaCoCo mantém relatórios unitário, integração e global, com gates de 90% de
 linhas, 75% de branches e 88% de métodos; a execução final passou esses gates.
-Foram aprovados 113 testes unitários e 50 testes de integração. Testcontainers/
+Foram aprovados 116 testes unitários e 50 testes de integração. Testcontainers/
 PostgreSQL é necessário para validar SQL produtivo; H2 é apenas apoio para
 testes rápidos. Os dois testes concorrentes que carregam o contexto sem perfil
 definem um secret JWT exclusivamente via `@TestPropertySource`; isso nunca é

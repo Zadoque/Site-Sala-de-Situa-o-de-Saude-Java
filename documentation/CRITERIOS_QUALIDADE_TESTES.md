@@ -29,8 +29,8 @@ contexto Spring.
    será usado sozinho para aprovar a qualidade de um teste.
 3. PIT deve executar mutações nos services de autenticação e analytics:
    `./mvnw -B test-compile org.pitest:pitest-maven:mutationCoverage`.
-4. O build de mutation testing falha se o mutation score ficar abaixo de 60%
-   ou o test strength ficar abaixo de 60%.
+4. O build de mutation testing falha se o mutation score ficar abaixo de 80%
+   ou o test strength ficar abaixo de 80%.
 5. Cada mutação sobrevivente deve ser classificada como:
    - comportamento não protegido: adicionar ou reescrever teste;
    - mutação equivalente ou irrelevante: documentar a justificativa e excluir

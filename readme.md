@@ -45,9 +45,9 @@ O compose usa o PostgreSQL configurado pela pipeline por padrão e não cria um 
 
 ## API V1
 
-Autenticação: `POST /api/v1/auth/login`, `/refresh` e `/logout`. O access token é retornado no corpo; refresh fica em cookie HttpOnly. Endpoints: `/api/v1/diseases`, `/api/v1/metadata`, `/api/v1/epidemiology/municipalities`, `/districts` e `/neighborhoods`.
+Autenticação: `POST /api/v1/auth/login`, `/refresh` e `/logout`. O access token é retornado no corpo; refresh fica em cookie HttpOnly. Endpoints: `/api/v1/diseases`, `/api/v1/metadata` e `/api/v1/epidemiology/region`, `/state`, `/municipalities`, `/districts` e `/neighborhoods`.
 
-Filtros: `disease`, `year`, `month`, `sex` (`M`/`F`), `ageBand`, `municipalityCode` e `districtCode`. Sexo omitido consulta `M`, `F` e `I`; ano/mês omitidos significam todos. O envelope sempre contém `totalNotifications`, `coverage` e `items`; o frontend não soma os itens.
+Filtros: `disease`, `year`, `month`, `sex` (`M`/`F`), `ageBand`, `ufCode`, `municipalityCode` e `districtCode`. Sexo omitido consulta `M`, `F` e `I`; ano/mês omitidos significam todos. `ufCode` é o código IBGE numérico de dois dígitos. O envelope sempre contém `totalNotifications`, `coverage` e `items`; o frontend não soma os itens.
 
 O bairro é o bairro da notificação derivado da unidade notificadora via CNES, não o endereço residencial do paciente. Ausência de mapeamento é reportada em `coverage`, não como bairro fictício. Ver o relatório em [documentation/BACKEND_API_V1_AUDIT_AND_IMPLEMENTATION.md](documentation/BACKEND_API_V1_AUDIT_AND_IMPLEMENTATION.md).
 

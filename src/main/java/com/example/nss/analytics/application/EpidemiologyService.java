@@ -132,7 +132,7 @@ public class EpidemiologyService {
                     Map.Entry::getValue,
                     (left, right) -> left,
                     LinkedHashMap::new)),
-        List.of("MUNICIPALITY", "DISTRICT", "NEIGHBORHOOD"),
+        List.of("REGION", "STATE", "MUNICIPALITY", "DISTRICT", "NEIGHBORHOOD"),
         new ArrayList<>(EpidemiologyFilter.AGE_BANDS),
         List.of("M", "F", "ALL"));
   }
