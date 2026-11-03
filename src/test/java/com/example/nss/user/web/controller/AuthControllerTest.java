@@ -120,9 +120,9 @@ class AuthControllerTest {
     when(refreshSessions.rotateWithToken("old-token"))
         .thenReturn(new RefreshSessionService.Rotation(user, "new-token"));
     when(userDetailsService.loadUserByUsername("ana@example.com")).thenReturn(principal);
-    when(jwtService.generateToken(user)).thenReturn("new-access");
+    when(jwtService.generateToken(7L)).thenReturn("new-access");
     when(userService.getByEmail("ana@example.com"))
-        .thenReturn(new UserResponse(null, "Ana", "ana@example.com", true));
+        .thenReturn(new UserResponse(7L, "Ana", "ana@example.com", true));
     ReflectionTestUtils.setField(controller, "refreshCookieName", "nss_refresh");
     ReflectionTestUtils.setField(controller, "refreshExpiration", 604_800_000L);
 
@@ -130,7 +130,7 @@ class AuthControllerTest {
 
     verify(refreshSessions).rotateWithToken("old-token");
     verify(userDetailsService).loadUserByUsername("ana@example.com");
-    verify(jwtService).generateToken(user);
+    verify(jwtService).generateToken(7L);
     verify(response).addHeader(eq("Set-Cookie"), any());
   }
 

@@ -19,7 +19,7 @@ public class EpidemiologyController {
 
   @GetMapping("/epidemiology/region")
   public AnalyticsResponse region(@ModelAttribute FilterRequest request) {
-    return response(service.unavailable(Geography.REGION, request.toFilter()));
+    return response(service.query(Geography.REGION, request.toFilter()));
   }
 
   @GetMapping("/epidemiology/state")

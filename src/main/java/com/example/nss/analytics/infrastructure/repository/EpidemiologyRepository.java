@@ -45,12 +45,16 @@ public class EpidemiologyRepository implements EpidemiologyQueryPort {
           case DISTRICT -> "f.notification_district_id";
           case NEIGHBORHOOD -> "f.notification_neighborhood_id";
         };
+    String from =
+        geography == Geography.REGION || geography == Geography.STATE
+            ? " FROM analytics.fato_casos f JOIN analytics.dim_municipio m ON m.cd_mun = f.cd_mun"
+            : " FROM analytics.fato_casos f";
     StringBuilder sql =
         new StringBuilder("SELECT ")
             .append(territory)
-            .append(
-                " AS code, SUM(f.cases_total) AS total FROM analytics.fato_casos f "
-                    + "JOIN analytics.dim_municipio m ON m.cd_mun = f.cd_mun WHERE 1=1");
+            .append(" AS code, SUM(f.cases_total) AS total")
+            .append(from)
+            .append(" WHERE 1=1");
     MapSqlParameterSource p = parameters(f, sql);
     if (geography == Geography.MUNICIPALITY && f.municipalityCode() != null) {
       sql.append(" AND f.cd_mun = :municipalityCode");
