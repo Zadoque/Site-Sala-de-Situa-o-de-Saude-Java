@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
+import com.example.nss.analytics.infrastructure.catalog.DatabaseTerritoryCatalog;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -113,5 +114,17 @@ class EpidemiologyRepositoryPostgresIT {
 
     assertTrue(repository.municipalityBelongsToUf("3301009", "33"));
     assertEquals(4L, repository.totals(filter, Geography.STATE, List.of()).total());
+  }
+
+  @Test
+  void resolvesPublishedIntramunicipalIdsFromTheServingFacts() {
+    var catalog = new DatabaseTerritoryCatalog(jdbc);
+
+    var districts = catalog.forGeography("3301009", null, "DISTRICT");
+    var neighborhoods = catalog.forGeography("3301009", "CG_DIST_SEDE", "NEIGHBORHOOD");
+
+    assertEquals(List.of("CG_DIST_SEDE"), districts.stream().map(e -> e.territoryId()).toList());
+    assertEquals(
+        List.of("CG_NH_CENTRO"), neighborhoods.stream().map(e -> e.territoryId()).toList());
   }
 }

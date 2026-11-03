@@ -47,4 +47,28 @@ class NegativeArchitectureTest {
             .beAnnotatedWith(jakarta.persistence.Entity.class);
     assertThrows(AssertionError.class, () -> rule.check(fixtures));
   }
+
+  @Test
+  void analyticsUserModuleViolationIsDetected() {
+    ArchRule rule =
+        noClasses()
+            .that()
+            .haveSimpleName("IllegalAnalytics")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage("..user..");
+    assertThrows(AssertionError.class, () -> rule.check(fixtures));
+  }
+
+  @Test
+  void infrastructureWebViolationIsDetected() {
+    ArchRule rule =
+        noClasses()
+            .that()
+            .haveSimpleName("IllegalInfrastructure")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage("..web..");
+    assertThrows(AssertionError.class, () -> rule.check(fixtures));
+  }
 }

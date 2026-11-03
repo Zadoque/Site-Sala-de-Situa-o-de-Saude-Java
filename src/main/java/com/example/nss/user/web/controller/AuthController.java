@@ -1,10 +1,8 @@
 package com.example.nss.user.web.controller;
 
-import com.example.nss.user.application.AuthRateLimiter;
-import com.example.nss.user.application.RefreshSessionService;
-import com.example.nss.user.application.UserService;
-import com.example.nss.user.security.EmailNormalizer;
-import com.example.nss.user.security.JwtService;
+import com.example.nss.user.application.AuthenticationService;
+import com.example.nss.user.application.query.AuthenticationResult;
+import com.example.nss.user.application.query.UserView;
 import com.example.nss.user.web.request.FirstAccessRequest;
 import com.example.nss.user.web.request.LoginRequest;
 import com.example.nss.user.web.request.PasswordResetCompleteRequest;
@@ -21,13 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,13 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-  private final UserService userService;
-  private final AuthenticationManager authenticationManager;
-  private final UserDetailsService userDetailsService;
-  private final JwtService jwtService;
-
-  @Value("${jwt.expiration:3600000}")
-  private long accessExpiration;
+  private final AuthenticationService authenticationService;
 
   @Value("${api.auth.refresh-cookie-name:nss_refresh}")
   private String refreshCookieName;
@@ -57,44 +43,34 @@ public class AuthController {
   @Value("${api.auth.secure-cookie:false}")
   private boolean secureCookie;
 
-  private final com.example.nss.user.application.FirstAccessService firstAccessService;
-  private final RefreshSessionService refreshSessions;
-  private final AuthRateLimiter rateLimiter;
   private final CookieCsrfTokenRepository csrfTokenRepository;
 
   @PostMapping("/first-access")
   public ResponseEntity<Void> firstAccess(@Valid @RequestBody FirstAccessRequest request) {
-    firstAccessService.complete(request);
+    authenticationService.completeFirstAccess(request);
     return ResponseEntity.noContent().build();
   }
 
   @PostMapping("/password-reset/request")
   public ResponseEntity<Void> requestPasswordReset(
       @Valid @RequestBody PasswordResetRequest request) {
-    rateLimiter.registerPasswordResetRequest(request.email());
-    userService.requestPasswordReset(request.email());
+    authenticationService.requestPasswordReset(request.email());
     return ResponseEntity.accepted().build();
   }
 
   @PostMapping("/password-reset/complete")
   public ResponseEntity<Void> completePasswordReset(
       @Valid @RequestBody PasswordResetCompleteRequest request) {
-    firstAccessService.completePasswordReset(request);
+    authenticationService.completePasswordReset(request);
     return ResponseEntity.noContent().build();
   }
 
   @org.springframework.web.bind.annotation.GetMapping("/me")
   public ResponseEntity<MeResponse> me(Authentication authentication) {
-    UserResponse user = userService.getByEmail(authentication.getName());
-    boolean admin =
-        authentication.getAuthorities().stream()
-            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+    AuthenticationService.MeResult result = authenticationService.me(authentication.getName());
+    UserView user = result.user();
     return ResponseEntity.ok(
-        new MeResponse(
-            user.email(),
-            user.nome(),
-            user.ativo(),
-            admin ? java.util.List.of("USER_MANAGEMENT") : java.util.List.of()));
+        new MeResponse(user.email(), user.nome(), user.ativo(), result.permissions()));
   }
 
   @org.springframework.web.bind.annotation.GetMapping("/csrf")
@@ -107,56 +83,34 @@ public class AuthController {
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> login(
       @Valid @RequestBody LoginRequest request, HttpServletResponse response) {
-    rateLimiter.registerLoginAttempt(request.email());
-    String normalizedEmail = EmailNormalizer.normalize(request.email());
-    Authentication authenticationRequest =
-        new UsernamePasswordAuthenticationToken(normalizedEmail, request.password());
-
-    Authentication authenticationResult;
-    try {
-      authenticationResult = authenticationManager.authenticate(authenticationRequest);
-    } catch (AuthenticationException exception) {
-      throw exception;
-    }
-    rateLimiter.loginSucceeded(request.email());
-
-    if (!(authenticationResult.getPrincipal() instanceof UserDetails userDetails)) {
-      throw new AuthenticationServiceException("A autenticação não retornou um usuário válido");
-    }
-
-    com.example.nss.user.domain.UserAccount entity =
-        userService.entityByEmail(userDetails.getUsername());
-    String token = jwtService.generateToken(entity);
-    String refresh = refreshSessions.issue(entity);
-    addRefreshCookie(response, refresh);
-    UserResponse user = userService.getByEmail(userDetails.getUsername());
+    AuthenticationResult result = authenticationService.login(request.email(), request.password());
+    addRefreshCookie(response, result.refreshToken());
     return ResponseEntity.ok(
-        new LoginResponse(token, accessExpiration / 1000, user, token, permissions(userDetails)));
+        new LoginResponse(
+            result.accessToken(),
+            result.accessExpirationSeconds(),
+            response(result.user()),
+            result.accessToken(),
+            result.permissions()));
   }
 
   @PostMapping("/refresh")
   public ResponseEntity<LoginResponse> refresh(
       HttpServletRequest request, HttpServletResponse response) {
-    String token = cookie(request);
-    RefreshSessionService.Rotation rotation = refreshSessions.rotateWithToken(token);
-    UserDetails userDetails = userDetailsService.loadUserByUsername(rotation.email());
-    com.example.nss.user.application.query.UserView refreshedUser =
-        userService.getByEmail(rotation.email());
-    String access = jwtService.generateToken(refreshedUser.id());
-    addRefreshCookie(response, rotation.rawToken());
+    AuthenticationResult result = authenticationService.refresh(cookie(request));
+    addRefreshCookie(response, result.refreshToken());
     return ResponseEntity.ok(
         new LoginResponse(
-            access,
-            accessExpiration / 1000,
-            userService.getByEmail(userDetails.getUsername()),
-            access,
-            permissions(userDetails)));
+            result.accessToken(),
+            result.accessExpirationSeconds(),
+            response(result.user()),
+            result.accessToken(),
+            result.permissions()));
   }
 
   @PostMapping("/logout")
   public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-    String token = cookie(request);
-    refreshSessions.revoke(token);
+    authenticationService.logout(cookie(request));
     clearRefreshCookie(response);
     return ResponseEntity.noContent().build();
   }
@@ -168,10 +122,8 @@ public class AuthController {
     return null;
   }
 
-  private java.util.List<String> permissions(UserDetails details) {
-    return details.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))
-        ? java.util.List.of("USER_MANAGEMENT")
-        : java.util.List.of();
+  private UserResponse response(UserView user) {
+    return new UserResponse(user.id(), user.nome(), user.email(), user.ativo());
   }
 
   private void addRefreshCookie(HttpServletResponse response, String token) {

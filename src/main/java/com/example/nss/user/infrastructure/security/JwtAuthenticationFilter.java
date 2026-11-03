@@ -1,4 +1,4 @@
-package com.example.nss.user.security;
+package com.example.nss.user.infrastructure.security;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;

@@ -1,5 +1,6 @@
-package com.example.nss.user.security;
+package com.example.nss.user.infrastructure.security;
 
+import com.example.nss.user.application.port.AccessTokenPort;
 import com.example.nss.user.domain.UserAccount;
 import com.example.nss.user.infrastructure.persistence.User;
 import io.jsonwebtoken.Claims;
@@ -14,7 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class JwtService {
+public class JwtService implements AccessTokenPort {
 
   private final SecretKey signingKey;
   private final long expiration;
@@ -39,6 +40,7 @@ public class JwtService {
     return generateToken(user.getId());
   }
 
+  @Override
   public String generateToken(long userId) {
     Date issuedAt = new Date();
     Date expirationDate = new Date(issuedAt.getTime() + expiration);

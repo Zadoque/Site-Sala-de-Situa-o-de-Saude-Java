@@ -1,9 +1,9 @@
 package com.example.nss.user.infrastructure.config;
 
 import com.example.nss.user.domain.AccountType;
+import com.example.nss.user.domain.rule.EmailNormalizer;
 import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
-import com.example.nss.user.security.EmailNormalizer;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

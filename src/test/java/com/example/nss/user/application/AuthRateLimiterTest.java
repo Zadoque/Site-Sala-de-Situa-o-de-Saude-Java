@@ -3,7 +3,7 @@ package com.example.nss.user.application;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.example.nss.user.exception.RateLimitExceededException;
+import com.example.nss.user.domain.exception.RateLimitExceededException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;

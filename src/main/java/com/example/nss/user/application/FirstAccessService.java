@@ -1,14 +1,14 @@
 package com.example.nss.user.application;
 
-import com.example.nss.shared.notification.MailService;
 import com.example.nss.user.application.command.FirstAccessCommand;
 import com.example.nss.user.application.command.PasswordResetCommand;
 import com.example.nss.user.application.port.FirstAccessGateway;
+import com.example.nss.user.application.port.MailPort;
 import com.example.nss.user.application.port.UserGateway;
 import com.example.nss.user.application.query.InvitationResult;
 import com.example.nss.user.application.query.InvitationView;
 import com.example.nss.user.domain.UserAccount;
-import com.example.nss.user.security.EmailNormalizer;
+import com.example.nss.user.domain.rule.EmailNormalizer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -28,7 +28,7 @@ public class FirstAccessService {
   private final UserGateway users;
   private final FirstAccessGateway tokens;
   private final PasswordEncoder encoder;
-  private final MailService mail;
+  private final MailPort mail;
   private final RefreshSessionService refreshSessions;
   private final TokenGenerator tokenGenerator;
 
@@ -43,7 +43,7 @@ public class FirstAccessService {
       UserGateway users,
       FirstAccessGateway tokens,
       PasswordEncoder encoder,
-      MailService mail,
+      MailPort mail,
       RefreshSessionService refreshSessions,
       TokenGenerator tokenGenerator) {
     this.users = users;
@@ -58,7 +58,7 @@ public class FirstAccessService {
       UserGateway users,
       FirstAccessGateway tokens,
       PasswordEncoder encoder,
-      MailService mail,
+      MailPort mail,
       RefreshSessionService refreshSessions) {
     this(users, tokens, encoder, mail, refreshSessions, new SecureRandomTokenGenerator());
   }

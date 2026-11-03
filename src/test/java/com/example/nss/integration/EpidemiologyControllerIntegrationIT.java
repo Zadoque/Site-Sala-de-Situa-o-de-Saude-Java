@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.nss.analytics.application.port.TerritoryCatalogPort;
 import com.example.nss.analytics.application.query.Disease;
 import com.example.nss.analytics.application.query.EpidemiologyTotals;
 import com.example.nss.analytics.application.query.MetadataEntry;
@@ -32,6 +33,7 @@ class EpidemiologyControllerIntegrationIT {
   @Autowired MockMvc mockMvc;
 
   @MockitoBean EpidemiologyRepository repository;
+  @MockitoBean TerritoryCatalogPort territoryCatalog;
 
   @Test
   void returnsMunicipalityAnalyticsThroughTheRealService() throws Exception {

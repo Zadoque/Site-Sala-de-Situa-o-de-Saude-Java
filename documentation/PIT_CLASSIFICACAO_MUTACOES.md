@@ -6,16 +6,16 @@ impedir que a porcentagem seja aumentada por testes artificiais.
 
 ## Resultado atual
 
-- 199 mutações geradas;
-- 174 mortas;
+- 215 mutações geradas;
+- 187 mortas;
 - mutation score: 87%;
-- test strength: 92%;
-- 10 mutações sem cobertura;
-- 15 mutações sobreviventes ou não cobertas no relatório atual.
+- test strength: 93%;
+- 13 mutações sem cobertura;
+- 15 mutações sobreviventes.
 
 Na execução por módulo, `analytics` teve 33 mutantes gerados, 27 mortos,
-score de 82% e test strength de 96%; `user` teve 166 gerados, 147 mortos,
-score de 89% e test strength de 91%.
+score de 82% e test strength de 96%; `user` teve 182 gerados, 160 mortos,
+score de 88% e test strength de 92%.
 
 Os gates de 80% para mutation score e test strength continuam ativos no Maven,
 com `failWhenNoMutations=true`.
@@ -24,9 +24,11 @@ com `failWhenNoMutations=true`.
 
 | Local | Classificação | Decisão |
 |---|---|---|
-| `EpidemiologyService.metadata:95` | Equivalente no fluxo atual | O `groupingBy` já produz uma entrada única por ano; o merge do `toMap` não é alcançável com o contrato de `metadata()`. Não criar teste artificial para forçar uma estrutura impossível. |
-| `FirstAccessService.cancel:166` | Irrelevante para o comportamento | O callback `ifPresent` é `void`; o método já é validado pelo estado do token e pela interação com o repositório. Um retorno nulo mutado não possui efeito observável. |
-| `FirstAccessService.renew:152` | Infraestrutura do stream | O `map(this::view)` é exercitado quando a renovação retorna o convite. O mutante de retorno nulo no callback não altera o contrato válido; o caminho de ausência já é protegido por `orElseThrow`. |
+| `EpidemiologyService` | Ramos sem cobertura em metadados, filtros e agregações | Manter a cobertura de resultados observáveis; revisar se o contrato analítico passar a expor esses ramos. |
+| `AuthRateLimiter` | Ramos internos de eviction e limpeza | Manter testes de limite, expiração e concorrência; não expor estruturas internas apenas para matar mutantes. |
+| `AuthenticationService` | Callbacks de conclusão de primeiro acesso e reset | Os fluxos públicos são cobertos por testes de contrato e integração; adicionar cenário se o contrato mudar. |
+| `FirstAccessService` e `RefreshSessionService` | Callbacks de stream | Validar estado, hash, revogação e uso único; não criar testes artificiais de implementação. |
+| `AuthenticationGateway` | Acessor de record sem cobertura isolada | O valor é exercitado pelos fluxos de autenticação; manter a verificação comportamental. |
 
 Essas mutações permanecem visíveis no relatório e não são mascaradas por uma
 exclusão ampla do PIT.
@@ -35,13 +37,10 @@ exclusão ampla do PIT.
 
 | Local | Classificação | Decisão |
 |---|---|---|
-| `AdminUserService.invite:52` | Equivalente ao default da entidade | `User.ativo` nasce `true`; o setter repete o valor padrão e não altera o estado observável. |
-| `AdminUserService.invite:53-54` | Equivalente ao default da entidade | `createdAt` e `updatedAt` são inicializados no construtor sem argumentos; a atribuição atual usa o mesmo instante lógico esperado para uma nova entidade. |
-| `AuthRateLimiter.check:52` | Estado interno sem efeito externo neste ponto | Remover a limpeza do mapa antes do retorno não muda o resultado da chamada expirada nem o limite subsequente, que recria a janela. Não expor o mapa apenas para matar o mutante. |
-| `FirstAccessService.issue:43` | Infraestrutura criptográfica | A mutação remove `SecureRandom.nextBytes`; não há teste determinístico seguro que prove entropia de uma amostra. O contrato observável já valida token não vazio, hash e link. |
-| `FirstAccessService.issuePasswordReset:66` | Infraestrutura criptográfica | Mesmo caso da emissão de convite: a aleatoriedade não deve ser validada comparando dois valores aleatórios. |
-| `RefreshSessionService.randomToken:106` | Infraestrutura criptográfica | A geração aleatória é um detalhe de segurança não determinístico; o contrato valida formato, hash e uso do token. |
-| `RefreshSessionService.revoke:75` | Mutação equivalente para entradas cobertas | Entradas nulas e em branco são testadas, assim como tokens válidos; a alteração do operador não produz uma diferença de domínio adicional sem duplicar os cenários. |
+| `AdminUserService` | Defaults de entidade equivalentes nos fluxos de convite | Não criar teste artificial; preservar testes de estado observável. |
+| `AuthRateLimiter` | Estados internos de janela/eviction sem diferença observável adicional | Manter os testes de limite, expiração e concorrência. |
+| `FirstAccessService` e `RefreshSessionService` | Geração criptográfica aleatória | Validar formato, hash, revogação e uso único; não comparar amostras aleatórias. |
+| `RefreshSessionService` | Validações já cobertas para tokens nulos, vazios e válidos | Manter a cobertura de contrato sem duplicar cenários equivalentes. |
 
 Os sobreviventes acima não justificam reduzir o limiar, remover as asserções ou
 adicionar testes que só observem implementação. Se o contrato de aleatoriedade,

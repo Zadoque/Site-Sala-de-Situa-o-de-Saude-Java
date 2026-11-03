@@ -14,3 +14,9 @@ sem importar adapters concretos.
 Novas funcionalidades devem ser adicionadas no módulo responsável, expondo
 contratos pequenos na aplicação quando houver uma fronteira real. Não há
 microsserviços, CQRS ou mensageria nesta decisão.
+
+O `AuthController` delega login, refresh, logout, primeiro acesso e reset de
+senha ao `user.application.AuthenticationService`. Ele permanece responsável
+por requests, respostas, códigos HTTP e cookies. A emissão e validação de JWT,
+o `AuthenticationManager` e o envio de e-mail são adapters em infraestrutura,
+ligados à aplicação por ports.

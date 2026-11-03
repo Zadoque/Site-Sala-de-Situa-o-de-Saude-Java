@@ -1,7 +1,5 @@
 package com.example.nss.shared.web;
 
-import com.example.nss.analytics.exception.InvalidFilterException;
-import com.example.nss.user.exception.RateLimitExceededException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.UUID;
@@ -44,24 +42,9 @@ public class GlobalExceptionHandler {
         request);
   }
 
-  @ExceptionHandler(RateLimitExceededException.class)
-  public ResponseEntity<ErrorResponse> handleRateLimit(HttpServletRequest request) {
-    return error(
-        HttpStatus.TOO_MANY_REQUESTS,
-        "RATE_LIMITED",
-        "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.",
-        request);
-  }
-
   @ExceptionHandler(DataIntegrityViolationException.class)
   public ResponseEntity<ErrorResponse> handleConflict(HttpServletRequest request) {
     return error(HttpStatus.CONFLICT, "CONFLICT", "Recurso já existente", request);
-  }
-
-  @ExceptionHandler(InvalidFilterException.class)
-  public ResponseEntity<ErrorResponse> handleFilter(
-      InvalidFilterException e, HttpServletRequest r) {
-    return error(HttpStatus.BAD_REQUEST, "INVALID_FILTER", e.getMessage(), r);
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

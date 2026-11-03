@@ -1,4 +1,4 @@
-package com.example.nss.analytics.exception;
+package com.example.nss.analytics.domain.exception;
 
 public class InvalidFilterException extends RuntimeException {
   private static final long serialVersionUID = 1L;

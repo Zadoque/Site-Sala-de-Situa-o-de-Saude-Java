@@ -30,7 +30,25 @@ class LayeredArchitectureTest {
           .resideInAnyPackage("..analytics..");
 
   @ArchTest
+  static final ArchRule shared_must_not_depend_on_business_modules =
+      noClasses()
+          .that()
+          .resideInAnyPackage("..shared..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage("..analytics..", "..user..");
+
+  @ArchTest
   static final ArchRule controllers_must_not_access_infrastructure =
+      noClasses()
+          .that()
+          .resideInAnyPackage("..web.controller..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage("..infrastructure..");
+
+  @ArchTest
+  static final ArchRule all_web_controllers_must_not_access_infrastructure =
       noClasses()
           .that()
           .resideInAnyPackage("..web.controller..")
@@ -133,4 +151,32 @@ class LayeredArchitectureTest {
           .should()
           .dependOnClassesThat()
           .resideInAnyPackage("..controller..");
+
+  @ArchTest
+  static final ArchRule rest_controllers_are_in_web =
+      classes()
+          .that()
+          .areAnnotatedWith(org.springframework.web.bind.annotation.RestController.class)
+          .should()
+          .resideInAnyPackage("..web.controller..");
+
+  @ArchTest
+  static final ArchRule repositories_are_in_infrastructure =
+      classes()
+          .that()
+          .areAnnotatedWith(org.springframework.stereotype.Repository.class)
+          .should()
+          .resideInAnyPackage("..infrastructure.repository..");
+
+  @ArchTest
+  static final ArchRule configurations_are_in_authorized_packages =
+      classes()
+          .that()
+          .areAnnotatedWith(org.springframework.context.annotation.Configuration.class)
+          .should()
+          .resideInAnyPackage("..infrastructure.config..", "..bootstrap.config..");
+
+  @ArchTest
+  static final ArchRule production_has_no_demo_package =
+      noClasses().should().resideInAnyPackage("com.example.demo..");
 }

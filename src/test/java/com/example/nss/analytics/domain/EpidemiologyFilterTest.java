@@ -2,7 +2,7 @@ package com.example.nss.analytics.domain;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.example.nss.analytics.exception.InvalidFilterException;
+import com.example.nss.analytics.domain.exception.InvalidFilterException;
 import org.junit.jupiter.api.Test;
 
 class EpidemiologyFilterTest {

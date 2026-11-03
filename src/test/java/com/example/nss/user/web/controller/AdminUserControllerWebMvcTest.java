@@ -12,8 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.nss.shared.web.GlobalExceptionHandler;
 import com.example.nss.user.application.AdminUserService;
 import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.security.CustomUserDetailsService;
-import com.example.nss.user.security.JwtService;
+import com.example.nss.user.infrastructure.security.CustomUserDetailsService;
+import com.example.nss.user.infrastructure.security.JwtService;
 import com.example.nss.user.web.response.ManagedUserResponse;
 import com.example.nss.user.web.response.UserPageResponse;
 import java.util.List;

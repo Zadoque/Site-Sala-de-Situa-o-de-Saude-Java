@@ -9,7 +9,7 @@ import com.example.nss.user.application.query.UserPageResult;
 import com.example.nss.user.application.query.UserPageView;
 import com.example.nss.user.domain.AccountType;
 import com.example.nss.user.domain.UserAccount;
-import com.example.nss.user.security.EmailNormalizer;
+import com.example.nss.user.domain.rule.EmailNormalizer;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;

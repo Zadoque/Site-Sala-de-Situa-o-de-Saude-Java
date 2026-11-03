@@ -33,7 +33,7 @@ Exemplo: `GET /api/v1/epidemiology/districts?disease=DENG&year=2026&month=3&sex=
 
 O retorno usa `totalNotifications`, `notificationsTotal` e `coverage`. `I` é incluído quando sexo não é informado; ano e mês omitidos aparecem como `null` em `filters`. `AVAILABLE` representa universo consultável, inclusive zero; `PARTIAL` separa mapeados/não mapeados; `UNAVAILABLE` retorna total nulo e itens vazios. O total é calculado por SQL, não pelo frontend.
 
-O território é o bairro da notificação derivado da unidade notificadora/CNES. Não representa residência ou endereço do paciente. A implementação exige município para nível intramunicipal e restringe o drill-down inicial a Campos dos Goytacazes; o catálogo canônico completo deve ser conectado antes da publicação final.
+O território é o bairro da notificação derivado da unidade notificadora/CNES. Não representa residência ou endereço do paciente. A consulta municipal usa a dimensão nacional publicada; os níveis intramunicipais permanecem limitados aos territórios efetivamente publicados e ao catálogo territorial disponível, sem inventar cobertura ausente.
 
 ## Auditoria do frontend V2
 

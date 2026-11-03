@@ -1,6 +1,6 @@
 package com.example.nss.user.application;
 
-import com.example.nss.user.exception.RateLimitExceededException;
+import com.example.nss.user.domain.exception.RateLimitExceededException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;

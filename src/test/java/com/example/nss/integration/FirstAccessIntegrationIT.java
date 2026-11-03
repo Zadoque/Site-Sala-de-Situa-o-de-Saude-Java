@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.shared.notification.MailService;
 import com.example.nss.user.application.LegacyUserTestAdapters;
 import com.example.nss.user.application.RefreshSessionService;
 import com.example.nss.user.domain.AccountType;
+import com.example.nss.user.infrastructure.notification.MailService;
 import com.example.nss.user.infrastructure.persistence.FirstAccessToken;
 import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;

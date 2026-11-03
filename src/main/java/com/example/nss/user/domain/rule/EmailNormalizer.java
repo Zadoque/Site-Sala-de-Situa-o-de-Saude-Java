@@ -1,4 +1,4 @@
-package com.example.nss.user.security;
+package com.example.nss.user.domain.rule;
 
 import java.util.Locale;
 

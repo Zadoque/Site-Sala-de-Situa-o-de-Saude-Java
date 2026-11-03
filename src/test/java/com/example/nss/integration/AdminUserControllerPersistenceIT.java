@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.shared.notification.MailService;
+import com.example.nss.user.infrastructure.notification.MailService;
 import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import org.junit.jupiter.api.Test;

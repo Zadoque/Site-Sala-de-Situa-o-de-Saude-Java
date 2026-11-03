@@ -1,5 +1,6 @@
-package com.example.nss.user.security;
+package com.example.nss.user.infrastructure.config;
 
+import com.example.nss.user.infrastructure.security.JwtAuthenticationFilter;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

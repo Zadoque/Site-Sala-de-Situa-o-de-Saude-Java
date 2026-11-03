@@ -2,9 +2,9 @@ package com.example.nss.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.example.nss.shared.notification.MailService;
 import com.example.nss.user.application.AdminUserService;
 import com.example.nss.user.domain.AccountType;
+import com.example.nss.user.infrastructure.notification.MailService;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.web.request.AccountInvitationRequest;
 import java.util.List;

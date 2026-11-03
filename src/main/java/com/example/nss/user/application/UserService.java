@@ -4,7 +4,7 @@ import com.example.nss.user.application.port.UserGateway;
 import com.example.nss.user.application.port.UserMapperPort;
 import com.example.nss.user.application.query.UserView;
 import com.example.nss.user.domain.UserAccount;
-import com.example.nss.user.security.EmailNormalizer;
+import com.example.nss.user.domain.rule.EmailNormalizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

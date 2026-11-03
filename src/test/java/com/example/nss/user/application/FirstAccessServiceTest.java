@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.shared.notification.MailService;
+import com.example.nss.user.infrastructure.notification.MailService;
 import com.example.nss.user.infrastructure.persistence.FirstAccessToken;
 import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;

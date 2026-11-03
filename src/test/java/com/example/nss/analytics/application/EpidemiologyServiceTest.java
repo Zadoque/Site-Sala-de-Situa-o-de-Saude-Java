@@ -244,7 +244,7 @@ class EpidemiologyServiceTest {
     when(repository.municipalityBelongsToUf("3301009", "35")).thenReturn(false);
 
     assertThrows(
-        com.example.nss.analytics.exception.InvalidFilterException.class,
+        com.example.nss.analytics.domain.exception.InvalidFilterException.class,
         () ->
             service.query(
                 Geography.MUNICIPALITY,

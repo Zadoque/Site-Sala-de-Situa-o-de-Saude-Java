@@ -1,5 +1,6 @@
-package com.example.nss.shared.notification;
+package com.example.nss.user.infrastructure.notification;
 
+import com.example.nss.user.application.port.MailPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -16,7 +17,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  */
 @Service
 @RequiredArgsConstructor
-public class MailService {
+public class MailService implements MailPort {
 
   private final JavaMailSender mailSender;
 
@@ -34,6 +35,7 @@ public class MailService {
     mailSender.send(message);
   }
 
+  @Override
   public void sendTextAfterCommit(String recipient, String subject, String body) {
     Runnable send = () -> sendText(recipient, subject, body);
     if (!TransactionSynchronizationManager.isSynchronizationActive()) {

@@ -6,8 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.nss.user.application.AdminUserService;
 import com.example.nss.user.application.query.UserPageResult;
-import com.example.nss.user.security.CustomUserDetailsService;
-import com.example.nss.user.security.JwtService;
+import com.example.nss.user.infrastructure.security.CustomUserDetailsService;
+import com.example.nss.user.infrastructure.security.JwtService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

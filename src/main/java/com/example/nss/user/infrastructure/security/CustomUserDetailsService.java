@@ -1,5 +1,6 @@
-package com.example.nss.user.security;
+package com.example.nss.user.infrastructure.security;
 
+import com.example.nss.user.domain.rule.EmailNormalizer;
 import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

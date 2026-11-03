@@ -1,6 +1,6 @@
 package com.example.nss.analytics.domain;
 
-import com.example.nss.analytics.exception.InvalidFilterException;
+import com.example.nss.analytics.domain.exception.InvalidFilterException;
 import java.util.List;
 import java.util.Set;
 

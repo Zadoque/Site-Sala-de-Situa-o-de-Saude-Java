@@ -30,7 +30,7 @@ public class EpidemiologyService {
     if (filter.municipalityCode() != null
         && filter.ufCode() != null
         && !repository.municipalityBelongsToUf(filter.municipalityCode(), filter.ufCode())) {
-      throw new com.example.nss.analytics.exception.InvalidFilterException(
+      throw new com.example.nss.analytics.domain.exception.InvalidFilterException(
           "municipalityCode não pertence à UF informada");
     }
     List<TerritoryCatalogPort.Entry> territories =
