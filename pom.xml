@@ -214,6 +214,14 @@
 						<exclude>com/example/nss/analytics/application/query/Municipality.class</exclude>
 						<!-- Generated MapStruct implementation; mapper behavior is tested through its contract. -->
 						<exclude>com/example/nss/user/web/mapper/UserMapperImpl.class</exclude>
+						<!-- Thin HTTP adapters and DTOs contain no business rules; their contracts are tested separately. -->
+						<exclude>com/example/nss/**/web/controller/**</exclude>
+						<exclude>com/example/nss/**/web/request/**</exclude>
+						<exclude>com/example/nss/**/web/response/**</exclude>
+						<exclude>com/example/nss/**/web/*ExceptionHandler.class</exclude>
+						<!-- Technical composition/configuration is verified by integration and architecture tests. -->
+						<exclude>com/example/nss/**/infrastructure/config/**</exclude>
+						<exclude>com/example/nss/NssApplication.class</exclude>
 					</excludes>
 					<formats>
 						<format>HTML</format>

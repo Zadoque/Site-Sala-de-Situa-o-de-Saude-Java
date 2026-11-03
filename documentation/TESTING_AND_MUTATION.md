@@ -12,7 +12,11 @@ matou 27 (82%, strength 96%); `user` gerou 182 e matou 160 (88%, strength
 
 JaCoCo mantém relatórios unitário, integração e global, com gates de 90% de
 linhas, 75% de branches e 88% de métodos; a execução final passou esses gates.
-Foram aprovados 126 testes unitários e 50 testes de integração. Testcontainers/
+O relatório global exclui somente adapters HTTP finos, DTOs, configuração
+técnica, classes geradas e tipos estruturais sem regra de negócio; controllers,
+contratos HTTP e configuração continuam cobertos por testes de contrato,
+integração e ArchUnit.
+Foram aprovados 128 testes unitários e 50 testes de integração. Testcontainers/
 PostgreSQL é necessário para validar SQL produtivo; H2 é apenas apoio para
 testes rápidos. Os dois testes concorrentes que carregam o contexto sem perfil
 definem um secret JWT exclusivamente via `@TestPropertySource`; isso nunca é
