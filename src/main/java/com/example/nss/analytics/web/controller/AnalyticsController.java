@@ -2,6 +2,7 @@ package com.example.nss.analytics.web.controller;
 
 import com.example.nss.analytics.application.AnalyticsService;
 import com.example.nss.analytics.web.response.CasoResumoResponse;
+import com.example.nss.analytics.application.query.CaseResult;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,11 @@ public class AnalyticsController {
   @GetMapping("casos")
   public List<CasoResumoResponse> buscarCasos(
       @RequestParam Integer ano, @RequestParam Integer mes) {
-    return analyticsService.buscarCasos(ano, mes);
+    return analyticsService.buscarCasos(ano, mes).stream().map(this::toResponse).toList();
+  }
+
+  private CasoResumoResponse toResponse(CaseResult c) {
+    return new CasoResumoResponse(c.codigoDoenca(), c.ano(), c.mes(), c.codigoMunicipio(), c.codigoUnidade(),
+        c.classificacao(), c.evolucao(), c.sexo(), c.semanaNotificacao(), c.anoNascimento(), c.totalCasos());
   }
 }

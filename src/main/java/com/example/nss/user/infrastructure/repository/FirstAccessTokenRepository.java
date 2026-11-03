@@ -1,6 +1,6 @@
 package com.example.nss.user.infrastructure.repository;
 
-import com.example.nss.user.domain.FirstAccessToken;
+import com.example.nss.user.infrastructure.persistence.FirstAccessToken;
 import jakarta.persistence.LockModeType;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

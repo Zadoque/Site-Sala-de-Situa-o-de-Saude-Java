@@ -1,6 +1,7 @@
 package com.example.nss.architecture;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
@@ -47,6 +48,15 @@ class LayeredArchitectureTest {
           .resideInAnyPackage("..web..");
 
   @ArchTest
+  static final ArchRule applications_must_not_access_infrastructure =
+      noClasses()
+          .that()
+          .resideInAnyPackage("..application..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage("..infrastructure..");
+
+  @ArchTest
   static final ArchRule repositories_must_not_access_web =
       noClasses()
           .that()
@@ -66,13 +76,32 @@ class LayeredArchitectureTest {
               "..web..", "..api..", "..application..", "..infrastructure..", "..security..");
 
   @ArchTest
-  static final ArchRule api_must_not_access_infrastructure =
+  static final ArchRule web_must_not_access_infrastructure =
       noClasses()
           .that()
-          .resideInAnyPackage("..api..")
+          .resideInAnyPackage("..web.controller..")
           .should()
           .dependOnClassesThat()
           .resideInAnyPackage("..infrastructure..");
+
+  @ArchTest
+  static final ArchRule domain_must_be_technology_free =
+      noClasses()
+          .that()
+          .resideInAnyPackage("..domain..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage(
+              "org.springframework..", "jakarta.persistence..", "org.hibernate..",
+              "org.springframework.jdbc..", "jakarta.servlet..", "..infrastructure..");
+
+  @ArchTest
+  static final ArchRule persistence_entities_are_in_infrastructure =
+      classes()
+          .that()
+          .areAnnotatedWith(jakarta.persistence.Entity.class)
+          .should()
+          .resideInAnyPackage("..infrastructure.persistence..");
 
   @ArchTest
   static final ArchRule controllers_must_not_access_repositories =

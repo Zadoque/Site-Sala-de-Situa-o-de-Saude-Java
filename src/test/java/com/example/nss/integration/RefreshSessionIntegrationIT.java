@@ -9,8 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.nss.user.application.RefreshSessionService;
 import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.RefreshSession;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.RefreshSession;
+import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.RefreshSessionRepository;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import java.time.Instant;

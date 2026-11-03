@@ -6,7 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

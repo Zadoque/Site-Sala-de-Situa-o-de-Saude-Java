@@ -1,7 +1,7 @@
 package com.example.nss.user.infrastructure.config;
 
 import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.security.EmailNormalizer;
 import java.time.Instant;

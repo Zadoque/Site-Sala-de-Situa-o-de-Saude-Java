@@ -3,4 +3,5 @@ package com.example.nss.user.web.response;
 import java.util.List;
 
 public record UserPageResponse(
-    List<ManagedUserResponse> items, int page, int size, boolean hasNext, long totalItems) {}
+    List<ManagedUserResponse> items, int page, int size, boolean hasNext, long totalItems)
+    implements com.example.nss.user.application.query.UserPageView {}

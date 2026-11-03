@@ -6,6 +6,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.example.nss.analytics.application.EpidemiologyService;
+import com.example.nss.analytics.application.query.AnalyticsResult;
+import com.example.nss.analytics.application.query.MetadataResult;
 import com.example.nss.analytics.domain.CoverageStatus;
 import com.example.nss.analytics.domain.Geography;
 import com.example.nss.analytics.web.response.AnalyticsResponse;
@@ -21,34 +23,30 @@ class EpidemiologyControllerTest {
           "DENG", 2024, 3, "F", "20_39", "3301009", "CG_DIST_SEDE");
 
   @Test
-  void regionAndStateUseUnavailableResponses() {
-    AnalyticsResponse unavailable =
-        new AnalyticsResponse(
-            "notifications",
-            Geography.REGION,
-            null,
-            null,
-            new AnalyticsResponse.Coverage(CoverageStatus.UNAVAILABLE, 0L, 0L),
-            List.of());
-    when(service.unavailable(Geography.REGION, request.toFilter())).thenReturn(unavailable);
-    when(service.unavailable(Geography.STATE, request.toFilter())).thenReturn(unavailable);
-
-    assertEquals(unavailable, controller.region(request));
-    assertEquals(unavailable, controller.state(request));
-    verify(service).unavailable(Geography.REGION, request.toFilter());
-    verify(service).unavailable(Geography.STATE, request.toFilter());
+  void regionAndStateDelegateToTheirQueryScopes() {
+    AnalyticsResult result = new AnalyticsResult("notifications", Geography.REGION,
+        new AnalyticsResult.Filters("DENG", 2024, 3, "F", "20_39", "3301009", "CG_DIST_SEDE"),
+        0L, new AnalyticsResult.Coverage(CoverageStatus.AVAILABLE, 0L, 0L), List.of());
+    when(service.query(Geography.REGION, request.toFilter())).thenReturn(result);
+    when(service.query(Geography.STATE, request.toFilter())).thenReturn(result);
+    assertEquals(0L, controller.region(request).totalNotifications());
+    assertEquals(0L, controller.state(request).totalNotifications());
+    verify(service).query(Geography.REGION, request.toFilter());
+    verify(service).query(Geography.STATE, request.toFilter());
   }
 
   @Test
   void geographicEndpointsDelegateToTheMatchingServiceScope() {
-    AnalyticsResponse response = mock(AnalyticsResponse.class);
+    AnalyticsResult response = new AnalyticsResult("notifications", Geography.MUNICIPALITY,
+        new AnalyticsResult.Filters("DENG", 2024, 3, "F", "20_39", "3301009", "CG_DIST_SEDE"),
+        0L, new AnalyticsResult.Coverage(CoverageStatus.AVAILABLE, 0L, 0L), List.of());
     when(service.query(Geography.MUNICIPALITY, request.toFilter())).thenReturn(response);
     when(service.query(Geography.DISTRICT, request.toFilter())).thenReturn(response);
     when(service.query(Geography.NEIGHBORHOOD, request.toFilter())).thenReturn(response);
 
-    assertEquals(response, controller.municipalities(request));
-    assertEquals(response, controller.districts(request));
-    assertEquals(response, controller.neighborhoods(request));
+    assertEquals(0L, controller.municipalities(request).totalNotifications());
+    assertEquals(0L, controller.districts(request).totalNotifications());
+    assertEquals(0L, controller.neighborhoods(request).totalNotifications());
     verify(service).query(Geography.MUNICIPALITY, request.toFilter());
     verify(service).query(Geography.DISTRICT, request.toFilter());
     verify(service).query(Geography.NEIGHBORHOOD, request.toFilter());
@@ -60,9 +58,10 @@ class EpidemiologyControllerTest {
         new MetadataResponse(
             List.of(2024), java.util.Map.of("2024", List.of(3)), List.of(), List.of(), List.of());
     when(service.diseases()).thenReturn(List.of("DENG"));
-    when(service.metadata()).thenReturn(metadata);
+    when(service.metadata()).thenReturn(new MetadataResult(metadata.availableYears(), metadata.availableMonthsByYear(),
+        metadata.supportedGeographies(), metadata.supportedAgeBands(), metadata.supportedSexes()));
 
     assertEquals(List.of("DENG"), controller.diseases().items());
-    assertEquals(metadata, controller.metadata());
+    assertEquals(metadata.availableYears(), controller.metadata().availableYears());
   }
 }

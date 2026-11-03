@@ -1,6 +1,8 @@
 package com.example.nss.analytics.web.controller;
 
 import com.example.nss.analytics.application.EpidemiologyService;
+import com.example.nss.analytics.application.query.AnalyticsResult;
+import com.example.nss.analytics.application.query.MetadataResult;
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
 import com.example.nss.analytics.web.response.AnalyticsResponse;
@@ -17,27 +19,27 @@ public class EpidemiologyController {
 
   @GetMapping("/epidemiology/region")
   public AnalyticsResponse region(@ModelAttribute FilterRequest request) {
-    return service.unavailable(Geography.REGION, request.toFilter());
+    return response(service.unavailable(Geography.REGION, request.toFilter()));
   }
 
   @GetMapping("/epidemiology/state")
   public AnalyticsResponse state(@ModelAttribute FilterRequest request) {
-    return service.unavailable(Geography.STATE, request.toFilter());
+    return response(service.query(Geography.STATE, request.toFilter()));
   }
 
   @GetMapping("/epidemiology/municipalities")
   public AnalyticsResponse municipalities(@ModelAttribute FilterRequest request) {
-    return service.query(Geography.MUNICIPALITY, request.toFilter());
+    return response(service.query(Geography.MUNICIPALITY, request.toFilter()));
   }
 
   @GetMapping("/epidemiology/districts")
   public AnalyticsResponse districts(@ModelAttribute FilterRequest request) {
-    return service.query(Geography.DISTRICT, request.toFilter());
+    return response(service.query(Geography.DISTRICT, request.toFilter()));
   }
 
   @GetMapping("/epidemiology/neighborhoods")
   public AnalyticsResponse neighborhoods(@ModelAttribute FilterRequest request) {
-    return service.query(Geography.NEIGHBORHOOD, request.toFilter());
+    return response(service.query(Geography.NEIGHBORHOOD, request.toFilter()));
   }
 
   @GetMapping("/diseases")
@@ -47,7 +49,19 @@ public class EpidemiologyController {
 
   @GetMapping("/metadata")
   public MetadataResponse metadata() {
-    return service.metadata();
+    MetadataResult m = service.metadata();
+    return new MetadataResponse(m.availableYears(), m.availableMonthsByYear(), m.supportedGeographies(),
+        m.supportedAgeBands(), m.supportedSexes());
+  }
+
+  private AnalyticsResponse response(AnalyticsResult r) {
+    return new AnalyticsResponse(r.metric(), r.geography(),
+        new AnalyticsResponse.FilterResponse(r.filters().disease(), r.filters().year(), r.filters().month(),
+            r.filters().sex(), r.filters().ageBand(), r.filters().municipalityCode(), r.filters().districtCode()),
+        r.totalNotifications(), new AnalyticsResponse.Coverage(r.coverage().status(),
+            r.coverage().mappedNotificationsTotal(), r.coverage().unmappedNotificationsTotal()),
+        r.items().stream().map(i -> new AnalyticsResponse.TerritoryItem(i.code(), i.name(), i.notificationsTotal(),
+            i.parentDistrictId())).toList());
   }
 
   public record FilterRequest(

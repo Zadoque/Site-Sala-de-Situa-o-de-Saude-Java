@@ -2,7 +2,7 @@ package com.example.nss.analytics.application;
 
 import com.example.nss.analytics.application.port.AnalyticsQueryPort;
 import com.example.nss.analytics.application.query.CasoResumo;
-import com.example.nss.analytics.web.response.CasoResumoResponse;
+import com.example.nss.analytics.application.query.CaseResult;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 public class AnalyticsService {
   private final AnalyticsQueryPort repository;
 
-  public List<CasoResumoResponse> buscarCasos(Integer ano, Integer mes) {
-    return repository.buscarCasos(ano, mes).stream().map(this::toResponse).toList();
+  public List<CaseResult> buscarCasos(Integer ano, Integer mes) {
+    return repository.buscarCasos(ano, mes).stream().map(this::toResult).toList();
   }
 
-  private CasoResumoResponse toResponse(CasoResumo caso) {
-    return new CasoResumoResponse(
+  private CaseResult toResult(CasoResumo caso) {
+    return new CaseResult(
         caso.codigoDoenca(),
         caso.ano(),
         caso.mes(),

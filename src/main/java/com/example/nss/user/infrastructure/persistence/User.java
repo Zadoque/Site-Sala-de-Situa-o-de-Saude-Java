@@ -1,5 +1,6 @@
-package com.example.nss.user.domain;
+package com.example.nss.user.infrastructure.persistence;
 
+import com.example.nss.user.domain.AccountType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

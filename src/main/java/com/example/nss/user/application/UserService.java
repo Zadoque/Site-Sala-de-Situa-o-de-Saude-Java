@@ -1,10 +1,10 @@
 package com.example.nss.user.application;
 
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.security.EmailNormalizer;
-import com.example.nss.user.web.mapper.UserMapper;
-import com.example.nss.user.web.response.UserResponse;
+import com.example.nss.user.application.port.UserMapperPort;
+import com.example.nss.user.application.query.UserView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
   private final UserRepository repository;
   private final FirstAccessService firstAccessService;
-  private final UserMapper mapper;
+  private final UserMapperPort mapper;
 
-  public UserResponse getByEmail(String email) {
-    return repository
+  @SuppressWarnings("unchecked")
+  public <T extends UserView> T getByEmail(String email) {
+    return (T)
+        repository
         .findByEmailIgnoreCase(EmailNormalizer.normalize(email))
         .map(mapper::toResponse)
         .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));

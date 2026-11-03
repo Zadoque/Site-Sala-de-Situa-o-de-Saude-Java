@@ -1,6 +1,6 @@
 package com.example.nss.user.security;
 
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -31,11 +31,15 @@ public class JwtService {
   }
 
   public String generateToken(User user) {
+    return generateToken(user.getId());
+  }
+
+  public String generateToken(long userId) {
     Date issuedAt = new Date();
     Date expirationDate = new Date(issuedAt.getTime() + expiration);
 
     return Jwts.builder()
-        .subject(String.valueOf(user.getId()))
+        .subject(String.valueOf(userId))
         .issuedAt(issuedAt)
         .expiration(expirationDate)
         .signWith(signingKey)

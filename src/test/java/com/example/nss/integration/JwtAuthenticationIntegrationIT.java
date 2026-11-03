@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.security.JwtService;
 import org.junit.jupiter.api.Test;

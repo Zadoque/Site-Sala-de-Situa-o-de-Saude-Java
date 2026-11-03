@@ -3,13 +3,13 @@ package com.example.nss.analytics.application;
 import com.example.nss.analytics.application.port.EpidemiologyQueryPort;
 import com.example.nss.analytics.application.port.TerritoryCatalogPort;
 import com.example.nss.analytics.application.query.EpidemiologyTotals;
+import com.example.nss.analytics.application.query.AnalyticsResult;
+import com.example.nss.analytics.application.query.MetadataResult;
 import com.example.nss.analytics.application.query.MetadataEntry;
 import com.example.nss.analytics.application.query.Municipality;
 import com.example.nss.analytics.domain.CoverageStatus;
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
-import com.example.nss.analytics.web.response.AnalyticsResponse;
-import com.example.nss.analytics.web.response.MetadataResponse;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -26,7 +26,7 @@ public class EpidemiologyService {
   private final EpidemiologyQueryPort repository;
   private final TerritoryCatalogPort catalog;
 
-  public AnalyticsResponse query(Geography geography, EpidemiologyFilter filter) {
+  public AnalyticsResult query(Geography geography, EpidemiologyFilter filter) {
     List<TerritoryCatalogPort.Entry> territories =
         catalog.forGeography(filter.municipalityCode(), filter.districtCode(), geography.name());
     if (geography == Geography.MUNICIPALITY) {
@@ -48,7 +48,7 @@ public class EpidemiologyService {
     EpidemiologyTotals totals = repository.totals(filter, geography, mappedIds);
     long total = totals.total();
     long mapped = totals.mapped();
-    List<AnalyticsResponse.TerritoryItem> items = new ArrayList<>();
+    List<AnalyticsResult.Item> items = new ArrayList<>();
     Map<String, Long> aggregates = new HashMap<>();
     repository
         .aggregate(filter, geography, mappedIds)
@@ -57,7 +57,7 @@ public class EpidemiologyService {
       aggregates.forEach(
           (code, value) ->
               items.add(
-                  new AnalyticsResponse.TerritoryItem(
+                  new AnalyticsResult.Item(
                       code,
                       geography == Geography.REGION ? regionName(code) : stateName(code),
                       value,
@@ -65,13 +65,13 @@ public class EpidemiologyService {
     }
     for (TerritoryCatalogPort.Entry entry : territories) {
       items.add(
-          new AnalyticsResponse.TerritoryItem(
+          new AnalyticsResult.Item(
               entry.territoryId(),
               entry.name(),
               aggregates.getOrDefault(entry.territoryId(), 0L),
               entry.parentDistrictId()));
     }
-    items.sort(Comparator.comparing(AnalyticsResponse.TerritoryItem::code));
+    items.sort(Comparator.comparing(AnalyticsResult.Item::code));
     CoverageStatus status =
         total == 0 || mapped == total ? CoverageStatus.AVAILABLE : CoverageStatus.PARTIAL;
     return response(geography, filter, total, status, mapped, total - mapped, items);
@@ -101,7 +101,7 @@ public class EpidemiologyService {
     return code;
   }
 
-  public AnalyticsResponse unavailable(Geography geography, EpidemiologyFilter filter) {
+  public AnalyticsResult unavailable(Geography geography, EpidemiologyFilter filter) {
     return response(geography, filter, null, CoverageStatus.UNAVAILABLE, 0L, 0L, List.of());
   }
 
@@ -109,7 +109,7 @@ public class EpidemiologyService {
     return repository.diseases().stream().map(row -> row.code()).toList();
   }
 
-  public MetadataResponse metadata() {
+  public MetadataResult metadata() {
     Map<Integer, List<Integer>> grouped =
         repository.metadata().stream()
             .collect(
@@ -117,7 +117,7 @@ public class EpidemiologyService {
                     MetadataEntry::year,
                     LinkedHashMap::new,
                     Collectors.mapping(MetadataEntry::month, Collectors.toList())));
-    return new MetadataResponse(
+    return new MetadataResult(
         new ArrayList<>(grouped.keySet()),
         grouped.entrySet().stream()
             .collect(
@@ -131,18 +131,18 @@ public class EpidemiologyService {
         List.of("M", "F", "ALL"));
   }
 
-  private AnalyticsResponse response(
+  private AnalyticsResult response(
       Geography geography,
       EpidemiologyFilter f,
       Long total,
       CoverageStatus status,
       long mapped,
       long unmapped,
-      List<AnalyticsResponse.TerritoryItem> items) {
-    return new AnalyticsResponse(
+      List<AnalyticsResult.Item> items) {
+    return new AnalyticsResult(
         "notifications",
         geography,
-        new AnalyticsResponse.FilterResponse(
+        new AnalyticsResult.Filters(
             f.disease(),
             f.year(),
             f.month(),
@@ -151,7 +151,7 @@ public class EpidemiologyService {
             f.municipalityCode(),
             f.districtCode()),
         total,
-        new AnalyticsResponse.Coverage(status, mapped, unmapped),
+        new AnalyticsResult.Coverage(status, mapped, unmapped),
         items);
   }
 }

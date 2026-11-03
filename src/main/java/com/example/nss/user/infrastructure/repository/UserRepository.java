@@ -1,6 +1,6 @@
 package com.example.nss.user.infrastructure.repository;
 
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.User;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -11,7 +11,7 @@ import com.example.nss.user.application.AuthRateLimiter;
 import com.example.nss.user.application.FirstAccessService;
 import com.example.nss.user.application.RefreshSessionService;
 import com.example.nss.user.application.UserService;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.security.CustomUserDetailsService;
 import com.example.nss.user.security.JwtService;
 import com.example.nss.user.web.response.UserResponse;

@@ -1,12 +1,15 @@
 package com.example.nss.user.application;
 
 import com.example.nss.shared.notification.MailService;
-import com.example.nss.user.domain.FirstAccessToken;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.FirstAccessToken;
+import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.security.EmailNormalizer;
-import com.example.nss.user.web.request.FirstAccessRequest;
+import com.example.nss.user.application.command.FirstAccessCommand;
+import com.example.nss.user.application.command.PasswordResetCommand;
+import com.example.nss.user.application.query.InvitationResult;
+import com.example.nss.user.application.query.InvitationView;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -109,7 +112,7 @@ public class FirstAccessService {
 
   @Transactional
   public void completePasswordReset(
-      com.example.nss.user.web.request.PasswordResetCompleteRequest request) {
+      PasswordResetCommand request) {
     FirstAccessToken invite =
         tokens
             .findByTokenHashForUpdate(hash(request.token()))
@@ -133,7 +136,7 @@ public class FirstAccessService {
   }
 
   @Transactional
-  public void complete(FirstAccessRequest request) {
+  public void complete(FirstAccessCommand request) {
     FirstAccessToken invite =
         tokens
             .findByTokenHashForUpdate(hash(request.token()))
@@ -164,12 +167,12 @@ public class FirstAccessService {
   }
 
   @Transactional(readOnly = true)
-  public java.util.List<com.example.nss.user.web.response.InvitationResponse> pendingInvitations() {
+  public java.util.List<InvitationView> pendingInvitations() {
     return tokens.findByStatusOrderByExpiresAtAsc(PENDING_STATUS).stream().map(this::view).toList();
   }
 
   @Transactional
-  public com.example.nss.user.web.response.InvitationResponse renew(Long id) {
+  public InvitationView renew(Long id) {
     FirstAccessToken old =
         tokens
             .findById(id)
@@ -194,8 +197,8 @@ public class FirstAccessService {
     }
   }
 
-  private com.example.nss.user.web.response.InvitationResponse view(FirstAccessToken t) {
-    return new com.example.nss.user.web.response.InvitationResponse(
+  private InvitationView view(FirstAccessToken t) {
+    return new InvitationResult(
         t.getId(),
         t.getUser().getId(),
         t.getUser().getEmail(),

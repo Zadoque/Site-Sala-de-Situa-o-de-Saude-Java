@@ -9,7 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.application.query.InvitationView;
+import com.example.nss.user.application.query.InvitationResult;
+import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.web.mapper.UserMapper;
 import com.example.nss.user.web.request.AccountInvitationRequest;
@@ -146,9 +148,9 @@ class AdminUserServiceTest {
 
   @Test
   void delegatesInvitationListingRenewalAndCancellation() {
-    var invitations =
+    List<InvitationView> invitations =
         List.of(
-            new com.example.nss.user.web.response.InvitationResponse(
+            new InvitationResult(
                 1L, 2L, "a@nss.test", AccountType.USER, "PENDING", null, null));
     var renewed = invitations.getFirst();
     when(firstAccess.pendingInvitations()).thenReturn(invitations);

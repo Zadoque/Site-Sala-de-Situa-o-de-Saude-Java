@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.UserDetails;
 

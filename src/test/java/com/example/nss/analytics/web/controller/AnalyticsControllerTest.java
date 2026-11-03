@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.example.nss.analytics.application.AnalyticsService;
+import com.example.nss.analytics.application.query.CaseResult;
 import com.example.nss.analytics.web.response.CasoResumoResponse;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ class AnalyticsControllerTest {
   void delegatesCaseEndpointParametersToTheService() {
     AnalyticsService service = mock(AnalyticsService.class);
     AnalyticsController controller = new AnalyticsController(service);
-    List<CasoResumoResponse> expected = List.of();
+    List<CaseResult> expected = List.of();
     when(service.buscarCasos(2024, 3)).thenReturn(expected);
 
     assertEquals(expected, controller.buscarCasos(2024, 3));

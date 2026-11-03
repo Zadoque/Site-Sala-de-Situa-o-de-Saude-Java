@@ -13,7 +13,7 @@ import com.example.nss.analytics.application.query.TerritoryAggregate;
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepository;
-import com.example.nss.analytics.web.response.AnalyticsResponse;
+import com.example.nss.analytics.application.query.AnalyticsResult;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,7 @@ class EpidemiologyServiceTest {
     when(repository.aggregate(any(), eq(Geography.DISTRICT), any()))
         .thenReturn(List.of(new TerritoryAggregate("CG_DIST_SEDE", 7L)));
 
-    AnalyticsResponse response =
+    AnalyticsResult response =
         service.query(
             Geography.DISTRICT,
             new EpidemiologyFilter("DENG", 2026, 3, null, null, "3301009", null));
@@ -52,7 +52,7 @@ class EpidemiologyServiceTest {
 
   @Test
   void neighborhoodWithoutDistrictIsUnavailable() {
-    AnalyticsResponse response =
+    AnalyticsResult response =
         service.query(
             Geography.NEIGHBORHOOD,
             new EpidemiologyFilter("DENG", null, null, null, null, "3301009", null));
@@ -68,7 +68,7 @@ class EpidemiologyServiceTest {
     when(repository.totals(any(), eq(Geography.DISTRICT), any()))
         .thenReturn(new EpidemiologyTotals(0L, 0L));
     when(repository.aggregate(any(), eq(Geography.DISTRICT), any())).thenReturn(List.of());
-    AnalyticsResponse response =
+    AnalyticsResult response =
         service.query(
             Geography.DISTRICT,
             new EpidemiologyFilter("DENG", null, null, null, null, "3302205", null));
@@ -79,7 +79,7 @@ class EpidemiologyServiceTest {
 
   @Test
   void unavailableCreatesAnExplicitUnavailableResponse() {
-    AnalyticsResponse response =
+    AnalyticsResult response =
         service.unavailable(
             Geography.DISTRICT,
             new EpidemiologyFilter("DENG", 2026, null, null, null, "3301009", null));
@@ -100,7 +100,7 @@ class EpidemiologyServiceTest {
         .thenReturn(new EpidemiologyTotals(0L, 0L));
     when(repository.aggregate(any(), eq(Geography.DISTRICT), any())).thenReturn(List.of());
 
-    AnalyticsResponse response =
+    AnalyticsResult response =
         service.query(
             Geography.DISTRICT,
             new EpidemiologyFilter("DENG", 2026, null, null, "20_39", "3301009", null));
@@ -141,7 +141,7 @@ class EpidemiologyServiceTest {
     when(repository.aggregate(any(), eq(Geography.MUNICIPALITY), any()))
         .thenReturn(List.of(new TerritoryAggregate("3301009", 5L)));
 
-    AnalyticsResponse response =
+    AnalyticsResult response =
         service.query(
             Geography.MUNICIPALITY,
             new EpidemiologyFilter(null, null, null, null, null, null, null));
@@ -169,7 +169,7 @@ class EpidemiologyServiceTest {
     when(repository.aggregate(any(), eq(Geography.NEIGHBORHOOD), any()))
         .thenReturn(List.of(new TerritoryAggregate("CG_NH_CENTRO", 3L)));
 
-    AnalyticsResponse response =
+    AnalyticsResult response =
         service.query(
             Geography.NEIGHBORHOOD,
             new EpidemiologyFilter(null, null, null, null, null, "3301009", "CG_DIST_SEDE"));
@@ -189,7 +189,7 @@ class EpidemiologyServiceTest {
     when(repository.totals(any(), eq(Geography.DISTRICT), any()))
         .thenReturn(new EpidemiologyTotals(0L, 0L));
 
-    AnalyticsResponse response =
+    AnalyticsResult response =
         service.query(
             Geography.DISTRICT,
             new EpidemiologyFilter(null, null, null, null, null, "3301009", null));
@@ -208,7 +208,7 @@ class EpidemiologyServiceTest {
     when(repository.aggregate(any(), eq(Geography.MUNICIPALITY), any()))
         .thenReturn(List.of(new TerritoryAggregate("3302403", 2L)));
 
-    AnalyticsResponse response =
+    AnalyticsResult response =
         service.query(
             Geography.MUNICIPALITY,
             new EpidemiologyFilter(null, null, null, null, null, "3302403", null));

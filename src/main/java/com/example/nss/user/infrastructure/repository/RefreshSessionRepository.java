@@ -1,6 +1,6 @@
 package com.example.nss.user.infrastructure.repository;
 
-import com.example.nss.user.domain.RefreshSession;
+import com.example.nss.user.infrastructure.persistence.RefreshSession;
 import jakarta.persistence.LockModeType;
 import java.time.Instant;
 import java.util.Optional;

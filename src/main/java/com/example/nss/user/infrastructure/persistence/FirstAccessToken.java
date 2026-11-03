@@ -1,4 +1,4 @@
-package com.example.nss.user.domain;
+package com.example.nss.user.infrastructure.persistence;
 
 import jakarta.persistence.*;
 import java.time.Instant;

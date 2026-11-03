@@ -10,4 +10,5 @@ public record InvitationResponse(
     AccountType accountType,
     String status,
     Instant sentAt,
-    Instant expiresAt) {}
+    Instant expiresAt)
+    implements com.example.nss.user.application.query.InvitationView {}

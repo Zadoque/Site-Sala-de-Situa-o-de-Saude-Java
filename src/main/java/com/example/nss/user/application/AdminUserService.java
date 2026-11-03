@@ -1,13 +1,15 @@
 package com.example.nss.user.application;
 
 import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import com.example.nss.user.security.EmailNormalizer;
-import com.example.nss.user.web.mapper.UserMapper;
-import com.example.nss.user.web.request.AccountInvitationRequest;
-import com.example.nss.user.web.response.ManagedUserResponse;
-import com.example.nss.user.web.response.UserPageResponse;
+import com.example.nss.user.application.command.InvitationCommand;
+import com.example.nss.user.application.port.UserMapperPort;
+import com.example.nss.user.application.query.InvitationView;
+import com.example.nss.user.application.query.ManagedUserView;
+import com.example.nss.user.application.query.UserPageResult;
+import com.example.nss.user.application.query.UserPageView;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,9 +22,10 @@ public class AdminUserService {
   private final UserRepository users;
   private final FirstAccessService firstAccess;
   private final RefreshSessionService refreshSessions;
-  private final UserMapper mapper;
+  private final UserMapperPort mapper;
 
-  public UserPageResponse search(String search, int page, int size) {
+  @SuppressWarnings("unchecked")
+  public <T extends UserPageView> T search(String search, int page, int size) {
     int safeSize = Math.min(Math.max(size, 1), 60);
     org.springframework.data.domain.Page<User> result =
         search == null || search.isBlank()
@@ -34,7 +37,7 @@ public class AdminUserService {
                 search,
                 org.springframework.data.domain.PageRequest.of(
                     page, safeSize, org.springframework.data.domain.Sort.by("email").ascending()));
-    return new UserPageResponse(
+    return (T) new UserPageResult(
         result.getContent().stream().map(this::view).toList(),
         result.getNumber(),
         result.getSize(),
@@ -43,7 +46,8 @@ public class AdminUserService {
   }
 
   @Transactional
-  public ManagedUserResponse invite(AccountInvitationRequest request) {
+  @SuppressWarnings("unchecked")
+  public <T extends ManagedUserView> T invite(InvitationCommand request) {
     String normalizedEmail = EmailNormalizer.normalize(request.email());
     if (users.findByEmailIgnoreCase(normalizedEmail).isPresent())
       throw new IllegalArgumentException("E-mail já cadastrado");
@@ -60,11 +64,12 @@ public class AdminUserService {
       throw new IllegalArgumentException("E-mail já cadastrado", exception);
     }
     firstAccess.issue(saved);
-    return view(saved);
+    return (T) view(saved);
   }
 
   @Transactional
-  public ManagedUserResponse setActive(Long id, boolean active, String actorEmail) {
+  @SuppressWarnings("unchecked")
+  public <T extends ManagedUserView> T setActive(Long id, boolean active, String actorEmail) {
     User user =
         users
             .findById(id)
@@ -76,7 +81,7 @@ public class AdminUserService {
     user.setAtivo(active);
     User saved = users.save(user);
     if (!active) refreshSessions.revokeAllForUser(saved.getId());
-    return view(saved);
+    return (T) view(saved);
   }
 
   @Transactional
@@ -92,19 +97,21 @@ public class AdminUserService {
     firstAccess.issuePasswordReset(user);
   }
 
-  public java.util.List<com.example.nss.user.web.response.InvitationResponse> invitations() {
-    return firstAccess.pendingInvitations();
+  @SuppressWarnings("unchecked")
+  public <T extends InvitationView> java.util.List<T> invitations() {
+    return (java.util.List<T>) firstAccess.pendingInvitations();
   }
 
-  public com.example.nss.user.web.response.InvitationResponse renewInvitation(Long id) {
-    return firstAccess.renew(id);
+  @SuppressWarnings("unchecked")
+  public <T extends InvitationView> T renewInvitation(Long id) {
+    return (T) firstAccess.renew(id);
   }
 
   public void cancelInvitation(Long id) {
     firstAccess.cancel(id);
   }
 
-  private ManagedUserResponse view(User user) {
+  private ManagedUserView view(User user) {
     return mapper.toManagedResponse(user, firstAccess.pending(user));
   }
 }

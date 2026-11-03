@@ -10,4 +10,5 @@ public record ManagedUserResponse(
     AccountType accountType,
     boolean active,
     boolean firstAccessPending,
-    Instant passwordCreatedAt) {}
+    Instant passwordCreatedAt)
+    implements com.example.nss.user.application.query.ManagedUserView {}

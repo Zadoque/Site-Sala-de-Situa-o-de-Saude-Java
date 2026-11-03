@@ -1,7 +1,7 @@
 package com.example.nss.user.application;
 
-import com.example.nss.user.domain.RefreshSession;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.infrastructure.persistence.RefreshSession;
+import com.example.nss.user.infrastructure.persistence.User;
 import com.example.nss.user.infrastructure.repository.RefreshSessionRepository;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
@@ -117,5 +117,9 @@ public class RefreshSessionService {
     }
   }
 
-  public record Rotation(User user, String rawToken) {}
+  public record Rotation(User user, String rawToken) {
+    public String email() {
+      return user.getEmail();
+    }
+  }
 }
