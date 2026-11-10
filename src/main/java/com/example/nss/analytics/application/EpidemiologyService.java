@@ -5,11 +5,11 @@ import com.example.nss.analytics.api.response.MetadataResponse;
 import com.example.nss.analytics.domain.CoverageStatus;
 import com.example.nss.analytics.domain.EpidemiologyFilter;
 import com.example.nss.analytics.domain.Geography;
+import com.example.nss.analytics.infrastructure.cache.AnalyticsResponseCache;
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepository;
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyTotals;
 import com.example.nss.analytics.infrastructure.repository.MetadataRow;
 import com.example.nss.analytics.infrastructure.repository.PublicationMetadataRow;
-import com.example.nss.analytics.infrastructure.cache.AnalyticsResponseCache;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -89,15 +89,16 @@ public class EpidemiologyService {
     items.sort(Comparator.comparing(AnalyticsResponse.TerritoryItem::code));
     CoverageStatus status =
         total == 0 || mapped == total ? CoverageStatus.AVAILABLE : CoverageStatus.PARTIAL;
-    AnalyticsResponse result = response(
-        geography,
-        filter,
-        total,
-        status,
-        mapped,
-        total - mapped,
-        items,
-        repository.publicationMetadata(filter));
+    AnalyticsResponse result =
+        response(
+            geography,
+            filter,
+            total,
+            status,
+            mapped,
+            total - mapped,
+            items,
+            repository.publicationMetadata(filter));
     if (cache != null) cache.put(cacheKey, result);
     return result;
   }
