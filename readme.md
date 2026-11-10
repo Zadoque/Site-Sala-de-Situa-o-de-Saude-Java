@@ -1,5 +1,13 @@
 # Sala de Situação de Saúde (NSS) — backend
 
+## Ambiente e secrets
+
+`.env.local` é exclusivo para desenvolvimento e deve usar credenciais
+descartáveis. Em servidor, não copie esse arquivo: o `NSS-deployment` mantém o
+arquivo runtime em `/etc/nss/deployment.env`, protegido com `0600`, e injeta as
+variáveis necessárias no container Java. JWT, SMTP, banco, Redis e senha de
+bootstrap nunca devem ser versionados.
+
 Backend Spring Boot/Java 21 para autenticação e leitura do PostgreSQL analítico publicado pela pipeline. Não acessa PySUS, SINAN bruto, CNES operacional ou Parquet em runtime.
 
 ## Arquitetura
