@@ -216,3 +216,18 @@ XML e CSV em `target/site/jacoco/`, com visões separadas em `unit/` e
 
 O checklist de deploy, smoke test, backup/restauração, rollback e observabilidade
 está em [documentation/OPERACAO_PRODUCAO.md](documentation/OPERACAO_PRODUCAO.md).
+
+## Arquitetura e estrutura
+
+```mermaid
+flowchart LR
+  C[Caddy] --> API[Controllers]
+  API --> AUTH[Auth services]
+  API --> EPI[Epidemiology service]
+  AUTH --> RS[(Redis sessions)]
+  AUTH --> RL[(Redis rate limiter)]
+  EPI --> RC[(Redis analytics cache, opcional)]
+  EPI --> PG[(PostgreSQL analytics)]
+```
+
+`src/main/java/.../analytics/` contém filtros, serviços, repositórios JDBC e cache; `.../user/` contém autenticação, sessões e rate limiter; `.../shared/redis/` concentra conexões dedicadas; `src/test/` contém testes unitários, WebMVC, integração PostgreSQL/Redis e mutação PIT. O cache é desativado por padrão e habilitado por `ANALYTICS_CACHE_ENABLED=true`, com TTL e revisão configuráveis.
