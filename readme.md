@@ -11,6 +11,11 @@ bootstrap nunca devem ser versionados.
 Para teste local direto: `cp .env.local.test .env`. Altere apenas portas/URLs se
 PostgreSQL, Redis ou frontend não estiverem nos endereços locais padrão.
 
+O arquivo local usa Mailpit. Em produção, configure `MAIL_HOST`, `MAIL_PORT`,
+`MAIL_FROM`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SMTP_AUTH=true` e
+`MAIL_SMTP_STARTTLS=true` no secret runtime do Deployment. `MAIL_PASSWORD` deve
+ser uma senha de aplicativo de uma conta de envio dedicada.
+
 Backend Spring Boot/Java 21 para autenticação e leitura do PostgreSQL analítico publicado pela pipeline. Não acessa PySUS, SINAN bruto, CNES operacional ou Parquet em runtime.
 
 ## Arquitetura
