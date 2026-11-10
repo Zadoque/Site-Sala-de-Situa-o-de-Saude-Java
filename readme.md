@@ -9,13 +9,13 @@ O backend é uma aplicação modular em camadas, organizada por responsabilidade
 - `web`: adaptadores HTTP. Controllers recebem parâmetros, delegam o caso de uso e devolvem DTOs da API.
 - `application`: casos de uso e orquestração. Valida filtros, consulta o catálogo territorial, calcula cobertura e compõe respostas.
 - `domain`: tipos e regras centrais, como `Geography`, `EpidemiologyFilter`, `CoverageStatus` e `User`.
-- `infrastructure`: integração com PostgreSQL, Redis, JPA, JDBC, Flyway, arquivos TSV territoriais e inicialização do administrador.
+- `infrastructure`: integração com PostgreSQL, Redis, JPA, JDBC, arquivos TSV territoriais e inicialização do administrador. O schema é preparado pelo `NSS-database`; o Java não executa DDL no boot.
 - `api`: requests e responses públicos. Records são imutáveis e definem o contrato JSON sem expor entidades persistidas.
 - `shared`: capacidades transversais, como tratamento de erros e envio de e-mail.
 
 O frontend é o cliente da API. Em produção, o Nginx pode encaminhar `/api/` para o Java, mantendo frontend e API na mesma origem. O Java possui dois datasources independentes:
 
-1. o datasource operacional, usado por JPA/Flyway para usuários, convites e tokens de primeiro acesso;
+1. o datasource operacional, usado por JPA para usuários, convites e tokens de primeiro acesso;
 2. o datasource analítico, somente leitura, usado por `JdbcTemplate` para consultar `analytics.*`, publicado pela pipeline;
 3. o Redis persistente, usado para refresh sessions e rate limit distribuído de autenticação.
 
@@ -138,11 +138,11 @@ Manter esses elementos privados impede que controllers, frontend ou outros módu
 
 ### Banco e migrações
 
-O Flyway migra o schema operacional `public`. O Alembic da pipeline migra o schema analítico `analytics`; os dois históricos são independentes. O arquivo `V0001__initial_schema.sql` é a migration inicial consolidada (`version=1`, exibida operacionalmente como `0001`) e representa diretamente o estado atual do schema SQL: `users`, `user_first_access` e índices de e-mail normalizado. Refresh sessions e rate limits são dados Redis, com TTL e persistência AOF.
+O `NSS-database` é a única fonte de schema, migrations, roles, grants e contratos. O Deployment aplica a migration inicial consolidada antes de iniciar Java e Pipeline. O Java apenas valida e consulta o schema; não executa DDL nem mantém Flyway próprio. A Pipeline também não aplica Alembic durante a ingestão. Refresh sessions e rate limits são dados Redis, com TTL e persistência AOF.
 
-Essa consolidação é o ponto de partida para bancos novos. Ela substitui o histórico anterior `V1`–`V6`; não deve ser aplicada sobre um banco que ainda tenha `flyway_schema_history` apontando para as migrations antigas sem antes recriar o schema operacional ou executar um procedimento explícito de baseline controlado. O banco analítico e seus dados não são apagados por essa mudança.
+Essa consolidação é o ponto de partida para bancos novos e substitui os históricos distribuídos anteriores. Em um banco existente, o Deployment deve executar o procedimento de cutover documentado e comparar o catálogo antes de aplicar a migration. O banco analítico e seus dados não são apagados por essa mudança.
 
-Em um ambiente descartável, recrie somente o schema operacional antes de iniciar o Java para que o Flyway execute a `0001` desde o início. Em um banco compartilhado já existente, use `SPRING_FLYWAY_BASELINE_ON_MIGRATE=true` e `SPRING_FLYWAY_BASELINE_VERSION=0` apenas quando as tabelas atuais já forem equivalentes ao schema consolidado; isso registra o ponto de partida sem modificar as tabelas analíticas.
+Em um ambiente descartável, o script `NSS-database/scripts/database.sh apply` cria o PostgreSQL e aplica `migrations/0001/{app,analytics}.sql` de forma idempotente. Em um banco compartilhado existente, execute o inventário e o cutover do Deployment; não use o Java para registrar ou alterar migrations.
 
 O datasource analítico usa `read-only=true`. A aplicação consulta `dim_doenca`, `dim_municipio`, `dim_unidade_saude`, `fato_casos` e `pipeline_current_publication`; a pipeline é a responsável por escrever e publicar esses dados.
 
@@ -165,7 +165,7 @@ O perfil Maven `dev` adiciona somente a integração do Spring Boot com o
 
 - **Produção/Docker:** o `Dockerfile` compila a aplicação com Java 21 e gera
   uma imagem final somente com o JRE e o JAR empacotado. As dependências de
-  runtime da aplicação (Spring Web, JPA, PostgreSQL, segurança, JWT, Flyway,
+  runtime da aplicação (Spring Web, JPA, PostgreSQL, segurança, JWT,
   Actuator e métricas) são empacotadas nesse JAR.
 - **Desenvolvimento local:** `./mvnw -Pdev spring-boot:run` habilita o starter
   `spring-boot-docker-compose`, que permite ao Spring iniciar o
