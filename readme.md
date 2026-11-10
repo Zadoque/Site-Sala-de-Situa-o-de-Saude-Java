@@ -8,6 +8,9 @@ arquivo runtime em `/etc/nss/deployment.env`, protegido com `0600`, e injeta as
 variáveis necessárias no container Java. JWT, SMTP, banco, Redis e senha de
 bootstrap nunca devem ser versionados.
 
+Para teste local direto: `cp .env.local.test .env`. Altere apenas portas/URLs se
+PostgreSQL, Redis ou frontend não estiverem nos endereços locais padrão.
+
 Backend Spring Boot/Java 21 para autenticação e leitura do PostgreSQL analítico publicado pela pipeline. Não acessa PySUS, SINAN bruto, CNES operacional ou Parquet em runtime.
 
 ## Arquitetura
