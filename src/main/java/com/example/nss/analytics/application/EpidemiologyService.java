@@ -9,6 +9,7 @@ import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepositor
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyTotals;
 import com.example.nss.analytics.infrastructure.repository.MetadataRow;
 import com.example.nss.analytics.infrastructure.repository.PublicationMetadataRow;
+import com.example.nss.analytics.infrastructure.cache.AnalyticsResponseCache;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -25,10 +27,24 @@ import org.springframework.stereotype.Service;
 public class EpidemiologyService {
   private final EpidemiologyRepository repository;
   private final TerritoryCatalog catalog;
+  private AnalyticsResponseCache cache;
+
+  @Autowired(required = false)
+  void setCache(AnalyticsResponseCache cache) {
+    this.cache = cache;
+  }
 
   public AnalyticsResponse query(Geography geography, EpidemiologyFilter filter) {
+    String cacheKey = cacheKey(geography, filter);
+    if (cache != null) {
+      AnalyticsResponse cached = cache.get(cacheKey);
+      if (cached != null) return cached;
+    }
     if (geography == Geography.NEIGHBORHOOD && filter.districtCode() == null) {
-      return response(geography, filter, null, CoverageStatus.UNAVAILABLE, 0L, 0L, List.of(), null);
+      AnalyticsResponse unavailable =
+          response(geography, filter, null, CoverageStatus.UNAVAILABLE, 0L, 0L, List.of(), null);
+      if (cache != null) cache.put(cacheKey, unavailable);
+      return unavailable;
     }
     List<TerritoryCatalog.Entry> territories =
         geography == Geography.REGION || geography == Geography.STATE
@@ -73,7 +89,7 @@ public class EpidemiologyService {
     items.sort(Comparator.comparing(AnalyticsResponse.TerritoryItem::code));
     CoverageStatus status =
         total == 0 || mapped == total ? CoverageStatus.AVAILABLE : CoverageStatus.PARTIAL;
-    return response(
+    AnalyticsResponse result = response(
         geography,
         filter,
         total,
@@ -82,6 +98,23 @@ public class EpidemiologyService {
         total - mapped,
         items,
         repository.publicationMetadata(filter));
+    if (cache != null) cache.put(cacheKey, result);
+    return result;
+  }
+
+  private String cacheKey(Geography geography, EpidemiologyFilter f) {
+    return String.join(
+        "|",
+        geography.name(),
+        String.valueOf(f.disease()),
+        String.valueOf(f.year()),
+        String.valueOf(f.month()),
+        String.valueOf(f.sex()),
+        String.valueOf(f.ageBand()),
+        String.valueOf(f.municipalityCode()),
+        String.valueOf(f.districtCode()),
+        String.valueOf(f.ufCode()),
+        String.valueOf(f.regionCode()));
   }
 
   public AnalyticsResponse unavailable(Geography geography, EpidemiologyFilter filter) {
