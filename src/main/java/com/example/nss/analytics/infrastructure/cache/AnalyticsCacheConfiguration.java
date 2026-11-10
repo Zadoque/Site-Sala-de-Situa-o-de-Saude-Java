@@ -21,9 +21,9 @@ public class AnalyticsCacheConfiguration {
   @Bean
   AnalyticsResponseCache analyticsResponseCache(
       DedicatedRedis redis,
-      ObjectMapper mapper,
       @Value("${analytics.cache.ttl-seconds:600}") long ttlSeconds,
       @Value("${analytics.cache.revision:v1}") String revision) {
+    ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
     return new AnalyticsResponseCache(
         redis.template(), mapper, Duration.ofSeconds(ttlSeconds), revision);
   }
