@@ -15,6 +15,9 @@ O arquivo local usa Mailpit. Em produção, configure `MAIL_HOST`, `MAIL_PORT`,
 `MAIL_FROM`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SMTP_AUTH=true` e
 `MAIL_SMTP_STARTTLS=true` no secret runtime do Deployment. `MAIL_PASSWORD` deve
 ser uma senha de aplicativo de uma conta de envio dedicada.
+Para Gmail, basta ativar a autenticação de dois fatores na conta Google e gerar
+uma senha de app nas configurações de segurança; use o e-mail da conta como
+`MAIL_USERNAME`/`MAIL_FROM` e a senha de app como `MAIL_PASSWORD`.
 
 Backend Spring Boot/Java 21 para autenticação e leitura do PostgreSQL analítico publicado pela pipeline. Não acessa PySUS, SINAN bruto, CNES operacional ou Parquet em runtime.
 
