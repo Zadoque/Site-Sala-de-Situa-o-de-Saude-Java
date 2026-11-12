@@ -30,7 +30,25 @@ class TerritoryCatalogTest {
             .sum();
 
     assertEquals(3, districts.size());
-    assertEquals(468, neighborhoodCount);
+    assertEquals(466, neighborhoodCount);
+    assertEquals(
+        1,
+        districts.stream()
+            .mapToLong(
+                district ->
+                    catalog.forGeography("3106200", district.territoryId(), "NEIGHBORHOOD").stream()
+                        .filter(entry -> entry.name().equals("Lourdes"))
+                        .count())
+            .sum());
+    assertEquals(
+        1,
+        districts.stream()
+            .mapToLong(
+                district ->
+                    catalog.forGeography("3106200", district.territoryId(), "NEIGHBORHOOD").stream()
+                        .filter(entry -> entry.name().equals("Santo Agostinho"))
+                        .count())
+            .sum());
     assertFalse(neighborhoods.isEmpty());
   }
 
