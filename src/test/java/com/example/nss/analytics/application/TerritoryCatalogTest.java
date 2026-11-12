@@ -21,6 +21,20 @@ class TerritoryCatalogTest {
   }
 
   @Test
+  void listsBeloHorizonteDistrictsAndNeighborhoods() {
+    var districts = catalog.forGeography("3106200", null, "DISTRICT");
+    var neighborhoods = catalog.forGeography("3106200", districts.getFirst().territoryId(), "NEIGHBORHOOD");
+    var neighborhoodCount =
+        districts.stream()
+            .mapToInt(district -> catalog.forGeography("3106200", district.territoryId(), "NEIGHBORHOOD").size())
+            .sum();
+
+    assertEquals(3, districts.size());
+    assertEquals(468, neighborhoodCount);
+    assertFalse(neighborhoods.isEmpty());
+  }
+
+  @Test
   void listsAllMunicipalitiesAndSupportsLookup() {
     var municipalities = catalog.forGeography(null, null, "MUNICIPALITY");
 
