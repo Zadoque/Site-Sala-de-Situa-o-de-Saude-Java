@@ -19,6 +19,8 @@ class CustomUserDetailsServiceTest {
     UserRepository repository = mock(UserRepository.class);
     CustomUserDetailsService service = new CustomUserDetailsService(repository);
     User user = new User();
+    user.setAccountVersion(0L);
+    user.setId(1L);
     user.setEmail("ana@example.com");
     user.setPassword("encoded");
     user.setAccountType(AccountType.ADMIN);
@@ -38,6 +40,8 @@ class CustomUserDetailsServiceTest {
     UserRepository repository = mock(UserRepository.class);
     CustomUserDetailsService service = new CustomUserDetailsService(repository);
     User user = new User();
+    user.setAccountVersion(0L);
+    user.setId(1L);
     user.setEmail("ana@example.com");
     when(repository.findByEmailIgnoreCase("ana@example.com")).thenReturn(Optional.of(user));
 

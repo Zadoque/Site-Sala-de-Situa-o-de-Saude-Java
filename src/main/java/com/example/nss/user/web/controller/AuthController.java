@@ -27,7 +27,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,7 +41,6 @@ public class AuthController {
 
   private final UserService userService;
   private final AuthenticationManager authenticationManager;
-  private final UserDetailsService userDetailsService;
   private final JwtService jwtService;
 
   @Value("${jwt.expiration:3600000}")
@@ -64,6 +62,7 @@ public class AuthController {
 
   @PostMapping("/first-access")
   public ResponseEntity<Void> firstAccess(@Valid @RequestBody FirstAccessRequest request) {
+    rateLimiter.registerFirstAccessAttempt();
     firstAccessService.complete(request);
     return ResponseEntity.noContent().build();
   }
@@ -79,6 +78,7 @@ public class AuthController {
   @PostMapping("/password-reset/complete")
   public ResponseEntity<Void> completePasswordReset(
       @Valid @RequestBody PasswordResetCompleteRequest request) {
+    rateLimiter.registerPasswordResetCompletion();
     firstAccessService.completePasswordReset(request);
     return ResponseEntity.noContent().build();
   }
@@ -118,17 +118,23 @@ public class AuthController {
     } catch (AuthenticationException exception) {
       throw exception;
     }
-    rateLimiter.loginSucceeded(request.email());
 
-    if (!(authenticationResult.getPrincipal() instanceof UserDetails userDetails)) {
+    if (!(authenticationResult.getPrincipal()
+        instanceof com.example.nss.user.security.VersionedUserDetails userDetails)) {
       throw new AuthenticationServiceException("A autenticação não retornou um usuário válido");
     }
 
-    com.example.nss.user.domain.User entity = userService.entityByEmail(userDetails.getUsername());
-    String token = jwtService.generateToken(entity);
+    com.example.nss.user.domain.User entity = userService.entityById(userDetails.accountId());
+    if (!entity.isAtivo()
+        || entity.getPassword() == null
+        || !java.util.Objects.equals(entity.getAccountVersion(), userDetails.accountRevision())) {
+      throw new org.springframework.security.authentication.BadCredentialsException(
+          "Conta inválida");
+    }
     String refresh = refreshSessions.issue(entity);
+    String token = jwtService.generateToken(entity);
     addRefreshCookie(response, refresh);
-    UserResponse user = userService.getByEmail(userDetails.getUsername());
+    UserResponse user = userService.response(entity);
     return ResponseEntity.ok(
         new LoginResponse(token, accessExpiration / 1000, user, token, permissions(userDetails)));
   }
@@ -136,16 +142,18 @@ public class AuthController {
   @PostMapping("/refresh")
   public ResponseEntity<LoginResponse> refresh(
       HttpServletRequest request, HttpServletResponse response) {
+    rateLimiter.registerRefreshAttempt();
     String token = cookie(request);
     RefreshSessionService.Rotation rotation = refreshSessions.rotateWithToken(token);
-    UserDetails userDetails = userDetailsService.loadUserByUsername(rotation.user().getEmail());
+    UserDetails userDetails =
+        new com.example.nss.user.security.VersionedUserDetails(rotation.user());
     String access = jwtService.generateToken(rotation.user());
     addRefreshCookie(response, rotation.rawToken());
     return ResponseEntity.ok(
         new LoginResponse(
             access,
             accessExpiration / 1000,
-            userService.getByEmail(userDetails.getUsername()),
+            userService.response(rotation.user()),
             access,
             permissions(userDetails)));
   }
