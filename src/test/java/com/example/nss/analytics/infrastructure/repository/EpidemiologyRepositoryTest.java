@@ -41,6 +41,7 @@ class EpidemiologyRepositoryTest {
     Object[][] rows = {
       {district, neighborhood, "NOTIFICATION_NEIGHBORHOOD", 3},
       {district, null, "NOTIFICATION_DISTRICT_ONLY", 2},
+      {district, "CNES_BAIRRO:3301009:Vila%20Nova", "NOTIFICATION_NEIGHBORHOOD_NAME_ONLY", 4},
       {"NaN", "NaN", "UNMAPPED_NOTIFICATION_UNIT", 7},
       {"UNKNOWN", null, "NOTIFICATION_DISTRICT_ONLY", 11},
       {district, neighborhood, "UNMAPPED_NOTIFICATION_UNIT", 13},
@@ -57,8 +58,8 @@ class EpidemiologyRepositoryTest {
             .map(TerritoryCatalog.Entry::territoryId)
             .toList();
     var totals = repository.totals(filter, Geography.DISTRICT, districtIds);
-    assertEquals(53L, totals.total());
-    assertEquals(5L, totals.mapped());
+    assertEquals(57L, totals.total());
+    assertEquals(9L, totals.mapped());
     assertEquals(1, repository.aggregate(filter, Geography.DISTRICT, districtIds).size());
     assertEquals(0, repository.aggregate(filter, Geography.DISTRICT, List.of()).size());
     var neighborhoods = new EpidemiologyFilter(null, null, null, null, null, "3301009", district);
@@ -67,7 +68,7 @@ class EpidemiologyRepositoryTest {
             .map(TerritoryCatalog.Entry::territoryId)
             .toList();
     assertEquals(
-        3L, repository.totals(neighborhoods, Geography.NEIGHBORHOOD, neighborhoodIds).mapped());
+        7L, repository.totals(neighborhoods, Geography.NEIGHBORHOOD, neighborhoodIds).mapped());
 
     assertEquals(1, repository.aggregate(filter, Geography.REGION, List.of("N")).size());
     assertEquals(1, repository.aggregate(filter, Geography.STATE, List.of("33")).size());

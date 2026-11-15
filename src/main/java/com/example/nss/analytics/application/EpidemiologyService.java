@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -74,6 +76,16 @@ public class EpidemiologyService {
               aggregates.getOrDefault(entry.territoryId(), 0L),
               entry.parentDistrictId()));
     }
+    if (geography == Geography.NEIGHBORHOOD) {
+      Set<String> knownCodes = territories.stream().map(TerritoryCatalog.Entry::territoryId).collect(Collectors.toSet());
+      for (Map.Entry<String, Long> aggregate : aggregates.entrySet()) {
+        String code = aggregate.getKey();
+        if (!knownCodes.contains(code) && code.startsWith("CNES_BAIRRO:")) {
+          items.add(new AnalyticsResponse.TerritoryItem(
+              code, nameOnlyNeighborhoodName(code), aggregate.getValue(), filter.districtCode()));
+        }
+      }
+    }
     if (geography == Geography.MUNICIPALITY
         && filter.municipalityCode() == null
         && filter.ufCode() == null) {
@@ -101,6 +113,12 @@ public class EpidemiologyService {
             repository.publicationMetadata(filter));
     if (cache != null) cache.put(cacheKey, result);
     return result;
+  }
+
+  private String nameOnlyNeighborhoodName(String code) {
+    String[] parts = code.split(":", 3);
+    if (parts.length < 3 || parts[2].isBlank()) return "Bairro informado no CNES";
+    return URLDecoder.decode(parts[2], StandardCharsets.UTF_8);
   }
 
   private String cacheKey(Geography geography, EpidemiologyFilter f) {

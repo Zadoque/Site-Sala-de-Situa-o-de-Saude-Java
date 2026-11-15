@@ -103,12 +103,20 @@ public class EpidemiologyRepository {
 
   private String mappedPredicate(
       Geography geography, List<String> mappedIds, MapSqlParameterSource p) {
+    if (geography == Geography.NEIGHBORHOOD) {
+      String mappedNeighborhoods = mappedIds.isEmpty()
+          ? "FALSE"
+          : "f.notification_neighborhood_id IN (:mappedIds)";
+      if (!mappedIds.isEmpty()) p.addValue("mappedIds", mappedIds);
+      return "f.notification_territory_status IN ('NOTIFICATION_NEIGHBORHOOD','NOTIFICATION_NEIGHBORHOOD_NAME_ONLY')"
+          + " AND (" + mappedNeighborhoods + " OR f.notification_neighborhood_id LIKE 'CNES_BAIRRO:%')";
+    }
     if (mappedIds.isEmpty()) return "FALSE";
     p.addValue("mappedIds", mappedIds);
     return switch (geography) {
       case MUNICIPALITY -> "f.cd_mun IN (:mappedIds)";
       case DISTRICT ->
-          "f.notification_district_id IN (:mappedIds) AND f.notification_territory_status IN ('NOTIFICATION_DISTRICT_ONLY','NOTIFICATION_NEIGHBORHOOD')";
+          "f.notification_district_id IN (:mappedIds) AND f.notification_territory_status IN ('NOTIFICATION_DISTRICT_ONLY','NOTIFICATION_NEIGHBORHOOD','NOTIFICATION_NEIGHBORHOOD_NAME_ONLY')";
       case NEIGHBORHOOD ->
           "f.notification_neighborhood_id IN (:mappedIds) AND f.notification_territory_status = 'NOTIFICATION_NEIGHBORHOOD'";
       case REGION, STATE -> "TRUE";
