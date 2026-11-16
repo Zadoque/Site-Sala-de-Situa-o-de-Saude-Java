@@ -11,7 +11,7 @@ import com.example.nss.analytics.domain.Geography;
 import com.example.nss.analytics.infrastructure.repository.DiseaseRow;
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepository;
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyTotals;
-import com.example.nss.analytics.infrastructure.repository.MetadataRow;
+import com.example.nss.analytics.infrastructure.repository.MetadataCatalogRow;
 import com.example.nss.analytics.infrastructure.repository.TerritoryAggregate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -124,9 +124,11 @@ class EpidemiologyServiceTest {
 
   @Test
   void metadataIsGroupedByYearAndDiseasesKeepRepositoryOrder() {
-    when(repository.metadata())
+    when(repository.metadataCatalog())
         .thenReturn(
-            List.of(new MetadataRow(2024, 1), new MetadataRow(2024, 2), new MetadataRow(2025, 1)));
+            List.of(
+                new MetadataCatalogRow("DENG", 2024, List.of(1, 2), false),
+                new MetadataCatalogRow("SIFA", 2025, List.of(1), true)));
     when(repository.diseases())
         .thenReturn(List.of(new DiseaseRow("DENG", "Dengue"), new DiseaseRow("COVID", "Covid-19")));
 

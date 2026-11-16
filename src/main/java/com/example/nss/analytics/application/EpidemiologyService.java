@@ -9,6 +9,8 @@ import com.example.nss.analytics.infrastructure.cache.AnalyticsResponseCache;
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepository;
 import com.example.nss.analytics.infrastructure.repository.EpidemiologyTotals;
 import com.example.nss.analytics.infrastructure.repository.MetadataRow;
+import com.example.nss.analytics.infrastructure.repository.MetadataCatalogRow;
+import com.example.nss.analytics.exception.MetadataCatalogUnavailableException;
 import com.example.nss.analytics.infrastructure.repository.PublicationMetadataRow;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -210,13 +212,19 @@ public class EpidemiologyService {
   }
 
   public MetadataResponse metadata() {
-    Map<Integer, List<Integer>> grouped =
-        repository.metadata().stream()
-            .collect(
-                Collectors.groupingBy(
-                    MetadataRow::year,
-                    LinkedHashMap::new,
-                    Collectors.mapping(MetadataRow::month, Collectors.toList())));
+    List<MetadataCatalogRow> catalogRows = repository.metadataCatalog();
+    if (catalogRows.isEmpty()) {
+      throw new MetadataCatalogUnavailableException(
+          "Catálogo de metadata epidemiológico ausente ou não publicado");
+    }
+    Map<Integer, List<Integer>> grouped = new LinkedHashMap<>();
+    for (MetadataCatalogRow row : catalogRows) {
+      List<Integer> months = grouped.computeIfAbsent(row.year(), ignored -> new ArrayList<>());
+      row.availableMonths().forEach(month -> {
+        if (!months.contains(month)) months.add(month);
+      });
+    }
+    grouped.values().forEach(values -> values.sort(Comparator.naturalOrder()));
     return new MetadataResponse(
         new ArrayList<>(grouped.keySet()),
         grouped.entrySet().stream()
@@ -229,7 +237,8 @@ public class EpidemiologyService {
         List.of("MUNICIPALITY", "DISTRICT", "NEIGHBORHOOD"),
         new ArrayList<>(EpidemiologyFilter.AGE_BANDS),
         List.of("M", "F", "ALL"),
-        java.util.Optional.ofNullable(repository.municipalityOnlyScopes()).orElse(List.of()).stream()
+        catalogRows.stream()
+            .filter(MetadataCatalogRow::municipalityOnly)
             .map(row -> new MetadataResponse.MunicipalityOnlyScope(row.disease(), row.year()))
             .toList());
   }

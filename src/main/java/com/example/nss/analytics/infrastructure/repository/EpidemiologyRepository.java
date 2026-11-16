@@ -167,39 +167,14 @@ public class EpidemiologyRepository {
         + ")";
   }
 
-  public List<MetadataRow> metadata() {
+  /** Lê somente o catálogo materializado pela publicação Gold. */
+  public List<MetadataCatalogRow> metadataCatalog() {
     return jdbc.query(
-        "SELECT "
-            + yearColumn
-            + " AS year, "
-            + monthColumn
-            + " AS month FROM analytics.fato_casos f WHERE 1=1"
-            + currentPublicationPredicate()
-            + " GROUP BY "
-            + yearColumn
-            + ", "
-            + monthColumn
-            + " ORDER BY "
-            + yearColumn
-            + ", "
-            + monthColumn,
+        "SELECT disease_codigo AS disease, ano AS year, available_months, municipality_only "
+            + "FROM analytics.pipeline_metadata_current "
+            + "ORDER BY disease_codigo, ano",
         java.util.Map.of(),
-        EpidemiologyRowMapper.metadata());
-  }
-
-  public List<MunicipalityOnlyScopeRow> municipalityOnlyScopes() {
-    return jdbc.query(
-        "SELECT f.disease_codigo AS disease, f.ano AS year "
-            + "FROM analytics.fato_casos f "
-            + "JOIN analytics.pipeline_current_publication p "
-            + " ON p.disease_codigo = f.disease_codigo AND p.ano = f.ano "
-            + " AND p.cd_mun = f.cd_mun AND p.batch_id = f.batch_id "
-            + "GROUP BY f.disease_codigo, f.ano "
-            + "HAVING SUM(CASE WHEN f.notification_territory_status <> 'UNMAPPED_NOTIFICATION_UNIT' "
-            + " THEN f.cases_total ELSE 0 END) = 0 "
-            + "ORDER BY f.disease_codigo, f.ano",
-        java.util.Map.of(),
-        EpidemiologyRowMapper.municipalityOnlyScope());
+        EpidemiologyRowMapper.metadataCatalog());
   }
 
   public PublicationMetadataRow publicationMetadata(EpidemiologyFilter f) {

@@ -1,6 +1,7 @@
 package com.example.nss.shared.web;
 
 import com.example.nss.analytics.exception.InvalidFilterException;
+import com.example.nss.analytics.exception.MetadataCatalogUnavailableException;
 import com.example.nss.shared.notification.MailDeliveryException;
 import com.example.nss.user.exception.AuthStoreUnavailableException;
 import com.example.nss.user.exception.ActiveSessionException;
@@ -76,6 +77,16 @@ public class GlobalExceptionHandler {
         HttpStatus.SERVICE_UNAVAILABLE,
         "AUTH_UNAVAILABLE",
         "Autenticação temporariamente indisponível",
+        request);
+  }
+
+  @ExceptionHandler(MetadataCatalogUnavailableException.class)
+  public ResponseEntity<ErrorResponse> handleMetadataUnavailable(
+      MetadataCatalogUnavailableException exception, HttpServletRequest request) {
+    return error(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        "METADATA_UNAVAILABLE",
+        exception.getMessage(),
         request);
   }
 

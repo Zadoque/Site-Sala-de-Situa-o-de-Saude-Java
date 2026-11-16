@@ -1,10 +1,12 @@
 package com.example.nss.analytics.infrastructure.mapper;
 
 import com.example.nss.analytics.infrastructure.repository.DiseaseRow;
-import com.example.nss.analytics.infrastructure.repository.MetadataRow;
-import com.example.nss.analytics.infrastructure.repository.MunicipalityOnlyScopeRow;
+import com.example.nss.analytics.infrastructure.repository.MetadataCatalogRow;
 import com.example.nss.analytics.infrastructure.repository.TerritoryAggregate;
 import org.springframework.jdbc.core.RowMapper;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class EpidemiologyRowMapper {
   private EpidemiologyRowMapper() {}
@@ -19,13 +21,18 @@ public final class EpidemiologyRowMapper {
         new DiseaseRow(resultSet.getString("code"), resultSet.getString("name"));
   }
 
-  public static RowMapper<MetadataRow> metadata() {
-    return (resultSet, rowNumber) ->
-        new MetadataRow(resultSet.getInt("year"), resultSet.getInt("month"));
-  }
-
-  public static RowMapper<MunicipalityOnlyScopeRow> municipalityOnlyScope() {
-    return (resultSet, rowNumber) ->
-        new MunicipalityOnlyScopeRow(resultSet.getString("disease"), resultSet.getInt("year"));
+  public static RowMapper<MetadataCatalogRow> metadataCatalog() {
+    return (resultSet, rowNumber) -> {
+      Object sqlArray = resultSet.getArray("available_months").getArray();
+      List<Integer> months = new ArrayList<>();
+      for (int i = 0; i < Array.getLength(sqlArray); i++) {
+        months.add(((Number) Array.get(sqlArray, i)).intValue());
+      }
+      return new MetadataCatalogRow(
+          resultSet.getString("disease"),
+          resultSet.getInt("year"),
+          List.copyOf(months),
+          resultSet.getBoolean("municipality_only"));
+    };
   }
 }

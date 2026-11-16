@@ -48,12 +48,17 @@ class EpidemiologyRepositoryPostgresIT {
         "20261104T000000Z");
     jdbc.execute(
         "CREATE TABLE analytics.pipeline_current_publication (disease_codigo VARCHAR, ano INT, cd_mun VARCHAR, batch_id VARCHAR, source_extracted_timestamp TIMESTAMPTZ, added_at TIMESTAMPTZ)");
+    jdbc.execute(
+        "CREATE TABLE analytics.pipeline_metadata_current (disease_codigo VARCHAR, ano INT, batch_id VARCHAR, available_months SMALLINT[], municipality_only BOOLEAN, source_extracted_at TIMESTAMPTZ, published_at TIMESTAMPTZ)");
     jdbc.update(
         "INSERT INTO analytics.pipeline_current_publication VALUES (?, ?, ?, ?, now(), now())",
         "DENG",
         2024,
         "3301009",
         "20261104T000000Z");
+    jdbc.update(
+        "INSERT INTO analytics.pipeline_metadata_current VALUES (?, ?, ?, ?, ?, now(), now())",
+        "DENG", 2024, "20261104T000000Z", new Short[] {3}, false);
     repository = new EpidemiologyRepository(jdbc, "ano", "mes");
   }
 
@@ -65,6 +70,6 @@ class EpidemiologyRepositoryPostgresIT {
 
     assertEquals(4L, totals.total());
     assertEquals(4L, totals.mapped());
-    assertEquals(List.of(2024), repository.metadata().stream().map(row -> row.year()).toList());
+    assertEquals(List.of(2024), repository.metadataCatalog().stream().map(row -> row.year()).toList());
   }
 }
