@@ -225,9 +225,18 @@ public class EpidemiologyService {
       });
     }
     grouped.values().forEach(values -> values.sort(Comparator.naturalOrder()));
-    return new MetadataResponse(
-        new ArrayList<>(grouped.keySet()),
+    Map<Integer, List<Integer>> orderedByYear =
         grouped.entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
+                    (left, right) -> left,
+                    LinkedHashMap::new));
+    return new MetadataResponse(
+        new ArrayList<>(orderedByYear.keySet()),
+        orderedByYear.entrySet().stream()
             .collect(
                 Collectors.toMap(
                     entry -> String.valueOf(entry.getKey()),

@@ -128,12 +128,13 @@ class EpidemiologyServiceTest {
         .thenReturn(
             List.of(
                 new MetadataCatalogRow("DENG", 2024, List.of(1, 2), false),
+                new MetadataCatalogRow("DENG", 2026, List.of(3), false),
                 new MetadataCatalogRow("SIFA", 2025, List.of(1), true)));
     when(repository.diseases())
         .thenReturn(List.of(new DiseaseRow("DENG", "Dengue"), new DiseaseRow("COVID", "Covid-19")));
 
     assertEquals(List.of("DENG", "COVID"), service.diseases());
-    assertEquals(List.of(2024, 2025), service.metadata().availableYears());
+    assertEquals(List.of(2024, 2025, 2026), service.metadata().availableYears());
     assertEquals(List.of(1, 2), service.metadata().availableMonthsByYear().get("2024"));
     assertEquals(List.of(1), service.metadata().availableMonthsByYear().get("2025"));
   }
