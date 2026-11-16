@@ -37,7 +37,16 @@ public record AnalyticsResponse(
   }
 
   public record Coverage(
-      CoverageStatus status, Long mappedNotificationsTotal, Long unmappedNotificationsTotal) {}
+      CoverageStatus status,
+      Long mappedNotificationsTotal,
+      Long unmappedNotificationsTotal,
+      String territorialLevel,
+      String reason) {
+    public Coverage(
+        CoverageStatus status, Long mappedNotificationsTotal, Long unmappedNotificationsTotal) {
+      this(status, mappedNotificationsTotal, unmappedNotificationsTotal, null, null);
+    }
+  }
 
   public record TerritoryItem(
       String code, String name, Long notificationsTotal, String parentDistrictId) {}

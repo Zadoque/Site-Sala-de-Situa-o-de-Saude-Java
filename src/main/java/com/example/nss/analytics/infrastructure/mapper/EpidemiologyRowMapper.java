@@ -2,6 +2,7 @@ package com.example.nss.analytics.infrastructure.mapper;
 
 import com.example.nss.analytics.infrastructure.repository.DiseaseRow;
 import com.example.nss.analytics.infrastructure.repository.MetadataRow;
+import com.example.nss.analytics.infrastructure.repository.MunicipalityOnlyScopeRow;
 import com.example.nss.analytics.infrastructure.repository.TerritoryAggregate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -21,5 +22,10 @@ public final class EpidemiologyRowMapper {
   public static RowMapper<MetadataRow> metadata() {
     return (resultSet, rowNumber) ->
         new MetadataRow(resultSet.getInt("year"), resultSet.getInt("month"));
+  }
+
+  public static RowMapper<MunicipalityOnlyScopeRow> municipalityOnlyScope() {
+    return (resultSet, rowNumber) ->
+        new MunicipalityOnlyScopeRow(resultSet.getString("disease"), resultSet.getInt("year"));
   }
 }

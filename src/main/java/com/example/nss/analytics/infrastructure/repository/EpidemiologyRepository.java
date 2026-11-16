@@ -94,6 +94,26 @@ public class EpidemiologyRepository {
             new EpidemiologyTotals(resultSet.getLong("total"), resultSet.getLong("mapped")));
   }
 
+  public EpidemiologyTotals notificationUnitTotals(EpidemiologyFilter f) {
+    StringBuilder sql =
+        new StringBuilder(
+            "SELECT COALESCE(SUM(f.cases_total),0) AS total, "
+                + "COALESCE(SUM(CASE WHEN f.notification_territory_status <> "
+                + "'UNMAPPED_NOTIFICATION_UNIT' THEN f.cases_total ELSE 0 END),0) AS mapped "
+                + "FROM analytics.fato_casos f WHERE 1=1");
+    MapSqlParameterSource p = parameters(f, sql);
+    if (f.municipalityCode() != null) {
+      sql.append(" AND f.cd_mun = :municipalityCode");
+      p.addValue(MUNICIPALITY_PARAMETER, f.municipalityCode());
+    }
+    sql.append(currentPublicationClause(f));
+    return jdbc.queryForObject(
+        sql.toString(),
+        p,
+        (resultSet, rowNumber) ->
+            new EpidemiologyTotals(resultSet.getLong("total"), resultSet.getLong("mapped")));
+  }
+
   public List<DiseaseRow> diseases() {
     return jdbc.query(
         "SELECT codigo AS code, nome AS name FROM analytics.dim_doenca ORDER BY codigo",
@@ -165,6 +185,21 @@ public class EpidemiologyRepository {
             + monthColumn,
         java.util.Map.of(),
         EpidemiologyRowMapper.metadata());
+  }
+
+  public List<MunicipalityOnlyScopeRow> municipalityOnlyScopes() {
+    return jdbc.query(
+        "SELECT f.disease_codigo AS disease, f.ano AS year "
+            + "FROM analytics.fato_casos f "
+            + "JOIN analytics.pipeline_current_publication p "
+            + " ON p.disease_codigo = f.disease_codigo AND p.ano = f.ano "
+            + " AND p.cd_mun = f.cd_mun AND p.batch_id = f.batch_id "
+            + "GROUP BY f.disease_codigo, f.ano "
+            + "HAVING SUM(CASE WHEN f.notification_territory_status <> 'UNMAPPED_NOTIFICATION_UNIT' "
+            + " THEN f.cases_total ELSE 0 END) = 0 "
+            + "ORDER BY f.disease_codigo, f.ano",
+        java.util.Map.of(),
+        EpidemiologyRowMapper.municipalityOnlyScope());
   }
 
   public PublicationMetadataRow publicationMetadata(EpidemiologyFilter f) {

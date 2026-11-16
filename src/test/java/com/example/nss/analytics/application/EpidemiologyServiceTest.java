@@ -45,6 +45,22 @@ class EpidemiologyServiceTest {
   }
 
   @Test
+  void fullyUnmappedMunicipalitySignalsMunicipalityOnlySource() {
+    when(repository.totals(any(), eq(Geography.MUNICIPALITY), any()))
+        .thenReturn(new EpidemiologyTotals(7305L, 0L));
+    when(repository.notificationUnitTotals(any())).thenReturn(new EpidemiologyTotals(7305L, 0L));
+    when(repository.aggregate(any(), eq(Geography.MUNICIPALITY), any())).thenReturn(List.of());
+
+    AnalyticsResponse response =
+        service.query(
+            Geography.MUNICIPALITY,
+            new EpidemiologyFilter("SIFA", 2025, null, null, null, "3304557", null));
+
+    assertEquals("MUNICIPALITY_ONLY", response.coverage().territorialLevel());
+    assertEquals("NOTIFICATION_UNIT_NOT_PROVIDED_BY_SOURCE", response.coverage().reason());
+  }
+
+  @Test
   void neighborhoodWithoutDistrictIsUnavailable() {
     AnalyticsResponse response =
         service.query(
