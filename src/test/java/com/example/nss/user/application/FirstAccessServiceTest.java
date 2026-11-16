@@ -348,7 +348,7 @@ class FirstAccessServiceTest {
     assertEquals(23L, invitation.id());
     org.mockito.Mockito.verify(tokens).save(old);
     org.mockito.Mockito.verify(mail)
-        .sendTextAfterCommit(
+        .sendTextRequired(
             org.mockito.ArgumentMatchers.eq("renew@nss.test"),
             org.mockito.ArgumentMatchers.any(),
             org.mockito.ArgumentMatchers.any());

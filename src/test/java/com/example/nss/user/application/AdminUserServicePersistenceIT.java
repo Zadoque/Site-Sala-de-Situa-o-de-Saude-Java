@@ -66,7 +66,7 @@ class AdminUserServicePersistenceIT {
     assertEquals("PASSWORD_RESET", invitation.getPurpose());
     assertEquals("PENDING", invitation.getStatus());
     verify(mail)
-        .sendTextAfterCommit(
+        .sendTextRequired(
             eq(email), eq("Redefinição de senha do NSS"), org.mockito.ArgumentMatchers.any());
   }
 

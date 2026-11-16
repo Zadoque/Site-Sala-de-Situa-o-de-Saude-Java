@@ -36,6 +36,16 @@ public class MailService {
     mailSender.send(message);
   }
 
+  /** Sends synchronously so an authenticated administrative action can report delivery failure. */
+  public void sendTextRequired(String recipient, String subject, String body) {
+    try {
+      sendText(recipient, subject, body);
+    } catch (RuntimeException exception) {
+      log.warn("Falha ao entregar notificação administrativa por e-mail", exception);
+      throw new MailDeliveryException(exception);
+    }
+  }
+
   public void sendTextAfterCommit(String recipient, String subject, String body) {
     Runnable send =
         () -> {

@@ -63,6 +63,14 @@ public class FirstAccessService {
 
   @Transactional
   public void issue(User user) {
+    issue(user, false);
+  }
+
+  public void issueForAdmin(User user) {
+    issue(user, true);
+  }
+
+  private void issue(User user, boolean requireDelivery) {
     tokens.findByUserId(user.getId()).ifPresent(this::deleteExistingToken);
     byte[] bytes = new byte[32];
     tokenGenerator.nextBytes(bytes);
@@ -76,7 +84,8 @@ public class FirstAccessService {
     token.setExpiresAt(Instant.now().plus(Duration.ofSeconds(expirationSeconds)));
     tokens.save(token);
     String link = frontendUrl.replaceAll("/$", "") + "/primeiro-acesso?token=" + raw;
-    mail.sendTextAfterCommit(
+    sendNotification(
+        requireDelivery,
         user.getEmail(),
         "Convite de primeiro acesso ao NSS",
         "Acesse o NSS pelo link abaixo para criar seu nome e senha:\n\n"
@@ -86,6 +95,14 @@ public class FirstAccessService {
 
   @Transactional
   public void issuePasswordReset(User user) {
+    issuePasswordReset(user, false);
+  }
+
+  public void issuePasswordResetForAdmin(User user) {
+    issuePasswordReset(user, true);
+  }
+
+  private void issuePasswordReset(User user, boolean requireDelivery) {
     tokens.findByUserId(user.getId()).ifPresent(this::deleteExistingToken);
     byte[] bytes = new byte[32];
     tokenGenerator.nextBytes(bytes);
@@ -99,12 +116,18 @@ public class FirstAccessService {
     token.setExpiresAt(Instant.now().plus(Duration.ofSeconds(expirationSeconds)));
     tokens.save(token);
     String link = frontendUrl.replaceAll("/$", "") + "/redefinir-senha?token=" + raw;
-    mail.sendTextAfterCommit(
+    sendNotification(
+        requireDelivery,
         user.getEmail(),
         "Redefinição de senha do NSS",
         "Use o link abaixo para criar uma nova senha:\n\n"
             + link
             + "\n\nEste link expira em 7 dias e só pode ser usado uma vez.");
+  }
+
+  private void sendNotification(boolean requireDelivery, String recipient, String subject, String body) {
+    if (requireDelivery) mail.sendTextRequired(recipient, subject, body);
+    else mail.sendTextAfterCommit(recipient, subject, body);
   }
 
   @Transactional
@@ -178,7 +201,7 @@ public class FirstAccessService {
       throw new IllegalArgumentException("Convite não está pendente");
     old.setStatus("CANCELLED");
     tokens.save(old);
-    issue(old.getUser());
+    issueForAdmin(old.getUser());
     return tokens.findByUserId(old.getUser().getId()).map(this::view).orElseThrow();
   }
 

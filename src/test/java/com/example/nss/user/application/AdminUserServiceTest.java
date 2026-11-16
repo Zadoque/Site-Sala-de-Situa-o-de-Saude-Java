@@ -76,7 +76,7 @@ class AdminUserServiceTest {
     assertEquals(true, invited.isAtivo());
     org.junit.jupiter.api.Assertions.assertNotNull(invited.getCreatedAt());
     org.junit.jupiter.api.Assertions.assertNotNull(invited.getUpdatedAt());
-    verify(firstAccess).issue(invited);
+    verify(firstAccess).issueForAdmin(invited);
   }
 
   @Test
@@ -145,7 +145,7 @@ class AdminUserServiceTest {
     assertEquals(null, user.getPassword());
     assertEquals(null, user.getPasswordCreatedAt());
     verify(refreshSessions).revokeAllForUser(8L);
-    verify(firstAccess).issuePasswordReset(user);
+    verify(firstAccess).issuePasswordResetForAdmin(user);
   }
 
   @Test

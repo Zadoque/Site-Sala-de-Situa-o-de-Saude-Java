@@ -59,7 +59,7 @@ public class AdminUserService {
     } catch (DataIntegrityViolationException exception) {
       throw new IllegalArgumentException("E-mail já cadastrado", exception);
     }
-    firstAccess.issue(saved);
+    firstAccess.issueForAdmin(saved);
     return view(saved);
   }
 
@@ -90,7 +90,7 @@ public class AdminUserService {
     user.setPasswordCreatedAt(null);
     users.saveAndFlush(user);
     refreshSessions.revokeAllForUser(user.getId());
-    firstAccess.issuePasswordReset(user);
+    firstAccess.issuePasswordResetForAdmin(user);
   }
 
   public java.util.List<com.example.nss.user.api.response.InvitationResponse> invitations() {

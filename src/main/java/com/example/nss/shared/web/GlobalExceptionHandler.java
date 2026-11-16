@@ -1,6 +1,7 @@
 package com.example.nss.shared.web;
 
 import com.example.nss.analytics.exception.InvalidFilterException;
+import com.example.nss.shared.notification.MailDeliveryException;
 import com.example.nss.user.exception.AuthStoreUnavailableException;
 import com.example.nss.user.exception.RateLimitExceededException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -86,6 +87,16 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleArgument(
       IllegalArgumentException e, HttpServletRequest r) {
     return error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", e.getMessage(), r);
+  }
+
+  @ExceptionHandler(MailDeliveryException.class)
+  public ResponseEntity<ErrorResponse> handleMailDelivery(
+      MailDeliveryException exception, HttpServletRequest request) {
+    return error(
+        HttpStatus.BAD_GATEWAY,
+        "EMAIL_DELIVERY_FAILED",
+        exception.getMessage(),
+        request);
   }
 
   @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})

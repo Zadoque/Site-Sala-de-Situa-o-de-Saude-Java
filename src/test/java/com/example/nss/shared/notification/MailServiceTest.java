@@ -1,6 +1,7 @@
 package com.example.nss.shared.notification;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doThrow;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -54,6 +55,23 @@ class MailServiceTest {
     } finally {
       TransactionSynchronizationManager.clearSynchronization();
     }
+  }
+
+  @Test
+  void reportsRequiredDeliveryFailureWithoutExposingTransportDetails() {
+    JavaMailSender sender = org.mockito.Mockito.mock(JavaMailSender.class);
+    MailService service = new MailService(sender);
+    doThrow(new RuntimeException("smtp credential details"))
+        .when(sender)
+        .send(org.mockito.ArgumentMatchers.any(SimpleMailMessage.class));
+
+    MailDeliveryException exception =
+        org.junit.jupiter.api.Assertions.assertThrows(
+            MailDeliveryException.class,
+            () -> service.sendTextRequired("user@example.com", "Subject", "Body"));
+
+    org.junit.jupiter.api.Assertions.assertEquals(
+        "Não foi possível enviar o e-mail. Verifique a configuração SMTP.", exception.getMessage());
   }
 
   private static boolean matches(SimpleMailMessage message) {
