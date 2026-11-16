@@ -90,6 +90,24 @@ class FirstAccessServiceTest {
   }
 
   @Test
+  void exposesTheEmailBoundToAPendingFirstAccessToken() throws Exception {
+    FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
+    User user = new User();
+    user.setEmail("invite@nss.test");
+    FirstAccessToken token = pendingToken(user, "FIRST_ACCESS", "first-access-token");
+    when(tokens.findByTokenHash(hash("first-access-token"))).thenReturn(Optional.of(token));
+    FirstAccessService service =
+        new FirstAccessService(
+            mock(UserRepository.class),
+            tokens,
+            mock(PasswordEncoder.class),
+            mock(MailService.class),
+            mock(RefreshSessionService.class));
+
+    assertEquals("invite@nss.test", service.firstAccessEmail("first-access-token"));
+  }
+
+  @Test
   void rejectsFirstAccessWhenEmailDoesNotMatchTheInvitation() throws Exception {
     FirstAccessTokenRepository tokens = mock(FirstAccessTokenRepository.class);
     UserRepository users = mock(UserRepository.class);

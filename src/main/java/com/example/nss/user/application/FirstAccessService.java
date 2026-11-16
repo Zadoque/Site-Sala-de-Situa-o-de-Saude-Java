@@ -155,6 +155,19 @@ public class FirstAccessService {
     tokens.save(invite);
   }
 
+  @Transactional(readOnly = true)
+  public String firstAccessEmail(String rawToken) {
+    return tokens
+        .findByTokenHash(hash(rawToken))
+        .filter(
+            t ->
+                PENDING_STATUS.equals(t.getStatus())
+                    && "FIRST_ACCESS".equals(t.getPurpose())
+                    && t.getExpiresAt().isAfter(Instant.now()))
+        .map(t -> t.getUser().getEmail())
+        .orElseThrow(() -> new IllegalArgumentException("Convite inválido ou expirado"));
+  }
+
   @Transactional
   public void complete(FirstAccessRequest request) {
     FirstAccessToken invite =

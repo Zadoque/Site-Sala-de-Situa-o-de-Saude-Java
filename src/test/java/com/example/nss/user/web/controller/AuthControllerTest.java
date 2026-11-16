@@ -161,4 +161,14 @@ class AuthControllerTest {
     verify(refreshSessions).revoke("refresh-token");
     verify(response).addHeader(eq("Set-Cookie"), any());
   }
+
+  @Test
+  void returnsTheEmailBoundToAValidFirstAccessToken() {
+    when(firstAccessService.firstAccessEmail("invite-token")).thenReturn("ana@example.com");
+
+    var result = controller.firstAccessDetails("invite-token");
+
+    assertEquals("ana@example.com", result.getBody().email());
+    verify(firstAccessService).firstAccessEmail("invite-token");
+  }
 }

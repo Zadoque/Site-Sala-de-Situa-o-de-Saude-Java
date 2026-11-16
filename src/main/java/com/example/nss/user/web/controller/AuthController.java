@@ -5,6 +5,7 @@ import com.example.nss.user.api.request.LoginRequest;
 import com.example.nss.user.api.request.PasswordResetCompleteRequest;
 import com.example.nss.user.api.request.PasswordResetRequest;
 import com.example.nss.user.api.response.LoginResponse;
+import com.example.nss.user.api.response.FirstAccessDetailsResponse;
 import com.example.nss.user.api.response.MeResponse;
 import com.example.nss.user.api.response.UserResponse;
 import com.example.nss.user.application.AuthRateLimiter;
@@ -30,6 +31,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -65,6 +68,13 @@ public class AuthController {
     rateLimiter.registerFirstAccessAttempt();
     firstAccessService.complete(request);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/first-access")
+  public ResponseEntity<FirstAccessDetailsResponse> firstAccessDetails(
+      @RequestParam String token) {
+    return ResponseEntity.ok(
+        new FirstAccessDetailsResponse(firstAccessService.firstAccessEmail(token)));
   }
 
   @PostMapping("/password-reset/request")
