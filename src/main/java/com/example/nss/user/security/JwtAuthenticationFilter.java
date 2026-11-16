@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
@@ -22,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
   private final CustomUserDetailsService userDetailsService;
+  private final StringRedisTemplate redis;
 
   @Override
   protected void doFilterInternal(
@@ -49,7 +52,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (userDetails instanceof VersionedUserDetails versioned
             && jwtService.isTokenValid(token, userId, userDetails.isEnabled())
-            && jwtService.hasAccountRevision(token, versioned.accountRevision())) {
+            && jwtService.hasAccountRevision(token, versioned.accountRevision())
+            && activeSession(token, userId)) {
           UsernamePasswordAuthenticationToken authentication =
               new UsernamePasswordAuthenticationToken(
                   userDetails, null, userDetails.getAuthorities());
@@ -65,5 +69,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  private boolean activeSession(String token, long userId) {
+    String tokenGeneration = jwtService.extractSessionGeneration(token);
+    if (tokenGeneration == null) return true;
+    String activeGeneration = redis.opsForValue().get("nss:auth:refresh:active:" + userId);
+    return Objects.equals(tokenGeneration, activeGeneration);
   }
 }

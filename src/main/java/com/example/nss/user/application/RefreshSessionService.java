@@ -104,6 +104,11 @@ public class RefreshSessionService {
     return raw;
   }
 
+  public String currentGeneration(Long userId) {
+    if (legacySessions != null) return null;
+    return redisOperation(() -> redis.opsForValue().get(generationKey(userId)));
+  }
+
   public Rotation rotateWithToken(String rawToken) {
     if (rawToken == null || rawToken.isBlank()) throw new BadCredentialsException(INVALID_REFRESH);
     String hash = hash(rawToken);

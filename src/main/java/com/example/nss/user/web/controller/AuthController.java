@@ -145,7 +145,8 @@ public class AuthController {
         request.replaceExistingSession()
             ? refreshSessions.issue(entity, true)
             : refreshSessions.issue(entity);
-    String token = jwtService.generateToken(entity);
+    String generation = refreshSessions.currentGeneration(entity.getId());
+    String token = generation == null ? jwtService.generateToken(entity) : jwtService.generateToken(entity, generation);
     addRefreshCookie(response, refresh);
     UserResponse user = userService.response(entity);
     return ResponseEntity.ok(
@@ -160,7 +161,8 @@ public class AuthController {
     RefreshSessionService.Rotation rotation = refreshSessions.rotateWithToken(token);
     UserDetails userDetails =
         new com.example.nss.user.security.VersionedUserDetails(rotation.user());
-    String access = jwtService.generateToken(rotation.user());
+    String generation = refreshSessions.currentGeneration(rotation.user().getId());
+    String access = generation == null ? jwtService.generateToken(rotation.user()) : jwtService.generateToken(rotation.user(), generation);
     addRefreshCookie(response, rotation.rawToken());
     return ResponseEntity.ok(
         new LoginResponse(
