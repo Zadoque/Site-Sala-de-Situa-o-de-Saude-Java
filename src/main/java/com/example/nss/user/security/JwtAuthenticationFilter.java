@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
@@ -24,7 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
   private final CustomUserDetailsService userDetailsService;
-  private final StringRedisTemplate redis;
+  private final ObjectProvider<StringRedisTemplate> redis;
 
   @Override
   protected void doFilterInternal(
@@ -74,7 +75,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private boolean activeSession(String token, long userId) {
     String tokenGeneration = jwtService.extractSessionGeneration(token);
     if (tokenGeneration == null) return true;
-    String activeGeneration = redis.opsForValue().get("nss:auth:refresh:active:" + userId);
+    StringRedisTemplate template = redis.getIfAvailable();
+    if (template == null) return false;
+    String activeGeneration = template.opsForValue().get("nss:auth:refresh:active:" + userId);
     return Objects.equals(tokenGeneration, activeGeneration);
   }
 }
