@@ -12,4 +12,5 @@ redis.call('PEXPIRE', KEYS[2], ARGV[5])
 redis.call('HSETNX', familyKey, 'revoked', '0')
 if redis.call('PTTL', familyKey) < tonumber(ARGV[5]) then redis.call('PEXPIRE', familyKey, ARGV[5]) end
 redis.call('HSET', KEYS[1], 'revokedAt', ARGV[3], 'replacedBy', ARGV[1])
+redis.call('SET', KEYS[4], generation, 'PX', ARGV[5])
 return 1

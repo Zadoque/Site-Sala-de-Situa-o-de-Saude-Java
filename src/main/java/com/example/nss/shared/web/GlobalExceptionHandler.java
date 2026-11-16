@@ -3,6 +3,7 @@ package com.example.nss.shared.web;
 import com.example.nss.analytics.exception.InvalidFilterException;
 import com.example.nss.shared.notification.MailDeliveryException;
 import com.example.nss.user.exception.AuthStoreUnavailableException;
+import com.example.nss.user.exception.ActiveSessionException;
 import com.example.nss.user.exception.RateLimitExceededException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -31,6 +32,12 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<ErrorResponse> handleBadCredentials(HttpServletRequest request) {
     return error(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Credenciais inválidas", request);
+  }
+
+  @ExceptionHandler(ActiveSessionException.class)
+  public ResponseEntity<ErrorResponse> handleActiveSession(
+      ActiveSessionException exception, HttpServletRequest request) {
+    return error(HttpStatus.CONFLICT, "ACTIVE_SESSION", exception.getMessage(), request);
   }
 
   @ExceptionHandler(AuthenticationException.class)

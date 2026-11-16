@@ -3,6 +3,7 @@ package com.example.nss.user.application;
 import com.example.nss.user.domain.RefreshSession;
 import com.example.nss.user.domain.User;
 import com.example.nss.user.exception.AuthStoreUnavailableException;
+import com.example.nss.user.exception.ActiveSessionException;
 import com.example.nss.user.infrastructure.repository.RefreshSessionRepository;
 import com.example.nss.user.infrastructure.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
@@ -55,6 +56,10 @@ public class RefreshSessionService {
   }
 
   public String issue(User user) {
+    return issue(user, false);
+  }
+
+  public String issue(User user, boolean replaceExistingSession) {
     String generation =
         legacySessions == null
             ? redisOperation(() -> redis.opsForValue().get(generationKey(user.getId())))
@@ -80,7 +85,10 @@ public class RefreshSessionService {
               () ->
                   redis.execute(
                       ISSUE_SCRIPT,
-                      List.of(key(session.getTokenHash()), generationKey(managedUser.getId())),
+                      List.of(
+                          key(session.getTokenHash()),
+                          generationKey(managedUser.getId()),
+                          activeKey(managedUser.getId())),
                       session.getId().toString(),
                       managedUser.getId().toString(),
                       session.getCreatedAt().toString(),
@@ -88,7 +96,9 @@ public class RefreshSessionService {
                       Long.toString(expirationMillis),
                       generation == null ? "0" : generation,
                       session.getTokenHash(),
-                      hash(managedUser.getPassword() + ":" + managedUser.getAccountVersion())));
+                      hash(managedUser.getPassword() + ":" + managedUser.getAccountVersion()),
+                      replaceExistingSession ? "1" : "0"));
+      if (Long.valueOf(2).equals(issued)) throw new ActiveSessionException();
       if (!Long.valueOf(1).equals(issued)) throw new BadCredentialsException(INVALID_REFRESH);
     }
     return raw;
@@ -127,7 +137,8 @@ public class RefreshSessionService {
                     List.of(
                         key(hash),
                         key(replacement.getTokenHash()),
-                        generationKey(managedUser.getId())),
+                        generationKey(managedUser.getId()),
+                        activeKey(managedUser.getId())),
                     replacement.getId().toString(),
                     managedUser.getId().toString(),
                     replacement.getCreatedAt().toString(),
@@ -162,7 +173,8 @@ public class RefreshSessionService {
                 List.of(key(hash)),
                 Instant.now().toString(),
                 PREFIX + "family:",
-                Long.toString(expirationMillis)));
+                Long.toString(expirationMillis),
+                PREFIX + "active:"));
   }
 
   public void revokeAllForUser(Long userId) {
@@ -173,11 +185,17 @@ public class RefreshSessionService {
     redisOperation(
         () ->
             redis.execute(
-                REVOKE_ALL, List.of(generationKey(userId)), Long.toString(expirationMillis)));
+                REVOKE_ALL,
+                List.of(generationKey(userId), activeKey(userId)),
+                Long.toString(expirationMillis)));
   }
 
   private static String generationKey(Long userId) {
     return PREFIX + "generation:" + userId;
+  }
+
+  private static String activeKey(Long userId) {
+    return PREFIX + "active:" + userId;
   }
 
   private static <T> T redisOperation(Supplier<T> operation) {

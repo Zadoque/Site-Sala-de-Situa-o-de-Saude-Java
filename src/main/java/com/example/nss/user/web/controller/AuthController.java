@@ -141,7 +141,10 @@ public class AuthController {
       throw new org.springframework.security.authentication.BadCredentialsException(
           "Conta inválida");
     }
-    String refresh = refreshSessions.issue(entity);
+    String refresh =
+        request.replaceExistingSession()
+            ? refreshSessions.issue(entity, true)
+            : refreshSessions.issue(entity);
     String token = jwtService.generateToken(entity);
     addRefreshCookie(response, refresh);
     UserResponse user = userService.response(entity);
