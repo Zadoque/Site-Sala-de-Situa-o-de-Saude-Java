@@ -19,11 +19,11 @@ Base registrada: `97b2f0c601553eadd8e5de4541ea4218ec1197b0`
 | Checkstyle | Aprovado | `./mvnw -q checkstyle:check` |
 | PMD | Aprovado | `./mvnw -q pmd:check` |
 | PIT | Aprovado | 111 mutações, 92 eliminadas, 83% de score; limiar configurado: 80% |
-| Failsafe | Pendente | `clean verify` executado na rede QA; falhou por configuração/ownership do banco de deployment, estado Redis e alguns contratos de integração |
+| Failsafe | Aprovado | 54 testes executados, 0 falhas, 0 erros, 0 ignorados, em rede QA nova com `deployment.env` e `ddl-auto=validate` |
 
 ## Failsafe e ambiente
 
-A execução foi feita com PostgreSQL, Redis e Testcontainers em rede QA isolada. O ciclo completo ainda não está aprovado: o banco provisionado pelo deployment atribui tabelas ao migrator, enquanto o contexto de integração tenta aplicar alterações com o usuário runtime; também houve estado Redis e expectativas de contrato que exigiram correção. A execução não deve ser tratada como aprovação funcional até uma nova rodada limpa e sem falhas.
+A execução final foi feita com PostgreSQL, Redis e Testcontainers em rede QA isolada. O schema foi aplicado pelo migrator e a aplicação executou com `ddl-auto=validate`, sem alterar ownership ou dados do deployment ativo. A rodada final do Failsafe passou integralmente.
 
 Os testes Redis e PostgreSQL não usam bancos ou serviços de produção. O cache analítico mantém a leitura de JSON produzido pelo modelo de resposta anterior, com teste de compatibilidade em `AnalyticsResponseCacheTest`.
 
@@ -38,4 +38,4 @@ Os testes Redis e PostgreSQL não usam bancos ou serviços de produção. O cach
 
 ## Limitações
 
-Não foi feita comparação automatizada de snapshots HTTP antes/depois. A equivalência é coberta pelos contratos e testes de integração existentes, mas uma comparação formal de respostas continua recomendável antes do merge final. O aceite permanece pendente até o Failsafe completo passar no ambiente QA corretamente configurado.
+Não foi feita comparação automatizada de snapshots HTTP antes/depois. A equivalência é coberta pelos contratos e testes de integração existentes; uma comparação formal de respostas continua recomendável antes do merge final.
