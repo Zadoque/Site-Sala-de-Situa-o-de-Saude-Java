@@ -7,8 +7,10 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RestController;
 
 @AnalyzeClasses(packages = "com.example.nss", importOptions = ImportOption.DoNotIncludeTests.class)
 class LayeredArchitectureTest {
@@ -75,6 +77,24 @@ class LayeredArchitectureTest {
           .resideInAnyPackage("..repository..");
 
   @ArchTest
+  static final ArchRule rest_controllers_are_located_in_controller =
+      classes()
+          .that()
+          .areAnnotatedWith(RestController.class)
+          .should()
+          .resideInAnyPackage("..controller..");
+
+  @ArchTest
+  static final ArchRule configurations_are_located_in_config_or_security =
+      classes()
+          .that()
+          .areAnnotatedWith(Configuration.class)
+          .should()
+          .resideInAnyPackage("..config..")
+          .orShould()
+          .haveSimpleName("SecurityConfig");
+
+  @ArchTest
   static final ArchRule services_are_located_in_service =
       classes()
           .that()
@@ -106,5 +126,15 @@ class LayeredArchitectureTest {
           .dependOnClassesThat()
           .resideInAnyPackage(
               "..api..", "..application..", "..domain..", "..infrastructure..", "..web..")
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule no_classes_remain_in_old_packages =
+      classes()
+          .that()
+          .resideInAnyPackage(
+              "..api..", "..application..", "..domain..", "..infrastructure..", "..web..")
+          .should()
+          .haveSimpleName("__no_classes_in_legacy_packages__")
           .allowEmptyShould(true);
 }
