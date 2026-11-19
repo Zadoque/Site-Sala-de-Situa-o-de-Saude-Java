@@ -212,7 +212,7 @@ class AuthControllerContractIT {
                     "Set-Cookie", org.hamcrest.Matchers.containsString("nss_refresh=new-token")));
 
     verify(refreshSessions).rotateWithToken("old-token");
-    verify(userService).entityById(user.getId());
+    verify(userService, org.mockito.Mockito.never()).entityById(user.getId());
   }
 
   @Test

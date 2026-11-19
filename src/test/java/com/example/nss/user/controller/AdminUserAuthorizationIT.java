@@ -4,9 +4,11 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.nss.user.entity.UserPageView;
 import com.example.nss.user.security.CustomUserDetailsService;
 import com.example.nss.user.security.JwtService;
 import com.example.nss.user.service.AdminUserService;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,6 +41,8 @@ class AdminUserAuthorizationIT {
 
   @Test
   void permitsAuthenticatedAdminAccessToAdminUsers() throws Exception {
+    org.mockito.Mockito.when(service.search(null, 0, 60))
+        .thenReturn(new UserPageView(List.of(), 0, 60, false, 0));
     mockMvc
         .perform(get("/api/v1/admin/users").with(user("admin").roles("ADMIN")))
         .andExpect(status().isOk());
