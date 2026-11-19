@@ -1,7 +1,7 @@
 package com.example.nss.analytics.config;
 
-import com.example.nss.shared.config.DedicatedRedis;
 import com.example.nss.analytics.repository.AnalyticsResponseCache;
+import com.example.nss.shared.config.DedicatedRedis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;

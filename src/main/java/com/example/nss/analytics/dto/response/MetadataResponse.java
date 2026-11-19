@@ -16,7 +16,13 @@ public record MetadataResponse(
       List<String> supportedGeographies,
       List<String> supportedAgeBands,
       List<String> supportedSexes) {
-    this(availableYears, availableMonthsByYear, supportedGeographies, supportedAgeBands, supportedSexes, List.of());
+    this(
+        availableYears,
+        availableMonthsByYear,
+        supportedGeographies,
+        supportedAgeBands,
+        supportedSexes,
+        List.of());
   }
 
   public record MunicipalityOnlyScope(String disease, Integer year) {}

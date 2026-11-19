@@ -3,10 +3,10 @@ package com.example.nss.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.example.nss.shared.service.MailService;
-import com.example.nss.user.dto.request.AccountInvitationRequest;
-import com.example.nss.user.service.AdminUserService;
+import com.example.nss.user.entity.AccountInvitationCommand;
 import com.example.nss.user.entity.AccountType;
 import com.example.nss.user.repository.UserRepository;
+import com.example.nss.user.service.AdminUserService;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -72,7 +72,7 @@ class AdminUserEmailUniquenessPostgresIT {
         () -> {
           start.await();
           try {
-            service.invite(new AccountInvitationRequest(email, AccountType.USER));
+            service.invite(new AccountInvitationCommand(email, AccountType.USER));
             return true;
           } catch (IllegalArgumentException exception) {
             return false;

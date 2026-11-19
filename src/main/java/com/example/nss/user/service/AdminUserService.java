@@ -1,11 +1,11 @@
 package com.example.nss.user.service;
 
-import com.example.nss.user.dto.mapper.UserMapper;
-import com.example.nss.user.dto.request.AccountInvitationRequest;
-import com.example.nss.user.dto.response.ManagedUserResponse;
-import com.example.nss.user.dto.response.UserPageResponse;
+import com.example.nss.user.entity.AccountInvitationCommand;
 import com.example.nss.user.entity.AccountType;
+import com.example.nss.user.entity.InvitationView;
+import com.example.nss.user.entity.ManagedUserView;
 import com.example.nss.user.entity.User;
+import com.example.nss.user.entity.UserPageView;
 import com.example.nss.user.repository.UserRepository;
 import com.example.nss.user.security.EmailNormalizer;
 import java.time.Instant;
@@ -20,9 +20,8 @@ public class AdminUserService {
   private final UserRepository users;
   private final FirstAccessService firstAccess;
   private final RefreshSessionService refreshSessions;
-  private final UserMapper mapper;
 
-  public UserPageResponse search(String search, int page, int size) {
+  public UserPageView search(String search, int page, int size) {
     int safeSize = Math.min(Math.max(size, 1), 60);
     org.springframework.data.domain.Page<User> result =
         search == null || search.isBlank()
@@ -34,7 +33,7 @@ public class AdminUserService {
                 search,
                 org.springframework.data.domain.PageRequest.of(
                     page, safeSize, org.springframework.data.domain.Sort.by("email").ascending()));
-    return new UserPageResponse(
+    return new UserPageView(
         result.getContent().stream().map(this::view).toList(),
         result.getNumber(),
         result.getSize(),
@@ -43,7 +42,7 @@ public class AdminUserService {
   }
 
   @Transactional
-  public ManagedUserResponse invite(AccountInvitationRequest request) {
+  public ManagedUserView invite(AccountInvitationCommand request) {
     String normalizedEmail = EmailNormalizer.normalize(request.email());
     if (users.findByEmailIgnoreCase(normalizedEmail).isPresent())
       throw new IllegalArgumentException("E-mail já cadastrado");
@@ -64,7 +63,7 @@ public class AdminUserService {
   }
 
   @Transactional
-  public ManagedUserResponse setActive(Long id, boolean active, String actorEmail) {
+  public ManagedUserView setActive(Long id, boolean active, String actorEmail) {
     User user =
         users
             .findById(id)
@@ -93,11 +92,11 @@ public class AdminUserService {
     firstAccess.issuePasswordResetForAdmin(user);
   }
 
-  public java.util.List<com.example.nss.user.dto.response.InvitationResponse> invitations() {
+  public java.util.List<InvitationView> invitations() {
     return firstAccess.pendingInvitations();
   }
 
-  public com.example.nss.user.dto.response.InvitationResponse renewInvitation(Long id) {
+  public InvitationView renewInvitation(Long id) {
     return firstAccess.renew(id);
   }
 
@@ -105,7 +104,14 @@ public class AdminUserService {
     firstAccess.cancel(id);
   }
 
-  private ManagedUserResponse view(User user) {
-    return mapper.toManagedResponse(user, firstAccess.pending(user));
+  private ManagedUserView view(User user) {
+    return new ManagedUserView(
+        user.getId(),
+        user.getEmail(),
+        user.getNome(),
+        user.getAccountType(),
+        user.isAtivo(),
+        firstAccess.pending(user),
+        user.getPasswordCreatedAt());
   }
 }

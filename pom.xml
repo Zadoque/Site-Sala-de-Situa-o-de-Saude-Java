@@ -450,7 +450,7 @@
 				</dependencies>
 				<configuration>
 					<targetClasses>
-						<param>com.example.nss.analytics.application.*</param>
+					<param>com.example.nss.analytics.service.*</param>
 					</targetClasses>
 					<targetTests>
 						<param>com.example.nss.analytics.*</param>

@@ -1,11 +1,11 @@
 package com.example.nss.shared.controller;
 
-import com.example.nss.shared.dto.response.ErrorResponse;
 import com.example.nss.analytics.exception.InvalidFilterException;
 import com.example.nss.analytics.exception.MetadataCatalogUnavailableException;
+import com.example.nss.shared.dto.response.ErrorResponse;
 import com.example.nss.shared.exception.MailDeliveryException;
-import com.example.nss.user.exception.AuthStoreUnavailableException;
 import com.example.nss.user.exception.ActiveSessionException;
+import com.example.nss.user.exception.AuthStoreUnavailableException;
 import com.example.nss.user.exception.RateLimitExceededException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -85,10 +85,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleMetadataUnavailable(
       MetadataCatalogUnavailableException exception, HttpServletRequest request) {
     return error(
-        HttpStatus.SERVICE_UNAVAILABLE,
-        "METADATA_UNAVAILABLE",
-        exception.getMessage(),
-        request);
+        HttpStatus.SERVICE_UNAVAILABLE, "METADATA_UNAVAILABLE", exception.getMessage(), request);
   }
 
   @ExceptionHandler(DataIntegrityViolationException.class)
@@ -111,11 +108,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MailDeliveryException.class)
   public ResponseEntity<ErrorResponse> handleMailDelivery(
       MailDeliveryException exception, HttpServletRequest request) {
-    return error(
-        HttpStatus.BAD_GATEWAY,
-        "EMAIL_DELIVERY_FAILED",
-        exception.getMessage(),
-        request);
+    return error(HttpStatus.BAD_GATEWAY, "EMAIL_DELIVERY_FAILED", exception.getMessage(), request);
   }
 
   @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})

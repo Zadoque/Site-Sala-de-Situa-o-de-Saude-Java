@@ -1,5 +1,6 @@
 package com.example.nss.analytics.controller;
 
+import com.example.nss.analytics.dto.mapper.AnalyticsMapper;
 import com.example.nss.analytics.dto.response.CasoResumoResponse;
 import com.example.nss.analytics.service.AnalyticsService;
 import java.util.List;
@@ -15,10 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AnalyticsController {
 
   private final AnalyticsService analyticsService;
+  private final AnalyticsMapper mapper;
 
   @GetMapping("casos")
   public List<CasoResumoResponse> buscarCasos(
       @RequestParam Integer ano, @RequestParam Integer mes) {
-    return analyticsService.buscarCasos(ano, mes);
+    return analyticsService.buscarCasos(ano, mes).stream().map(mapper::toResponse).toList();
   }
 }

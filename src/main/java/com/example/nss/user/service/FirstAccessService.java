@@ -1,8 +1,10 @@
 package com.example.nss.user.service;
 
 import com.example.nss.shared.service.MailService;
-import com.example.nss.user.dto.request.FirstAccessRequest;
+import com.example.nss.user.entity.FirstAccessCommand;
 import com.example.nss.user.entity.FirstAccessToken;
+import com.example.nss.user.entity.InvitationView;
+import com.example.nss.user.entity.PasswordResetCommand;
 import com.example.nss.user.entity.User;
 import com.example.nss.user.repository.FirstAccessTokenRepository;
 import com.example.nss.user.repository.UserRepository;
@@ -125,14 +127,14 @@ public class FirstAccessService {
             + "\n\nEste link expira em 7 dias e só pode ser usado uma vez.");
   }
 
-  private void sendNotification(boolean requireDelivery, String recipient, String subject, String body) {
+  private void sendNotification(
+      boolean requireDelivery, String recipient, String subject, String body) {
     if (requireDelivery) mail.sendTextRequired(recipient, subject, body);
     else mail.sendTextAfterCommit(recipient, subject, body);
   }
 
   @Transactional
-  public void completePasswordReset(
-      com.example.nss.user.dto.request.PasswordResetCompleteRequest request) {
+  public void completePasswordReset(PasswordResetCommand request) {
     FirstAccessToken invite =
         tokens
             .findByTokenHashForUpdate(hash(request.token()))
@@ -169,7 +171,7 @@ public class FirstAccessService {
   }
 
   @Transactional
-  public void complete(FirstAccessRequest request) {
+  public void complete(FirstAccessCommand request) {
     FirstAccessToken invite =
         tokens
             .findByTokenHashForUpdate(hash(request.token()))
@@ -200,12 +202,12 @@ public class FirstAccessService {
   }
 
   @Transactional(readOnly = true)
-  public java.util.List<com.example.nss.user.dto.response.InvitationResponse> pendingInvitations() {
+  public java.util.List<InvitationView> pendingInvitations() {
     return tokens.findByStatusOrderByExpiresAtAsc(PENDING_STATUS).stream().map(this::view).toList();
   }
 
   @Transactional
-  public com.example.nss.user.dto.response.InvitationResponse renew(Long id) {
+  public InvitationView renew(Long id) {
     FirstAccessToken old =
         tokens
             .findById(id)
@@ -230,8 +232,8 @@ public class FirstAccessService {
     }
   }
 
-  private com.example.nss.user.dto.response.InvitationResponse view(FirstAccessToken t) {
-    return new com.example.nss.user.dto.response.InvitationResponse(
+  private InvitationView view(FirstAccessToken t) {
+    return new InvitationView(
         t.getId(),
         t.getUser().getId(),
         t.getUser().getEmail(),

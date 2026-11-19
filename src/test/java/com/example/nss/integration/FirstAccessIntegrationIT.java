@@ -6,12 +6,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.nss.shared.service.MailService;
-import com.example.nss.user.service.RefreshSessionService;
 import com.example.nss.user.entity.AccountType;
 import com.example.nss.user.entity.FirstAccessToken;
 import com.example.nss.user.entity.User;
 import com.example.nss.user.repository.FirstAccessTokenRepository;
 import com.example.nss.user.repository.UserRepository;
+import com.example.nss.user.service.RefreshSessionService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;

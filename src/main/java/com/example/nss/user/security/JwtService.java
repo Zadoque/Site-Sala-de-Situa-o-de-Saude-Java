@@ -38,11 +38,12 @@ public class JwtService {
     Date issuedAt = new Date();
     Date expirationDate = new Date(issuedAt.getTime() + expiration);
 
-    var builder = Jwts.builder()
-        .subject(String.valueOf(user.getId()))
-        .claim("accountRevision", VersionedUserDetails.revision(user))
-        .issuedAt(issuedAt)
-        .expiration(expirationDate);
+    var builder =
+        Jwts.builder()
+            .subject(String.valueOf(user.getId()))
+            .claim("accountRevision", VersionedUserDetails.revision(user))
+            .issuedAt(issuedAt)
+            .expiration(expirationDate);
     if (sessionGeneration != null && !sessionGeneration.isBlank()) {
       builder.claim("sessionGeneration", sessionGeneration);
     }

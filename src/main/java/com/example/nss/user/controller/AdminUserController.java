@@ -1,10 +1,12 @@
 package com.example.nss.user.controller;
 
+import com.example.nss.user.dto.mapper.UserMapper;
 import com.example.nss.user.dto.request.AccountInvitationRequest;
 import com.example.nss.user.dto.request.ActivationRequest;
 import com.example.nss.user.dto.response.InvitationResponse;
 import com.example.nss.user.dto.response.ManagedUserResponse;
 import com.example.nss.user.dto.response.UserPageResponse;
+import com.example.nss.user.entity.AccountInvitationCommand;
 import com.example.nss.user.service.AdminUserService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/admin/users")
 public class AdminUserController {
   private final AdminUserService service;
+  private final UserMapper mapper;
 
   @GetMapping
   public UserPageResponse search(
@@ -28,19 +31,23 @@ public class AdminUserController {
     if (page < 0 || size < 1 || size > 60) {
       throw new IllegalArgumentException("page deve ser >= 0 e size deve estar entre 1 e 60");
     }
-    return service.search(search, page, size);
+    return mapper.toPageResponse(service.search(search, page, size));
   }
 
   @PostMapping
   public ResponseEntity<ManagedUserResponse> invite(
       @Valid @RequestBody AccountInvitationRequest request) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(service.invite(request));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(
+            mapper.toManagedResponse(
+                service.invite(
+                    new AccountInvitationCommand(request.email(), request.accountType()))));
   }
 
   @PatchMapping("/{id}/activation")
   public ManagedUserResponse activation(
       @PathVariable Long id, @Valid @RequestBody ActivationRequest request, Authentication auth) {
-    return service.setActive(id, request.active(), auth.getName());
+    return mapper.toManagedResponse(service.setActive(id, request.active(), auth.getName()));
   }
 
   @PostMapping("/{id}/password-reset")
@@ -51,12 +58,12 @@ public class AdminUserController {
 
   @GetMapping("/invitations")
   public List<InvitationResponse> invitations() {
-    return service.invitations();
+    return service.invitations().stream().map(mapper::toInvitationResponse).toList();
   }
 
   @PostMapping("/invitations/{id}/renew")
   public InvitationResponse renew(@PathVariable Long id) {
-    return service.renewInvitation(id);
+    return mapper.toInvitationResponse(service.renewInvitation(id));
   }
 
   @PostMapping("/invitations/{id}/cancel")

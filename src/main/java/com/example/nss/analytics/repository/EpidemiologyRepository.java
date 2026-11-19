@@ -2,7 +2,6 @@ package com.example.nss.analytics.repository;
 
 import com.example.nss.analytics.entity.EpidemiologyFilter;
 import com.example.nss.analytics.entity.Geography;
-import com.example.nss.analytics.repository.EpidemiologyRowMapper;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -45,12 +44,12 @@ public class EpidemiologyRepository {
                 " AS code, SUM(f.cases_total) AS total FROM analytics.fato_casos f" + " WHERE 1=1");
     MapSqlParameterSource p = parameters(f, sql);
     if (geography == Geography.MUNICIPALITY && f.municipalityCode() != null) {
-      sql.append(" AND f.cd_mun = :municipalityCode");
+      sql.append(" AND f.cd_mun = :" + MUNICIPALITY_PARAMETER);
       p.addValue(MUNICIPALITY_PARAMETER, f.municipalityCode());
     }
     appendAreaFilter(f, geography, sql, p);
     if (geography != Geography.MUNICIPALITY && f.municipalityCode() != null) {
-      sql.append(" AND f.cd_mun = :municipalityCode");
+      sql.append(" AND f.cd_mun = :" + MUNICIPALITY_PARAMETER);
       p.addValue(MUNICIPALITY_PARAMETER, f.municipalityCode());
     }
     if (geography == Geography.NEIGHBORHOOD && f.districtCode() != null) {
@@ -124,12 +123,13 @@ public class EpidemiologyRepository {
   private String mappedPredicate(
       Geography geography, List<String> mappedIds, MapSqlParameterSource p) {
     if (geography == Geography.NEIGHBORHOOD) {
-      String mappedNeighborhoods = mappedIds.isEmpty()
-          ? "FALSE"
-          : "f.notification_neighborhood_id IN (:mappedIds)";
+      String mappedNeighborhoods =
+          mappedIds.isEmpty() ? "FALSE" : "f.notification_neighborhood_id IN (:mappedIds)";
       if (!mappedIds.isEmpty()) p.addValue("mappedIds", mappedIds);
       return "f.notification_territory_status IN ('NOTIFICATION_NEIGHBORHOOD','NOTIFICATION_NEIGHBORHOOD_NAME_ONLY')"
-          + " AND (" + mappedNeighborhoods + " OR f.notification_neighborhood_id LIKE 'CNES_BAIRRO:%')";
+          + " AND ("
+          + mappedNeighborhoods
+          + " OR f.notification_neighborhood_id LIKE 'CNES_BAIRRO:%')";
     }
     if (mappedIds.isEmpty()) return "FALSE";
     p.addValue("mappedIds", mappedIds);

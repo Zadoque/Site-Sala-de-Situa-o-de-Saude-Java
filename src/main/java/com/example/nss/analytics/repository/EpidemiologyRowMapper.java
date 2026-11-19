@@ -1,12 +1,9 @@
 package com.example.nss.analytics.repository;
 
-import com.example.nss.analytics.repository.DiseaseRow;
-import com.example.nss.analytics.repository.MetadataCatalogRow;
-import com.example.nss.analytics.repository.TerritoryAggregate;
-import org.springframework.jdbc.core.RowMapper;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.jdbc.core.RowMapper;
 
 public final class EpidemiologyRowMapper {
   private EpidemiologyRowMapper() {}

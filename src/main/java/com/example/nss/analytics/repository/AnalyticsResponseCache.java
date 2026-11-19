@@ -1,6 +1,6 @@
 package com.example.nss.analytics.repository;
 
-import com.example.nss.analytics.dto.response.AnalyticsResponse;
+import com.example.nss.analytics.entity.AnalyticsResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -23,16 +23,16 @@ public final class AnalyticsResponseCache {
     this.revision = revision;
   }
 
-  public AnalyticsResponse get(String requestKey) {
+  public AnalyticsResult get(String requestKey) {
     try {
       String value = redis.opsForValue().get(key(requestKey));
-      return value == null ? null : mapper.readValue(value, AnalyticsResponse.class);
+      return value == null ? null : mapper.readValue(value, AnalyticsResult.class);
     } catch (Exception ignored) {
       return null;
     }
   }
 
-  public void put(String requestKey, AnalyticsResponse response) {
+  public void put(String requestKey, AnalyticsResult response) {
     try {
       String value = mapper.writeValueAsString(response);
       redis.opsForValue().set(key(requestKey), value, ttl);

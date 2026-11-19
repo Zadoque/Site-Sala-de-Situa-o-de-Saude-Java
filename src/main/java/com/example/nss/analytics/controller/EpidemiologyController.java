@@ -1,10 +1,11 @@
 package com.example.nss.analytics.controller;
 
+import com.example.nss.analytics.dto.mapper.AnalyticsMapper;
 import com.example.nss.analytics.dto.response.AnalyticsResponse;
 import com.example.nss.analytics.dto.response.MetadataResponse;
-import com.example.nss.analytics.service.EpidemiologyService;
 import com.example.nss.analytics.entity.EpidemiologyFilter;
 import com.example.nss.analytics.entity.Geography;
+import com.example.nss.analytics.service.EpidemiologyService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -14,30 +15,31 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class EpidemiologyController {
   private final EpidemiologyService service;
+  private final AnalyticsMapper mapper;
 
   @GetMapping("/epidemiology/region")
   public AnalyticsResponse region(@ModelAttribute FilterRequest request) {
-    return service.query(Geography.REGION, request.toFilter());
+    return mapper.toResponse(service.query(Geography.REGION, request.toFilter()));
   }
 
   @GetMapping("/epidemiology/state")
   public AnalyticsResponse state(@ModelAttribute FilterRequest request) {
-    return service.query(Geography.STATE, request.toFilter());
+    return mapper.toResponse(service.query(Geography.STATE, request.toFilter()));
   }
 
   @GetMapping("/epidemiology/municipalities")
   public AnalyticsResponse municipalities(@ModelAttribute FilterRequest request) {
-    return service.query(Geography.MUNICIPALITY, request.toFilter());
+    return mapper.toResponse(service.query(Geography.MUNICIPALITY, request.toFilter()));
   }
 
   @GetMapping("/epidemiology/districts")
   public AnalyticsResponse districts(@ModelAttribute FilterRequest request) {
-    return service.query(Geography.DISTRICT, request.toFilter());
+    return mapper.toResponse(service.query(Geography.DISTRICT, request.toFilter()));
   }
 
   @GetMapping("/epidemiology/neighborhoods")
   public AnalyticsResponse neighborhoods(@ModelAttribute FilterRequest request) {
-    return service.query(Geography.NEIGHBORHOOD, request.toFilter());
+    return mapper.toResponse(service.query(Geography.NEIGHBORHOOD, request.toFilter()));
   }
 
   @GetMapping("/diseases")
@@ -47,7 +49,7 @@ public class EpidemiologyController {
 
   @GetMapping("/metadata")
   public MetadataResponse metadata() {
-    return service.metadata();
+    return mapper.toResponse(service.metadata());
   }
 
   public record FilterRequest(

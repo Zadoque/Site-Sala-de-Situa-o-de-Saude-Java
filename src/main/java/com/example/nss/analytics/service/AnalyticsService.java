@@ -1,7 +1,7 @@
 package com.example.nss.analytics.service;
 
-import com.example.nss.analytics.dto.response.CasoResumoResponse;
 import com.example.nss.analytics.repository.AnalyticsRepository;
+import com.example.nss.analytics.repository.CasoResumo;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 public class AnalyticsService {
   private final AnalyticsRepository repository;
 
-  public List<CasoResumoResponse> buscarCasos(Integer ano, Integer mes) {
+  public List<CasoResumo> buscarCasos(Integer ano, Integer mes) {
     return repository.buscarCasos(ano, mes).stream()
         .map(
             caso ->
-                new CasoResumoResponse(
+                new CasoResumo(
                     caso.codigoDoenca(),
                     caso.ano(),
                     caso.mes(),

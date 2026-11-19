@@ -1,18 +1,21 @@
 package com.example.nss.user.controller;
 
+import com.example.nss.user.dto.mapper.UserMapper;
 import com.example.nss.user.dto.request.FirstAccessRequest;
 import com.example.nss.user.dto.request.LoginRequest;
 import com.example.nss.user.dto.request.PasswordResetCompleteRequest;
 import com.example.nss.user.dto.request.PasswordResetRequest;
-import com.example.nss.user.dto.response.LoginResponse;
 import com.example.nss.user.dto.response.FirstAccessDetailsResponse;
+import com.example.nss.user.dto.response.LoginResponse;
 import com.example.nss.user.dto.response.MeResponse;
 import com.example.nss.user.dto.response.UserResponse;
+import com.example.nss.user.entity.FirstAccessCommand;
+import com.example.nss.user.entity.PasswordResetCommand;
+import com.example.nss.user.security.EmailNormalizer;
+import com.example.nss.user.security.JwtService;
 import com.example.nss.user.service.AuthRateLimiter;
 import com.example.nss.user.service.RefreshSessionService;
 import com.example.nss.user.service.UserService;
-import com.example.nss.user.security.EmailNormalizer;
-import com.example.nss.user.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -30,11 +33,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -45,6 +48,7 @@ public class AuthController {
   private final UserService userService;
   private final AuthenticationManager authenticationManager;
   private final JwtService jwtService;
+  private final UserMapper userMapper;
 
   @Value("${jwt.expiration:3600000}")
   private long accessExpiration;
@@ -66,13 +70,14 @@ public class AuthController {
   @PostMapping("/first-access")
   public ResponseEntity<Void> firstAccess(@Valid @RequestBody FirstAccessRequest request) {
     rateLimiter.registerFirstAccessAttempt();
-    firstAccessService.complete(request);
+    firstAccessService.complete(
+        new FirstAccessCommand(
+            request.email(), request.name(), request.password(), request.token()));
     return ResponseEntity.noContent().build();
   }
 
   @GetMapping("/first-access")
-  public ResponseEntity<FirstAccessDetailsResponse> firstAccessDetails(
-      @RequestParam String token) {
+  public ResponseEntity<FirstAccessDetailsResponse> firstAccessDetails(@RequestParam String token) {
     return ResponseEntity.ok(
         new FirstAccessDetailsResponse(firstAccessService.firstAccessEmail(token)));
   }
@@ -89,13 +94,14 @@ public class AuthController {
   public ResponseEntity<Void> completePasswordReset(
       @Valid @RequestBody PasswordResetCompleteRequest request) {
     rateLimiter.registerPasswordResetCompletion();
-    firstAccessService.completePasswordReset(request);
+    firstAccessService.completePasswordReset(
+        new PasswordResetCommand(request.email(), request.password(), request.token()));
     return ResponseEntity.noContent().build();
   }
 
   @org.springframework.web.bind.annotation.GetMapping("/me")
   public ResponseEntity<MeResponse> me(Authentication authentication) {
-    UserResponse user = userService.getByEmail(authentication.getName());
+    UserResponse user = userMapper.toResponse(userService.getByEmail(authentication.getName()));
     boolean admin =
         authentication.getAuthorities().stream()
             .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
@@ -146,9 +152,12 @@ public class AuthController {
             ? refreshSessions.issue(entity, true)
             : refreshSessions.issue(entity);
     String generation = refreshSessions.currentGeneration(entity.getId());
-    String token = generation == null ? jwtService.generateToken(entity) : jwtService.generateToken(entity, generation);
+    String token =
+        generation == null
+            ? jwtService.generateToken(entity)
+            : jwtService.generateToken(entity, generation);
     addRefreshCookie(response, refresh);
-    UserResponse user = userService.response(entity);
+    UserResponse user = userMapper.toResponse(entity);
     return ResponseEntity.ok(
         new LoginResponse(token, accessExpiration / 1000, user, token, permissions(userDetails)));
   }
@@ -162,13 +171,16 @@ public class AuthController {
     UserDetails userDetails =
         new com.example.nss.user.security.VersionedUserDetails(rotation.user());
     String generation = refreshSessions.currentGeneration(rotation.user().getId());
-    String access = generation == null ? jwtService.generateToken(rotation.user()) : jwtService.generateToken(rotation.user(), generation);
+    String access =
+        generation == null
+            ? jwtService.generateToken(rotation.user())
+            : jwtService.generateToken(rotation.user(), generation);
     addRefreshCookie(response, rotation.rawToken());
     return ResponseEntity.ok(
         new LoginResponse(
             access,
             accessExpiration / 1000,
-            userService.response(rotation.user()),
+            userMapper.toResponse(rotation.user()),
             access,
             permissions(userDetails)));
   }

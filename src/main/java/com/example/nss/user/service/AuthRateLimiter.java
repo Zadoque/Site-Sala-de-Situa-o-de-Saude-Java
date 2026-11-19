@@ -1,9 +1,9 @@
 package com.example.nss.user.service;
 
-import com.example.nss.user.security.ClientAddress;
 import com.example.nss.shared.config.DedicatedRedis;
 import com.example.nss.user.exception.AuthStoreUnavailableException;
 import com.example.nss.user.exception.RateLimitExceededException;
+import com.example.nss.user.security.ClientAddress;
 import com.example.nss.user.security.EmailNormalizer;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.nio.charset.StandardCharsets;

@@ -1,7 +1,5 @@
 package com.example.nss.user.service;
 
-import com.example.nss.user.dto.mapper.UserMapper;
-import com.example.nss.user.dto.response.UserResponse;
 import com.example.nss.user.entity.User;
 import com.example.nss.user.repository.UserRepository;
 import com.example.nss.user.security.EmailNormalizer;
@@ -14,12 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
   private final UserRepository repository;
   private final FirstAccessService firstAccessService;
-  private final UserMapper mapper;
 
-  public UserResponse getByEmail(String email) {
+  public User getByEmail(String email) {
     return repository
         .findByEmailIgnoreCase(EmailNormalizer.normalize(email))
-        .map(mapper::toResponse)
         .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
   }
 
@@ -38,10 +34,6 @@ public class UserService {
             () ->
                 new org.springframework.security.authentication.BadCredentialsException(
                     "Conta inválida"));
-  }
-
-  public UserResponse response(User user) {
-    return mapper.toResponse(user);
   }
 
   public void requestPasswordReset(String email) {
