@@ -19,11 +19,11 @@ Base registrada: `97b2f0c601553eadd8e5de4541ea4218ec1197b0`
 | Checkstyle | Aprovado | `./mvnw -q checkstyle:check` |
 | PMD | Aprovado | `./mvnw -q pmd:check` |
 | PIT | Aprovado | 111 mutações, 92 eliminadas, 83% de score; limiar configurado: 80% |
-| Failsafe limpo | Aprovado | Executado pelo `nss-deployment` com `deployment.env`, rede Docker interna e socket Docker montado |
+| Failsafe | Pendente | `clean verify` executado na rede QA; falhou por configuração/ownership do banco de deployment, estado Redis e alguns contratos de integração |
 
 ## Failsafe e ambiente
 
-A execução limpa foi feita com PostgreSQL, Redis e Testcontainers isolados. Uma repetição posterior no banco persistente do deployment falhou por dados de execuções anteriores (`duplicate key` e sessões ativas); essa execução não é usada como aprovação funcional.
+A execução foi feita com PostgreSQL, Redis e Testcontainers em rede QA isolada. O ciclo completo ainda não está aprovado: o banco provisionado pelo deployment atribui tabelas ao migrator, enquanto o contexto de integração tenta aplicar alterações com o usuário runtime; também houve estado Redis e expectativas de contrato que exigiram correção. A execução não deve ser tratada como aprovação funcional até uma nova rodada limpa e sem falhas.
 
 Os testes Redis e PostgreSQL não usam bancos ou serviços de produção. O cache analítico mantém a leitura de JSON produzido pelo modelo de resposta anterior, com teste de compatibilidade em `AnalyticsResponseCacheTest`.
 
@@ -38,4 +38,4 @@ Os testes Redis e PostgreSQL não usam bancos ou serviços de produção. O cach
 
 ## Limitações
 
-Não foi feita comparação automatizada de snapshots HTTP antes/depois. A equivalência é coberta pelos contratos e testes de integração existentes, mas uma comparação formal de respostas continua recomendável antes do merge final.
+Não foi feita comparação automatizada de snapshots HTTP antes/depois. A equivalência é coberta pelos contratos e testes de integração existentes, mas uma comparação formal de respostas continua recomendável antes do merge final. O aceite permanece pendente até o Failsafe completo passar no ambiente QA corretamente configurado.
