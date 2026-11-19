@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 import com.example.nss.analytics.entity.AnalyticsResult;
 import com.example.nss.analytics.entity.EpidemiologyFilter;
 import com.example.nss.analytics.entity.Geography;
+import com.example.nss.analytics.repository.AnalyticsResponseCache;
 import com.example.nss.analytics.repository.DiseaseRow;
 import com.example.nss.analytics.repository.EpidemiologyRepository;
 import com.example.nss.analytics.repository.EpidemiologyTotals;
@@ -24,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class EpidemiologyServiceTest {
   @Mock EpidemiologyRepository repository;
   @Mock TerritoryCatalog catalog;
+  @Mock AnalyticsResponseCache cache;
   @InjectMocks EpidemiologyService service;
 
   @Test
@@ -71,6 +73,18 @@ class EpidemiologyServiceTest {
     assertEquals("UNAVAILABLE", response.coverage().status().name());
     assertTrue(response.items().isEmpty());
     verifyNoInteractions(repository);
+  }
+
+  @Test
+  void cacheHitUsesAllFilterDimensionsAndAvoidsRepositoryAccess() {
+    var filter = new EpidemiologyFilter("DENG", 2026, 3, "M", "20_39", "3301009", "CG_DIST");
+    var cached = service.unavailable(Geography.DISTRICT, filter);
+    service.setCache(cache);
+    when(cache.get("DISTRICT|DENG|2026|3|M|20_39|3301009|CG_DIST|null|null")).thenReturn(cached);
+
+    assertSame(cached, service.query(Geography.DISTRICT, filter));
+    verify(cache).get("DISTRICT|DENG|2026|3|M|20_39|3301009|CG_DIST|null|null");
+    verifyNoInteractions(repository, catalog);
   }
 
   @Test
@@ -229,6 +243,50 @@ class EpidemiologyServiceTest {
 
     assertEquals(List.of("3302403"), response.items().stream().map(e -> e.code()).toList());
     verify(catalog).forGeography("3302403", null, "MUNICIPALITY");
+  }
+
+  @Test
+  void municipalityWithUfKeepsOnlyMunicipalitiesFromThatUf() {
+    when(catalog.forGeography(null, null, "MUNICIPALITY"))
+        .thenReturn(
+            List.of(
+                new TerritoryCatalog.Entry(
+                    "3302403", "Macaé", "MUNICIPALITY", "3302403", null, "AVAILABLE"),
+                new TerritoryCatalog.Entry(
+                    "3106200", "Belo Horizonte", "MUNICIPALITY", "3106200", null, "AVAILABLE")));
+    when(repository.totals(any(), eq(Geography.MUNICIPALITY), any()))
+        .thenReturn(new EpidemiologyTotals(1L, 1L));
+    when(repository.aggregate(any(), eq(Geography.MUNICIPALITY), any())).thenReturn(List.of());
+
+    var response =
+        service.query(
+            Geography.MUNICIPALITY,
+            new EpidemiologyFilter(null, null, null, null, null, null, null, "33", null));
+
+    assertEquals(
+        List.of("3302403"),
+        response.items().stream().map(AnalyticsResult.TerritoryItem::code).toList());
+  }
+
+  @Test
+  void regionFilterOnlyReturnsStatesFromTheRequestedRegion() {
+    when(repository.totals(any(), any(), any())).thenReturn(new EpidemiologyTotals(0L, 0L));
+    when(repository.aggregate(any(), any(), any())).thenReturn(List.of());
+
+    var response =
+        service.query(
+            Geography.STATE,
+            new EpidemiologyFilter(null, null, null, null, null, null, null, null, "SE"));
+
+    assertFalse(response.items().isEmpty());
+    assertTrue(
+        response.items().stream()
+            .allMatch(
+                item ->
+                    item.code().equals("31")
+                        || item.code().equals("32")
+                        || item.code().equals("33")
+                        || item.code().equals("35")));
   }
 
   @Test
