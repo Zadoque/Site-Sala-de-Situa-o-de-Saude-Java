@@ -33,9 +33,12 @@ class RefreshSessionRedisIT {
       service.revoke(old);
       assertThrows(BadCredentialsException.class, () -> service.rotateWithToken(next));
       String current = service.issue(user);
-      user.setPassword(encoder.encode("new-password"));
+      var changedUser = new User();
+      changedUser.setId(user.getId());
+      changedUser.setPassword(encoder.encode("new-password"));
+      when(users.findById(user.getId())).thenReturn(Optional.of(changedUser));
       assertThrows(BadCredentialsException.class, () -> service.rotateWithToken(current));
-      String token = service.issue(user);
+      String token = service.issue(changedUser);
       try (var executor = Executors.newFixedThreadPool(2)) {
         var first = executor.submit(() -> rotate(service, token));
         var second = executor.submit(() -> rotate(service, token));

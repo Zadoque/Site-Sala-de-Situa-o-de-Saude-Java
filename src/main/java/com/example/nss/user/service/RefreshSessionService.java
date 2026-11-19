@@ -130,6 +130,7 @@ public class RefreshSessionService {
         || managedUser.getPassword() == null
         || !credential.equals(
             hash(managedUser.getPassword() + ":" + managedUser.getAccountVersion()))) {
+      revokeAllForUser(managedUser.getId());
       throw new BadCredentialsException(INVALID_REFRESH);
     }
     String replacementRaw = randomToken();
