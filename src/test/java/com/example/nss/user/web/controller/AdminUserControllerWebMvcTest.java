@@ -1,4 +1,4 @@
-package com.example.nss.user.web.controller;
+package com.example.nss.user.controller;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -9,11 +9,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.shared.web.GlobalExceptionHandler;
-import com.example.nss.user.api.response.ManagedUserResponse;
-import com.example.nss.user.api.response.UserPageResponse;
-import com.example.nss.user.application.AdminUserService;
-import com.example.nss.user.domain.AccountType;
+import com.example.nss.shared.controller.GlobalExceptionHandler;
+import com.example.nss.user.dto.response.ManagedUserResponse;
+import com.example.nss.user.dto.response.UserPageResponse;
+import com.example.nss.user.service.AdminUserService;
+import com.example.nss.user.entity.AccountType;
 import com.example.nss.user.security.CustomUserDetailsService;
 import com.example.nss.user.security.JwtService;
 import java.util.List;

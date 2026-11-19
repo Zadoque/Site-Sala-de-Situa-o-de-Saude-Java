@@ -1,4 +1,4 @@
-package com.example.nss.analytics.infrastructure.repository;
+package com.example.nss.analytics.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

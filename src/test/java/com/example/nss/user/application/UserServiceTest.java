@@ -1,4 +1,4 @@
-package com.example.nss.user.application;
+package com.example.nss.user.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -7,10 +7,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.api.mapper.UserMapper;
-import com.example.nss.user.api.response.UserResponse;
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.dto.mapper.UserMapper;
+import com.example.nss.user.dto.response.UserResponse;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.UserRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;

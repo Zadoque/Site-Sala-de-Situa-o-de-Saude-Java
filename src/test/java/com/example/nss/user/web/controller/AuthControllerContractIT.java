@@ -1,4 +1,4 @@
-package com.example.nss.user.web.controller;
+package com.example.nss.user.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -7,12 +7,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.user.api.response.UserResponse;
-import com.example.nss.user.application.AuthRateLimiter;
-import com.example.nss.user.application.FirstAccessService;
-import com.example.nss.user.application.RefreshSessionService;
-import com.example.nss.user.application.UserService;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.dto.response.UserResponse;
+import com.example.nss.user.service.AuthRateLimiter;
+import com.example.nss.user.service.FirstAccessService;
+import com.example.nss.user.service.RefreshSessionService;
+import com.example.nss.user.service.UserService;
+import com.example.nss.user.entity.User;
 import com.example.nss.user.security.CustomUserDetailsService;
 import com.example.nss.user.security.JwtService;
 import org.junit.jupiter.api.Test;
@@ -160,7 +160,7 @@ class AuthControllerContractIT {
     entity.setEmail("user@nss.test");
     entity.setPassword("encoded");
     entity.setAccountVersion(0L);
-    entity.setAccountType(com.example.nss.user.domain.AccountType.USER);
+    entity.setAccountType(com.example.nss.user.entity.AccountType.USER);
     UserDetails principal = new com.example.nss.user.security.VersionedUserDetails(entity);
     UserResponse response = new UserResponse(7L, "User", "user@nss.test", true);
     org.mockito.Mockito.when(authentication.getPrincipal()).thenReturn(principal);
@@ -284,7 +284,7 @@ class AuthControllerContractIT {
     entity.setEmail("admin@nss.test");
     entity.setPassword("encoded");
     entity.setAccountVersion(0L);
-    entity.setAccountType(com.example.nss.user.domain.AccountType.ADMIN);
+    entity.setAccountType(com.example.nss.user.entity.AccountType.ADMIN);
     UserDetails principal = new com.example.nss.user.security.VersionedUserDetails(entity);
     org.mockito.Mockito.when(authentication.getPrincipal()).thenReturn(principal);
     org.mockito.Mockito.when(authenticationManager.authenticate(any())).thenReturn(authentication);

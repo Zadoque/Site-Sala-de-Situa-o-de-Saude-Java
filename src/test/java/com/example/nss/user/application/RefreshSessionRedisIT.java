@@ -1,11 +1,11 @@
-package com.example.nss.user.application;
+package com.example.nss.user.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.example.nss.shared.redis.DedicatedRedis;
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.shared.config.DedicatedRedis;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.UserRepository;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.Executors;

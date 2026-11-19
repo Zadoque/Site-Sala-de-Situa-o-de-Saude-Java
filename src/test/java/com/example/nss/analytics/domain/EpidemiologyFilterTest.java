@@ -1,4 +1,4 @@
-package com.example.nss.analytics.domain;
+package com.example.nss.analytics.entity;
 
 import static org.junit.jupiter.api.Assertions.*;
 

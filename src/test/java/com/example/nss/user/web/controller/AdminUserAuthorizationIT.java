@@ -1,10 +1,10 @@
-package com.example.nss.user.web.controller;
+package com.example.nss.user.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.user.application.AdminUserService;
+import com.example.nss.user.service.AdminUserService;
 import com.example.nss.user.security.CustomUserDetailsService;
 import com.example.nss.user.security.JwtService;
 import org.junit.jupiter.api.Test;

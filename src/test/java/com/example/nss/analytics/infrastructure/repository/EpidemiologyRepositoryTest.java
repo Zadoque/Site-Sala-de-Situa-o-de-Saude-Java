@@ -1,10 +1,10 @@
-package com.example.nss.analytics.infrastructure.repository;
+package com.example.nss.analytics.repository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.example.nss.analytics.application.TerritoryCatalog;
-import com.example.nss.analytics.domain.EpidemiologyFilter;
-import com.example.nss.analytics.domain.Geography;
+import com.example.nss.analytics.service.TerritoryCatalog;
+import com.example.nss.analytics.entity.EpidemiologyFilter;
+import com.example.nss.analytics.entity.Geography;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package com.example.nss.user.application;
+package com.example.nss.user.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -10,10 +10,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.domain.RefreshSession;
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.RefreshSessionRepository;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.entity.RefreshSession;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.RefreshSessionRepository;
+import com.example.nss.user.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;

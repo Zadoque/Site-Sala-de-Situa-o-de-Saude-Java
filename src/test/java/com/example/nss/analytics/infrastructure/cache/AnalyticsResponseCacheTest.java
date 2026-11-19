@@ -1,4 +1,4 @@
-package com.example.nss.analytics.infrastructure.cache;
+package com.example.nss.analytics.repository;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -8,9 +8,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.analytics.api.response.AnalyticsResponse;
-import com.example.nss.analytics.domain.CoverageStatus;
-import com.example.nss.analytics.domain.Geography;
+import com.example.nss.analytics.dto.response.AnalyticsResponse;
+import com.example.nss.analytics.entity.CoverageStatus;
+import com.example.nss.analytics.entity.Geography;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.List;

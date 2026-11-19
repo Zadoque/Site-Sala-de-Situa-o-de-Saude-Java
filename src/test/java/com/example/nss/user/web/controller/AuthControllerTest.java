@@ -1,4 +1,4 @@
-package com.example.nss.user.web.controller;
+package com.example.nss.user.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -8,13 +8,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.api.request.LoginRequest;
-import com.example.nss.user.api.response.UserResponse;
-import com.example.nss.user.application.AuthRateLimiter;
-import com.example.nss.user.application.FirstAccessService;
-import com.example.nss.user.application.RefreshSessionService;
-import com.example.nss.user.application.UserService;
-import com.example.nss.user.domain.User;
+import com.example.nss.user.dto.request.LoginRequest;
+import com.example.nss.user.dto.response.UserResponse;
+import com.example.nss.user.service.AuthRateLimiter;
+import com.example.nss.user.service.FirstAccessService;
+import com.example.nss.user.service.RefreshSessionService;
+import com.example.nss.user.service.UserService;
+import com.example.nss.user.entity.User;
 import com.example.nss.user.security.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

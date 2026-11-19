@@ -1,18 +1,18 @@
-package com.example.nss.analytics.application;
+package com.example.nss.analytics.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.example.nss.analytics.api.response.AnalyticsResponse;
-import com.example.nss.analytics.domain.EpidemiologyFilter;
-import com.example.nss.analytics.domain.Geography;
-import com.example.nss.analytics.infrastructure.repository.DiseaseRow;
-import com.example.nss.analytics.infrastructure.repository.EpidemiologyRepository;
-import com.example.nss.analytics.infrastructure.repository.EpidemiologyTotals;
-import com.example.nss.analytics.infrastructure.repository.MetadataCatalogRow;
-import com.example.nss.analytics.infrastructure.repository.TerritoryAggregate;
+import com.example.nss.analytics.dto.response.AnalyticsResponse;
+import com.example.nss.analytics.entity.EpidemiologyFilter;
+import com.example.nss.analytics.entity.Geography;
+import com.example.nss.analytics.repository.DiseaseRow;
+import com.example.nss.analytics.repository.EpidemiologyRepository;
+import com.example.nss.analytics.repository.EpidemiologyTotals;
+import com.example.nss.analytics.repository.MetadataCatalogRow;
+import com.example.nss.analytics.repository.TerritoryAggregate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,9 +1,9 @@
-package com.example.nss.user.application;
+package com.example.nss.user.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.example.nss.shared.redis.DedicatedRedis;
+import com.example.nss.shared.config.DedicatedRedis;
 import com.example.nss.user.exception.RateLimitExceededException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.URI;

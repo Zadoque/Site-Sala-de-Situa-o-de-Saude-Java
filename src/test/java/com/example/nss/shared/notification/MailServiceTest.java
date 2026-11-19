@@ -1,4 +1,4 @@
-package com.example.nss.shared.notification;
+package com.example.nss.shared.service;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.doThrow;

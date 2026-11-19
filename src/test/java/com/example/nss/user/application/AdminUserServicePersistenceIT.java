@@ -1,4 +1,4 @@
-package com.example.nss.user.application;
+package com.example.nss.user.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
-import com.example.nss.shared.notification.MailService;
-import com.example.nss.user.api.request.AccountInvitationRequest;
-import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.FirstAccessToken;
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.shared.service.MailService;
+import com.example.nss.user.dto.request.AccountInvitationRequest;
+import com.example.nss.user.entity.AccountType;
+import com.example.nss.user.entity.FirstAccessToken;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.FirstAccessTokenRepository;
+import com.example.nss.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

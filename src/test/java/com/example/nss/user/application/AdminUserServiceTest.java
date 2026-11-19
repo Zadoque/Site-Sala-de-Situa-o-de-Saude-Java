@@ -1,4 +1,4 @@
-package com.example.nss.user.application;
+package com.example.nss.user.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -8,11 +8,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.api.mapper.UserMapper;
-import com.example.nss.user.api.request.AccountInvitationRequest;
-import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.dto.mapper.UserMapper;
+import com.example.nss.user.dto.request.AccountInvitationRequest;
+import com.example.nss.user.entity.AccountType;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.UserRepository;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -161,7 +161,7 @@ class AdminUserServiceTest {
   void delegatesInvitationListingRenewalAndCancellation() {
     var invitations =
         List.of(
-            new com.example.nss.user.api.response.InvitationResponse(
+            new com.example.nss.user.dto.response.InvitationResponse(
                 1L, 2L, "a@nss.test", AccountType.USER, "PENDING", null, null));
     var renewed = invitations.getFirst();
     when(firstAccess.pendingInvitations()).thenReturn(invitations);

@@ -1,6 +1,6 @@
 package com.example.nss.user.security;
 
-import com.example.nss.user.domain.User;
+import com.example.nss.user.entity.User;
 import java.util.List;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 

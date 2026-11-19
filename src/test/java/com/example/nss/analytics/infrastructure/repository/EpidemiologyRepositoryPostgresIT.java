@@ -1,9 +1,9 @@
-package com.example.nss.analytics.infrastructure.repository;
+package com.example.nss.analytics.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.example.nss.analytics.domain.EpidemiologyFilter;
-import com.example.nss.analytics.domain.Geography;
+import com.example.nss.analytics.entity.EpidemiologyFilter;
+import com.example.nss.analytics.entity.Geography;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

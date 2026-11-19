@@ -1,16 +1,16 @@
-package com.example.nss.user.application;
+package com.example.nss.user.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.shared.notification.MailService;
-import com.example.nss.user.api.request.FirstAccessRequest;
-import com.example.nss.user.domain.FirstAccessToken;
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.shared.service.MailService;
+import com.example.nss.user.dto.request.FirstAccessRequest;
+import com.example.nss.user.entity.FirstAccessToken;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.FirstAccessTokenRepository;
+import com.example.nss.user.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
@@ -268,7 +268,7 @@ class FirstAccessServiceTest {
     User user = new User();
     user.setId(13L);
     user.setEmail("pending@nss.test");
-    user.setAccountType(com.example.nss.user.domain.AccountType.USER);
+    user.setAccountType(com.example.nss.user.entity.AccountType.USER);
     FirstAccessToken token = pendingToken(user, "FIRST_ACCESS", "pending");
     token.setId(13L);
     when(tokens.findByStatusOrderByExpiresAtAsc("PENDING")).thenReturn(List.of(token));
@@ -299,7 +299,7 @@ class FirstAccessServiceTest {
     when(encoder.encode("NewPassword123!")).thenReturn("encoded-reset");
 
     service.completePasswordReset(
-        new com.example.nss.user.api.request.PasswordResetCompleteRequest(
+        new com.example.nss.user.dto.request.PasswordResetCompleteRequest(
             "RESET@NSS.TEST", "reset-token", "NewPassword123!"));
 
     assertEquals("encoded-reset", user.getPassword());
@@ -333,7 +333,7 @@ class FirstAccessServiceTest {
         IllegalArgumentException.class,
         () ->
             service.completePasswordReset(
-                new com.example.nss.user.api.request.PasswordResetCompleteRequest(
+                new com.example.nss.user.dto.request.PasswordResetCompleteRequest(
                     "reset@nss.test", "expired-reset", "NewPassword123!")));
   }
 

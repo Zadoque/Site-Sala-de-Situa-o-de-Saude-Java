@@ -1,12 +1,12 @@
-package com.example.nss.analytics.web.controller;
+package com.example.nss.analytics.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.analytics.api.response.CasoResumoResponse;
-import com.example.nss.analytics.application.AnalyticsService;
+import com.example.nss.analytics.dto.response.CasoResumoResponse;
+import com.example.nss.analytics.service.AnalyticsService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

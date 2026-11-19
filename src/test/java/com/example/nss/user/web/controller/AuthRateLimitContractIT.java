@@ -1,13 +1,13 @@
-package com.example.nss.user.web.controller;
+package com.example.nss.user.controller;
 
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.user.application.FirstAccessService;
-import com.example.nss.user.application.RefreshSessionService;
-import com.example.nss.user.application.UserService;
+import com.example.nss.user.service.FirstAccessService;
+import com.example.nss.user.service.RefreshSessionService;
+import com.example.nss.user.service.UserService;
 import com.example.nss.user.security.CustomUserDetailsService;
 import com.example.nss.user.security.JwtService;
 import java.util.UUID;
