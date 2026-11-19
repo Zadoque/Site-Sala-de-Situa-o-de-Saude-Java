@@ -19,6 +19,7 @@ class RefreshSessionRedisIT {
   void logoutInvalidatesRotatedSessionAndPasswordChangeInvalidatesSession() throws Exception {
     String url = System.getenv().getOrDefault("SPRING_DATA_REDIS_URL", "redis://localhost:6379");
     try (var connection = new DedicatedRedis(url, Duration.ofSeconds(2))) {
+      clearRefreshState(connection);
       var users = mock(UserRepository.class);
       var encoder = new BCryptPasswordEncoder();
       var user = new User();
@@ -47,6 +48,7 @@ class RefreshSessionRedisIT {
   void rejectsChangedAccountVersionWithoutChangingPassword() {
     String url = System.getenv().getOrDefault("SPRING_DATA_REDIS_URL", "redis://localhost:6379");
     try (var connection = new DedicatedRedis(url, Duration.ofSeconds(2))) {
+      clearRefreshState(connection);
       var users = mock(UserRepository.class);
       var oldAccount = new User();
       oldAccount.setId(983413L);
@@ -73,5 +75,10 @@ class RefreshSessionRedisIT {
     } catch (BadCredentialsException exception) {
       return false;
     }
+  }
+
+  private void clearRefreshState(DedicatedRedis connection) {
+    var keys = connection.template().keys("nss:auth:refresh:*");
+    if (keys != null && !keys.isEmpty()) connection.template().delete(keys);
   }
 }
