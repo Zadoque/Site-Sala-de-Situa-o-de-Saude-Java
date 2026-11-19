@@ -45,7 +45,7 @@ public class EpidemiologyService {
     }
     if (geography == Geography.NEIGHBORHOOD && filter.districtCode() == null) {
       AnalyticsResult unavailable =
-          response(
+          buildResult(
               geography, filter, null, CoverageStatus.UNAVAILABLE, 0L, 0L, null, List.of(), null);
       if (cache != null) cache.put(cacheKey, unavailable);
       return unavailable;
@@ -111,7 +111,7 @@ public class EpidemiologyService {
     EpidemiologyTotals unitTotals =
         geography == Geography.MUNICIPALITY ? repository.notificationUnitTotals(filter) : null;
     AnalyticsResult result =
-        response(
+        buildResult(
             geography,
             filter,
             total,
@@ -147,7 +147,7 @@ public class EpidemiologyService {
   }
 
   public AnalyticsResult unavailable(Geography geography, EpidemiologyFilter filter) {
-    return response(
+    return buildResult(
         geography, filter, null, CoverageStatus.UNAVAILABLE, 0L, 0L, null, List.of(), null);
   }
 
@@ -260,7 +260,7 @@ public class EpidemiologyService {
             .toList());
   }
 
-  private AnalyticsResult response(
+  private AnalyticsResult buildResult(
       Geography geography,
       EpidemiologyFilter f,
       Long total,
