@@ -6,10 +6,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.user.application.RefreshSessionService;
-import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.entity.AccountType;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.UserRepository;
+import com.example.nss.user.service.RefreshSessionService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;

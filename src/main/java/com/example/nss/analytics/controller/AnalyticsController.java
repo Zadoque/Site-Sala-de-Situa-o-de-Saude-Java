@@ -1,0 +1,26 @@
+package com.example.nss.analytics.controller;
+
+import com.example.nss.analytics.dto.mapper.AnalyticsMapper;
+import com.example.nss.analytics.dto.response.CasoResumoResponse;
+import com.example.nss.analytics.service.AnalyticsService;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("analytics")
+@RequiredArgsConstructor
+public class AnalyticsController {
+
+  private final AnalyticsService analyticsService;
+  private final AnalyticsMapper mapper;
+
+  @GetMapping("casos")
+  public List<CasoResumoResponse> buscarCasos(
+      @RequestParam Integer ano, @RequestParam Integer mes) {
+    return analyticsService.buscarCasos(ano, mes).stream().map(mapper::toResponse).toList();
+  }
+}

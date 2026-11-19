@@ -1,5 +1,24 @@
 # Sala de Situação de Saúde (NSS) — backend
 
+## Ambiente e secrets
+
+`.env.local` é exclusivo para desenvolvimento e deve usar credenciais
+descartáveis. Em servidor, não copie esse arquivo: o `NSS-deployment` mantém o
+arquivo runtime em `/etc/nss/deployment.env`, protegido com `0600`, e injeta as
+variáveis necessárias no container Java. JWT, SMTP, banco, Redis e senha de
+bootstrap nunca devem ser versionados.
+
+Para teste local direto: `cp .env.local.test .env`. Altere apenas portas/URLs se
+PostgreSQL, Redis ou frontend não estiverem nos endereços locais padrão.
+
+O arquivo local usa Mailpit. Em produção, configure `MAIL_HOST`, `MAIL_PORT`,
+`MAIL_FROM`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SMTP_AUTH=true` e
+`MAIL_SMTP_STARTTLS=true` no secret runtime do Deployment. `MAIL_PASSWORD` deve
+ser uma senha de aplicativo de uma conta de envio dedicada.
+Para Gmail, basta ativar a autenticação de dois fatores na conta Google e gerar
+uma senha de app nas configurações de segurança; use o e-mail da conta como
+`MAIL_USERNAME`/`MAIL_FROM` e a senha de app como `MAIL_PASSWORD`.
+
 Backend Spring Boot/Java 21 para autenticação e leitura do PostgreSQL analítico publicado pela pipeline. Não acessa PySUS, SINAN bruto, CNES operacional ou Parquet em runtime.
 
 ## Arquitetura
@@ -9,13 +28,13 @@ O backend é uma aplicação modular em camadas, organizada por responsabilidade
 - `web`: adaptadores HTTP. Controllers recebem parâmetros, delegam o caso de uso e devolvem DTOs da API.
 - `application`: casos de uso e orquestração. Valida filtros, consulta o catálogo territorial, calcula cobertura e compõe respostas.
 - `domain`: tipos e regras centrais, como `Geography`, `EpidemiologyFilter`, `CoverageStatus` e `User`.
-- `infrastructure`: integração com PostgreSQL, Redis, JPA, JDBC, Flyway, arquivos TSV territoriais e inicialização do administrador.
+- `infrastructure`: integração com PostgreSQL, Redis, JPA, JDBC, arquivos TSV territoriais e inicialização do administrador. O schema é preparado pelo `NSS-database`; o Java não executa DDL no boot.
 - `api`: requests e responses públicos. Records são imutáveis e definem o contrato JSON sem expor entidades persistidas.
 - `shared`: capacidades transversais, como tratamento de erros e envio de e-mail.
 
 O frontend é o cliente da API. Em produção, o Nginx pode encaminhar `/api/` para o Java, mantendo frontend e API na mesma origem. O Java possui dois datasources independentes:
 
-1. o datasource operacional, usado por JPA/Flyway para usuários, convites e tokens de primeiro acesso;
+1. o datasource operacional, usado por JPA para usuários, convites e tokens de primeiro acesso;
 2. o datasource analítico, somente leitura, usado por `JdbcTemplate` para consultar `analytics.*`, publicado pela pipeline;
 3. o Redis persistente, usado para refresh sessions e rate limit distribuído de autenticação.
 
@@ -138,11 +157,11 @@ Manter esses elementos privados impede que controllers, frontend ou outros módu
 
 ### Banco e migrações
 
-O Flyway migra o schema operacional `public`. O Alembic da pipeline migra o schema analítico `analytics`; os dois históricos são independentes. O arquivo `V0001__initial_schema.sql` é a migration inicial consolidada (`version=1`, exibida operacionalmente como `0001`) e representa diretamente o estado atual do schema SQL: `users`, `user_first_access` e índices de e-mail normalizado. Refresh sessions e rate limits são dados Redis, com TTL e persistência AOF.
+O `NSS-database` é a única fonte de schema, migrations, roles, grants e contratos. O Deployment aplica a migration inicial consolidada antes de iniciar Java e Pipeline. O Java apenas valida e consulta o schema; não executa DDL nem mantém Flyway próprio. A Pipeline também não aplica Alembic durante a ingestão. Refresh sessions e rate limits são dados Redis, com TTL e persistência AOF.
 
-Essa consolidação é o ponto de partida para bancos novos. Ela substitui o histórico anterior `V1`–`V6`; não deve ser aplicada sobre um banco que ainda tenha `flyway_schema_history` apontando para as migrations antigas sem antes recriar o schema operacional ou executar um procedimento explícito de baseline controlado. O banco analítico e seus dados não são apagados por essa mudança.
+Essa consolidação é o ponto de partida para bancos novos e substitui os históricos distribuídos anteriores. Em um banco existente, o Deployment deve executar o procedimento de cutover documentado e comparar o catálogo antes de aplicar a migration. O banco analítico e seus dados não são apagados por essa mudança.
 
-Em um ambiente descartável, recrie somente o schema operacional antes de iniciar o Java para que o Flyway execute a `0001` desde o início. Em um banco compartilhado já existente, use `SPRING_FLYWAY_BASELINE_ON_MIGRATE=true` e `SPRING_FLYWAY_BASELINE_VERSION=0` apenas quando as tabelas atuais já forem equivalentes ao schema consolidado; isso registra o ponto de partida sem modificar as tabelas analíticas.
+Em um ambiente descartável, o script `NSS-database/scripts/database.sh apply` cria o PostgreSQL e aplica `migrations/0001/{app,analytics}.sql` de forma idempotente. Em um banco compartilhado existente, execute o inventário e o cutover do Deployment; não use o Java para registrar ou alterar migrations.
 
 O datasource analítico usa `read-only=true`. A aplicação consulta `dim_doenca`, `dim_municipio`, `dim_unidade_saude`, `fato_casos` e `pipeline_current_publication`; a pipeline é a responsável por escrever e publicar esses dados.
 
@@ -165,7 +184,7 @@ O perfil Maven `dev` adiciona somente a integração do Spring Boot com o
 
 - **Produção/Docker:** o `Dockerfile` compila a aplicação com Java 21 e gera
   uma imagem final somente com o JRE e o JAR empacotado. As dependências de
-  runtime da aplicação (Spring Web, JPA, PostgreSQL, segurança, JWT, Flyway,
+  runtime da aplicação (Spring Web, JPA, PostgreSQL, segurança, JWT,
   Actuator e métricas) são empacotadas nesse JAR.
 - **Desenvolvimento local:** `./mvnw -Pdev spring-boot:run` habilita o starter
   `spring-boot-docker-compose`, que permite ao Spring iniciar o
@@ -216,3 +235,18 @@ XML e CSV em `target/site/jacoco/`, com visões separadas em `unit/` e
 
 O checklist de deploy, smoke test, backup/restauração, rollback e observabilidade
 está em [documentation/OPERACAO_PRODUCAO.md](documentation/OPERACAO_PRODUCAO.md).
+
+## Arquitetura e estrutura
+
+```mermaid
+flowchart LR
+  C[Caddy] --> API[Controllers]
+  API --> AUTH[Auth services]
+  API --> EPI[Epidemiology service]
+  AUTH --> RS[(Redis sessions)]
+  AUTH --> RL[(Redis rate limiter)]
+  EPI --> RC[(Redis analytics cache, opcional)]
+  EPI --> PG[(PostgreSQL analytics)]
+```
+
+`src/main/java/.../analytics/` contém filtros, serviços, repositórios JDBC e cache; `.../user/` contém autenticação, sessões e rate limiter; `.../shared/redis/` concentra conexões dedicadas; `src/test/` contém testes unitários, WebMVC, integração PostgreSQL/Redis e mutação PIT. O cache é desativado por padrão e habilitado por `ANALYTICS_CACHE_ENABLED=true`, com TTL e revisão configuráveis.

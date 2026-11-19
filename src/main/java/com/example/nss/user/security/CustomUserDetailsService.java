@@ -1,7 +1,7 @@
 package com.example.nss.user.security;
 
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -35,10 +35,6 @@ public class CustomUserDetailsService implements UserDetailsService {
   private UserDetails toUserDetails(User user) {
     if (user.getPassword() == null)
       throw new UsernameNotFoundException("Conta ainda não configurada");
-    return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
-        .password(user.getPassword())
-        .roles(user.getAccountType().name())
-        .disabled(!user.isAtivo())
-        .build();
+    return new VersionedUserDetails(user);
   }
 }

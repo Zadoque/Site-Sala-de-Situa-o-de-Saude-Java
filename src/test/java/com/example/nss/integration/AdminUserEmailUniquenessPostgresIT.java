@@ -2,11 +2,11 @@ package com.example.nss.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.example.nss.shared.notification.MailService;
-import com.example.nss.user.api.request.AccountInvitationRequest;
-import com.example.nss.user.application.AdminUserService;
-import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.shared.service.MailService;
+import com.example.nss.user.entity.AccountInvitationCommand;
+import com.example.nss.user.entity.AccountType;
+import com.example.nss.user.repository.UserRepository;
+import com.example.nss.user.service.AdminUserService;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -26,7 +26,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest
 class AdminUserEmailUniquenessPostgresIT {
   @Container
-  static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
+  static final PostgreSQLContainer POSTGRES =
+      new PostgreSQLContainer("postgres:16-alpine").withInitScript("nss-schema/app.sql");
 
   @Autowired AdminUserService service;
   @Autowired UserRepository users;
@@ -38,8 +39,6 @@ class AdminUserEmailUniquenessPostgresIT {
     registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
     registry.add("spring.datasource.username", POSTGRES::getUsername);
     registry.add("spring.datasource.password", POSTGRES::getPassword);
-    registry.add("spring.flyway.user", POSTGRES::getUsername);
-    registry.add("spring.flyway.password", POSTGRES::getPassword);
     registry.add("spring.docker.compose.enabled", () -> false);
     registry.add("analytics.datasource.url", POSTGRES::getJdbcUrl);
     registry.add("analytics.datasource.username", POSTGRES::getUsername);
@@ -73,7 +72,7 @@ class AdminUserEmailUniquenessPostgresIT {
         () -> {
           start.await();
           try {
-            service.invite(new AccountInvitationRequest(email, AccountType.USER));
+            service.invite(new AccountInvitationCommand(email, AccountType.USER));
             return true;
           } catch (IllegalArgumentException exception) {
             return false;

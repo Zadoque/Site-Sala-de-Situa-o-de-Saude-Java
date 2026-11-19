@@ -1,6 +1,6 @@
 package com.example.nss.user.security;
 
-import com.example.nss.user.domain.User;
+import com.example.nss.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -31,15 +31,23 @@ public class JwtService {
   }
 
   public String generateToken(User user) {
+    return generateToken(user, null);
+  }
+
+  public String generateToken(User user, String sessionGeneration) {
     Date issuedAt = new Date();
     Date expirationDate = new Date(issuedAt.getTime() + expiration);
 
-    return Jwts.builder()
-        .subject(String.valueOf(user.getId()))
-        .issuedAt(issuedAt)
-        .expiration(expirationDate)
-        .signWith(signingKey)
-        .compact();
+    var builder =
+        Jwts.builder()
+            .subject(String.valueOf(user.getId()))
+            .claim("accountRevision", VersionedUserDetails.revision(user))
+            .issuedAt(issuedAt)
+            .expiration(expirationDate);
+    if (sessionGeneration != null && !sessionGeneration.isBlank()) {
+      builder.claim("sessionGeneration", sessionGeneration);
+    }
+    return builder.signWith(signingKey).compact();
   }
 
   public long extractUserId(String token) {
@@ -50,6 +58,15 @@ public class JwtService {
     long tokenUserId = extractUserId(token);
 
     return tokenUserId == userId && enabled && !isTokenExpired(token);
+  }
+
+  public boolean hasAccountRevision(String token, long revision) {
+    Long tokenRevision = extractClaim(token, claims -> claims.get("accountRevision", Long.class));
+    return tokenRevision != null && tokenRevision == revision;
+  }
+
+  public String extractSessionGeneration(String token) {
+    return extractClaim(token, claims -> claims.get("sessionGeneration", String.class));
   }
 
   private boolean isTokenExpired(String token) {

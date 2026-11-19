@@ -6,7 +6,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
   private final CustomUserDetailsService userDetailsService;
+  private final ObjectProvider<StringRedisTemplate> redis;
 
   @Override
   protected void doFilterInternal(
@@ -47,7 +51,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         UserDetails userDetails = userDetailsService.loadUserById(userId);
 
-        if (jwtService.isTokenValid(token, userId, userDetails.isEnabled())) {
+        if (userDetails instanceof VersionedUserDetails versioned
+            && jwtService.isTokenValid(token, userId, userDetails.isEnabled())
+            && jwtService.hasAccountRevision(token, versioned.accountRevision())
+            && activeSession(token, userId)) {
           UsernamePasswordAuthenticationToken authentication =
               new UsernamePasswordAuthenticationToken(
                   userDetails, null, userDetails.getAuthorities());
@@ -63,5 +70,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  private boolean activeSession(String token, long userId) {
+    String tokenGeneration = jwtService.extractSessionGeneration(token);
+    if (tokenGeneration == null) return true;
+    StringRedisTemplate template = redis.getIfAvailable();
+    if (template == null) return false;
+    String activeGeneration = template.opsForValue().get("nss:auth:refresh:active:" + userId);
+    return Objects.equals(tokenGeneration, activeGeneration);
   }
 }

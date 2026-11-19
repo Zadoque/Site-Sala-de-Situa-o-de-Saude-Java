@@ -1,0 +1,234 @@
+package com.example.nss.user.controller;
+
+import com.example.nss.user.dto.mapper.UserMapper;
+import com.example.nss.user.dto.request.FirstAccessRequest;
+import com.example.nss.user.dto.request.LoginRequest;
+import com.example.nss.user.dto.request.PasswordResetCompleteRequest;
+import com.example.nss.user.dto.request.PasswordResetRequest;
+import com.example.nss.user.dto.response.FirstAccessDetailsResponse;
+import com.example.nss.user.dto.response.LoginResponse;
+import com.example.nss.user.dto.response.MeResponse;
+import com.example.nss.user.dto.response.UserResponse;
+import com.example.nss.user.entity.FirstAccessCommand;
+import com.example.nss.user.entity.PasswordResetCommand;
+import com.example.nss.user.security.EmailNormalizer;
+import com.example.nss.user.security.JwtService;
+import com.example.nss.user.service.AuthRateLimiter;
+import com.example.nss.user.service.RefreshSessionService;
+import com.example.nss.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import java.time.Duration;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+  private final UserService userService;
+  private final AuthenticationManager authenticationManager;
+  private final JwtService jwtService;
+  private final UserMapper userMapper;
+
+  @Value("${jwt.expiration:3600000}")
+  private long accessExpiration;
+
+  @Value("${api.auth.refresh-cookie-name:nss_refresh}")
+  private String refreshCookieName;
+
+  @Value("${api.auth.refresh-expiration:604800000}")
+  private long refreshExpiration;
+
+  @Value("${api.auth.secure-cookie:false}")
+  private boolean secureCookie;
+
+  private final com.example.nss.user.service.FirstAccessService firstAccessService;
+  private final RefreshSessionService refreshSessions;
+  private final AuthRateLimiter rateLimiter;
+  private final CookieCsrfTokenRepository csrfTokenRepository;
+
+  @PostMapping("/first-access")
+  public ResponseEntity<Void> firstAccess(@Valid @RequestBody FirstAccessRequest request) {
+    rateLimiter.registerFirstAccessAttempt();
+    firstAccessService.complete(
+        new FirstAccessCommand(
+            request.email(), request.name(), request.password(), request.token()));
+    return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/first-access")
+  public ResponseEntity<FirstAccessDetailsResponse> firstAccessDetails(@RequestParam String token) {
+    return ResponseEntity.ok(
+        new FirstAccessDetailsResponse(firstAccessService.firstAccessEmail(token)));
+  }
+
+  @PostMapping("/password-reset/request")
+  public ResponseEntity<Void> requestPasswordReset(
+      @Valid @RequestBody PasswordResetRequest request) {
+    rateLimiter.registerPasswordResetRequest(request.email());
+    userService.requestPasswordReset(request.email());
+    return ResponseEntity.accepted().build();
+  }
+
+  @PostMapping("/password-reset/complete")
+  public ResponseEntity<Void> completePasswordReset(
+      @Valid @RequestBody PasswordResetCompleteRequest request) {
+    rateLimiter.registerPasswordResetCompletion();
+    firstAccessService.completePasswordReset(
+        new PasswordResetCommand(request.email(), request.password(), request.token()));
+    return ResponseEntity.noContent().build();
+  }
+
+  @org.springframework.web.bind.annotation.GetMapping("/me")
+  public ResponseEntity<MeResponse> me(Authentication authentication) {
+    UserResponse user = userMapper.toResponse(userService.getByEmail(authentication.getName()));
+    boolean admin =
+        authentication.getAuthorities().stream()
+            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+    return ResponseEntity.ok(
+        new MeResponse(
+            user.email(),
+            user.nome(),
+            user.ativo(),
+            admin ? java.util.List.of("USER_MANAGEMENT") : java.util.List.of()));
+  }
+
+  @org.springframework.web.bind.annotation.GetMapping("/csrf")
+  public ResponseEntity<String> csrf(
+      CsrfToken token, HttpServletRequest request, HttpServletResponse response) {
+    csrfTokenRepository.saveToken(token, request, response);
+    return ResponseEntity.ok(token.getToken());
+  }
+
+  @PostMapping("/login")
+  public ResponseEntity<LoginResponse> login(
+      @Valid @RequestBody LoginRequest request, HttpServletResponse response) {
+    rateLimiter.registerLoginAttempt(request.email());
+    String normalizedEmail = EmailNormalizer.normalize(request.email());
+    Authentication authenticationRequest =
+        new UsernamePasswordAuthenticationToken(normalizedEmail, request.password());
+
+    Authentication authenticationResult;
+    try {
+      authenticationResult = authenticationManager.authenticate(authenticationRequest);
+    } catch (AuthenticationException exception) {
+      throw exception;
+    }
+
+    if (!(authenticationResult.getPrincipal()
+        instanceof com.example.nss.user.security.VersionedUserDetails userDetails)) {
+      throw new AuthenticationServiceException("A autenticação não retornou um usuário válido");
+    }
+
+    com.example.nss.user.entity.User entity = userService.entityById(userDetails.accountId());
+    if (!entity.isAtivo()
+        || entity.getPassword() == null
+        || !java.util.Objects.equals(entity.getAccountVersion(), userDetails.accountRevision())) {
+      throw new org.springframework.security.authentication.BadCredentialsException(
+          "Conta inválida");
+    }
+    String refresh =
+        request.replaceExistingSession()
+            ? refreshSessions.issue(entity, true)
+            : refreshSessions.issue(entity);
+    String generation = refreshSessions.currentGeneration(entity.getId());
+    String token =
+        generation == null
+            ? jwtService.generateToken(entity)
+            : jwtService.generateToken(entity, generation);
+    addRefreshCookie(response, refresh);
+    UserResponse user = userMapper.toResponse(entity);
+    return ResponseEntity.ok(
+        new LoginResponse(token, accessExpiration / 1000, user, token, permissions(userDetails)));
+  }
+
+  @PostMapping("/refresh")
+  public ResponseEntity<LoginResponse> refresh(
+      HttpServletRequest request, HttpServletResponse response) {
+    rateLimiter.registerRefreshAttempt();
+    String token = cookie(request);
+    RefreshSessionService.Rotation rotation = refreshSessions.rotateWithToken(token);
+    UserDetails userDetails =
+        new com.example.nss.user.security.VersionedUserDetails(rotation.user());
+    String generation = refreshSessions.currentGeneration(rotation.user().getId());
+    String access =
+        generation == null
+            ? jwtService.generateToken(rotation.user())
+            : jwtService.generateToken(rotation.user(), generation);
+    addRefreshCookie(response, rotation.rawToken());
+    return ResponseEntity.ok(
+        new LoginResponse(
+            access,
+            accessExpiration / 1000,
+            userMapper.toResponse(rotation.user()),
+            access,
+            permissions(userDetails)));
+  }
+
+  @PostMapping("/logout")
+  public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+    String token = cookie(request);
+    refreshSessions.revoke(token);
+    clearRefreshCookie(response);
+    return ResponseEntity.noContent().build();
+  }
+
+  private String cookie(HttpServletRequest request) {
+    if (request.getCookies() == null) return null;
+    for (jakarta.servlet.http.Cookie c : request.getCookies())
+      if (refreshCookieName.equals(c.getName())) return c.getValue();
+    return null;
+  }
+
+  private java.util.List<String> permissions(UserDetails details) {
+    return details.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))
+        ? java.util.List.of("USER_MANAGEMENT")
+        : java.util.List.of();
+  }
+
+  private void addRefreshCookie(HttpServletResponse response, String token) {
+    response.addHeader(
+        HttpHeaders.SET_COOKIE,
+        ResponseCookie.from(refreshCookieName, token)
+            .httpOnly(true)
+            .secure(secureCookie)
+            .sameSite("Strict")
+            .path("/api/v1/auth")
+            .maxAge(Duration.ofMillis(refreshExpiration))
+            .build()
+            .toString());
+  }
+
+  private void clearRefreshCookie(HttpServletResponse response) {
+    response.addHeader(
+        HttpHeaders.SET_COOKIE,
+        ResponseCookie.from(refreshCookieName, "")
+            .httpOnly(true)
+            .secure(secureCookie)
+            .sameSite("Strict")
+            .path("/api/v1/auth")
+            .maxAge(Duration.ZERO)
+            .build()
+            .toString());
+  }
+}

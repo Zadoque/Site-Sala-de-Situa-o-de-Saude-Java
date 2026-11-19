@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.example.nss.user.domain.User;
+import com.example.nss.user.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -45,6 +45,7 @@ class JwtServiceTest {
 
   private User entity(long id) {
     User user = new User();
+    user.setAccountVersion(0L);
     user.setId(id);
     user.setEmail("user@nss.test");
     user.setAtivo(true);

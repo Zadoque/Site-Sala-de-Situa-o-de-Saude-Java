@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.entity.AccountType;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.UserRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +19,8 @@ class CustomUserDetailsServiceTest {
     UserRepository repository = mock(UserRepository.class);
     CustomUserDetailsService service = new CustomUserDetailsService(repository);
     User user = new User();
+    user.setAccountVersion(0L);
+    user.setId(1L);
     user.setEmail("ana@example.com");
     user.setPassword("encoded");
     user.setAccountType(AccountType.ADMIN);
@@ -38,6 +40,8 @@ class CustomUserDetailsServiceTest {
     UserRepository repository = mock(UserRepository.class);
     CustomUserDetailsService service = new CustomUserDetailsService(repository);
     User user = new User();
+    user.setAccountVersion(0L);
+    user.setId(1L);
     user.setEmail("ana@example.com");
     when(repository.findByEmailIgnoreCase("ana@example.com")).thenReturn(Optional.of(user));
 

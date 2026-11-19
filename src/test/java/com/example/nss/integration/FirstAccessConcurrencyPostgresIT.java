@@ -4,14 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.example.nss.shared.notification.MailService;
-import com.example.nss.user.api.request.FirstAccessRequest;
-import com.example.nss.user.application.FirstAccessService;
-import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.FirstAccessToken;
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.FirstAccessTokenRepository;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.shared.service.MailService;
+import com.example.nss.user.entity.AccountType;
+import com.example.nss.user.entity.FirstAccessCommand;
+import com.example.nss.user.entity.FirstAccessToken;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.FirstAccessTokenRepository;
+import com.example.nss.user.repository.UserRepository;
+import com.example.nss.user.service.FirstAccessService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
@@ -35,7 +35,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest
 class FirstAccessConcurrencyPostgresIT {
   @Container
-  static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
+  static final PostgreSQLContainer POSTGRES =
+      new PostgreSQLContainer("postgres:16-alpine").withInitScript("nss-schema/app.sql");
 
   @Autowired FirstAccessService firstAccess;
   @Autowired FirstAccessTokenRepository tokens;
@@ -48,8 +49,6 @@ class FirstAccessConcurrencyPostgresIT {
     registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
     registry.add("spring.datasource.username", POSTGRES::getUsername);
     registry.add("spring.datasource.password", POSTGRES::getPassword);
-    registry.add("spring.flyway.user", POSTGRES::getUsername);
-    registry.add("spring.flyway.password", POSTGRES::getPassword);
     registry.add("spring.docker.compose.enabled", () -> false);
     registry.add("analytics.datasource.url", POSTGRES::getJdbcUrl);
     registry.add("analytics.datasource.username", POSTGRES::getUsername);
@@ -115,7 +114,7 @@ class FirstAccessConcurrencyPostgresIT {
           ready.countDown();
           start.await();
           firstAccess.complete(
-              new FirstAccessRequest(
+              new FirstAccessCommand(
                   "concurrent-first-access@nss.test", name, "Password123!", rawToken));
           return null;
         });

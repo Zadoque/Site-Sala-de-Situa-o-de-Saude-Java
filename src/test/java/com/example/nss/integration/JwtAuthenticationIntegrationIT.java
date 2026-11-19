@@ -5,9 +5,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.nss.user.domain.AccountType;
-import com.example.nss.user.domain.User;
-import com.example.nss.user.infrastructure.repository.UserRepository;
+import com.example.nss.user.entity.AccountType;
+import com.example.nss.user.entity.User;
+import com.example.nss.user.repository.UserRepository;
 import com.example.nss.user.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +64,25 @@ class JwtAuthenticationIntegrationIT {
     mockMvc
         .perform(get("/api/v1/admin/users").header("Authorization", "Bearer " + token))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void rejectsTokenIssuedBeforeAccountWasDisabledAndReactivated() throws Exception {
+    User user = persistUser("jwt-reactivated@nss.test", AccountType.USER, true);
+    String token = jwtService.generateToken(user);
+    user.setAtivo(false);
+    user = users.saveAndFlush(user);
+    user.setAtivo(true);
+    user = users.saveAndFlush(user);
+
+    mockMvc
+        .perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + token))
+        .andExpect(status().isUnauthorized());
+    mockMvc
+        .perform(
+            get("/api/v1/auth/me")
+                .header("Authorization", "Bearer " + jwtService.generateToken(user)))
+        .andExpect(status().isOk());
   }
 
   @Test
