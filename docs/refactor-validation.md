@@ -13,7 +13,7 @@ Base registrada: `97b2f0c601553eadd8e5de4541ea4218ec1197b0`
 
 | Verificação | Resultado | Evidência/observação |
 | --- | --- | --- |
-| Surefire | Aprovado | 121 testes, 0 falhas, 0 erros, 0 ignorados |
+| Surefire | Aprovado | 126 testes, 0 falhas, 0 erros, 0 ignorados |
 | ArchUnit | Aprovado | Dependências, localização de Services/Repositories/Controllers, configuração e ausência de pacotes legados |
 | Spotless | Aprovado | `./mvnw -q spotless:check` |
 | Checkstyle | Aprovado | `./mvnw -q checkstyle:check` |
